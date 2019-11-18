@@ -1,6 +1,6 @@
 {
   "name": "spiritsinobjects",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Application for image sonification and sequencing",
   "main": "main.js",
   "directories": {
