@@ -7,12 +7,19 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "mocha test",
+    "start": "./node_modules/.bin/electron dist/main.js",
+    "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main.js -d",
+    "compile": "sh ./scripts/compile.sh",
+    "install": "./node_modules/.bin/electron-rebuild",
+    "test": "./node_modules/.bin/mocha test",
     "pretest": "",
     "version": "",
     "postversion": "git push && git push --tags",
     "u": "npm run git -- -m \"update\"",
-    "git": "npm version patch --force"
+    "git": "npm version patch --force",
+    "build:linux": "sh ./scripts/build_linux.sh",
+    "build:mac": "sh ./scripts/build_mac.sh",
+    "build:win": "sh ./scripts/build_win.sh"
   },
   "repository": {
     "type": "git",
@@ -44,5 +51,8 @@
     "mocha": "^6.2.2",
     "typescript": "^3.7.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "optionalDependencies": {
+    "electron-installer-debian": "^2.0.0"
+  }
 }

@@ -1,0 +1,9 @@
+{
+  "dest": "./releases/linux/",
+  "categories": [
+    "Video"
+  ],
+  "lintianOverrides": [
+    "changelog-file-missing-in-native-package"
+  ]
+}
