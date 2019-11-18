@@ -1,0 +1,48 @@
+{
+  "name": "spiritsinobjects",
+  "version": "0.2.1",
+  "description": "Application for image sonification and sequencing",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "mocha test",
+    "pretest": "",
+    "version": "",
+    "postversion": "git push && git push --tags",
+    "u": "npm run git -- -m \"update\"",
+    "git": "npm version patch --force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sixteenmillimeter/spiritsInObjects.git"
+  },
+  "author": "carlosdominguez",
+  "contributors": [
+    {
+      "name": "Matt McWilliams",
+      "url": "https://sixteenmillimeter.com"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sixteenmillimeter/spiritsInObjects/issues"
+  },
+  "homepage": "https://github.com/sixteenmillimeter/spiritsInObjects#readme",
+  "devDependencies": {
+    "@types/electron": "^1.6.10",
+    "@types/node": "^12.12.8",
+    "chai": "^4.2.0",
+    "electron": "^7.1.1",
+    "electron-installer-common": "^0.7.3",
+    "electron-installer-dmg": "^3.0.0",
+    "electron-packager": "^14.1.0",
+    "electron-rebuild": "^1.8.6",
+    "electron-wix-msi": "^2.2.0",
+    "less": "^3.10.3",
+    "mocha": "^6.2.2",
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {}
+}
