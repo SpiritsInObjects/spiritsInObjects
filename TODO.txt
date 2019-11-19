@@ -1,0 +1,59 @@
+1) User Interface Improvements (5-10 weeks total) 
+	a) Add improvements requested by users 
+		i) Save state of current project 
+		ii) Load state from file (.sio) 
+		iii) Generate sound from video files as well as image sequences and still 
+images 
+		iv) Playback generated audio using space bar 
+		v) Add additional default settings to reduce repetition of user interaction 
+		vi) Update and simplify the design of image sequence timeline UI 
+		vii) Add or remove frames from timeline viii) Convert images to grayscale before interpreting as sound
+	b) Port application from nw.js to Electron runtime 
+	c) Add unit and integration testing 
+		i) Add unit tests using Mocha 
+		ii) Test integration and usability using Chai 
+	d) Port all existing Javascript to Typescript (1 week) 
+		i) Add type checking to development process 
+		ii) Allow compiling to different Javascript versions and platforms 
+	e) Re-organize interface to allow for additional features 
+		i) Add UI enabling for the interoperability between generating audio and generating video or images from. 
+
+2) Additional Feature Development (6-10 weeks) 
+	a) Isolate image to sound synthesis capabilities as a portable library 
+		i) Refactor core functionality into a Javascript library that can accept arbitrary image data and interpret it as sound as an optical film soundtrack reader would (using existing approach) 
+		ii) Document source code to increase portability of library to lower-level languages for improved performance targeting live video processing 
+		iii) Release as a FOSS-licensed repository to be freely used by other developers 
+		iv) Optimize performance of Javascript library 
+			(a) Target 40ms and under per-frame interpretation time 
+			(b) Maintain 24FPS or higher output
+	b) Generate image from sound as a portable library 
+		i) Generated images can be photographed on to Super16 film to produce audio when projected through 16mm soundtrack reader 
+		ii) Use audio and midi files to generate variable density audio soundtracks
+		iii) Generate variable-width soundtracks 
+		iv) Expose and develop tests on 16mm film verifying input matches output 
+	c) Use live video and sound as sources 
+		i) Live video will be interpreted as sound live in a Canvas element in the Electron renderer view 
+			(a) Support feed from external webcam or device camera 
+			(b) Support RTMP and MJPEG stream input 
+		ii) Enable live audio by streaming it into an AudioBuffer and interpreting it as images using Canvas in near-real time 
+			(a) Support feed from external microphone or integrated device 
+			(b) mic 
+			(c) Support feed from MP3 or RTMP stream 
+	d) Generate live video and sound as output 
+		i) Publish live video as MJPEG and RTMP streams using ffmpeg 
+		ii) Play on local machine or as MP3 and RTMP streams using ffmpeg or sox 
+	e) Build a responsive mobile interface using existing libraries 
+		i) Use existing Javascript image and sound processing libraries in a mobile WebView context 
+		ii) Reduce complexity of UI based on limited UI space and file handling capabilities on mobile 
+
+3) Release (4-8 weeks) 
+	a) Provide beta version of software to test users 
+		i) Incorporate feedback and error reporting into final release 
+	b) Package and release desktop application for macOS, Linux and Windows. 
+		i) Build desktop app releases on Electron runtime 
+		ii) Provide user documentation in writing and videos 
+		iii) Provide download of binary installers 
+	c) Package and release mobile application 
+		i) Build mobile app releases on Cordova platform 
+		ii) Submit mobile apps for Google Play and Apple App Store 
+		iii) Provide user documentation and demonstrations in writing and videos 
