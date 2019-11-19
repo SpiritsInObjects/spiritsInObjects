@@ -22,7 +22,7 @@
 					<br>
 					<section id="fileinput">
 						<div>
-							<input id="fileUpload" type="file" accept="image/*" multiple method="#files" onchange="loadingObjects(this.files); document.getElementById('fileUpload').disabled = 'disabled'; document.getElementById('exportButtons').style.display = 'initial';">
+							<input id="fileUpload" type="file" accept="image/*" multiple method="#files" >
 							</input>
 						</div>
 					</section>
@@ -88,8 +88,9 @@
 				</div>	
 			</div>
 		</div>
-	<!--<script src="../contrib/jquery-1.11.3.min.js"></script>-->
-	<script>window.$ = window.jQuery = require('jquery');</script>
+	<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+	<script src="../contrib/jquery-1.11.3.min.js"></script>
+	<!--<script>window.$ = window.jQuery = require('jquery');</script>-->
 	<script src="../contrib/jquery.mobile-1.4.5.min.js"></script>
 	<script src="../contrib/phillcorder.js"></script>
 	<script src="../contrib/recorder.js"></script>

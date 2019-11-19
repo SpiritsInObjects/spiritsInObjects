@@ -1,6 +1,6 @@
 'use strict';
 
-const prompt = require('electron-prompt');
+const { dialog } = require('electron').remote;
 //var gui = require('nw.gui');
 var fs = require('fs'); //node.js filesystem
 var path = require('path');
@@ -30,6 +30,10 @@ var sliderMin = 0;
 
 var fadeMultiplier = 1.0;
 
+async function prompt (message) {
+	return 1
+}
+
 
 var getTotalFrameCountOfSoundtrack = function(totalFrameCount01) {
 	totalFrameCount = totalFrameCount01;
@@ -40,7 +44,8 @@ var getTotalFrameCountOfSoundtrack = function(totalFrameCount01) {
 	}
 }
 
-var loadingObjects = async function (e1) {
+var loadingObjects = async function (el) {
+	console.trace()
 	console.dir(el)
 	const files = document.getElementById('fileUpload').files;
 	if (files && files[0]) {
@@ -75,24 +80,24 @@ var loadingObjects = async function (e1) {
 				document.getElementById("button-" + k).appendChild(buttonImages[k]);
 				
 				currentButton.addEventListener('click', async function() {
-					var userFrameLocationRaw = await prompt( { label : 'When do you want me to sound? (frame number)' } );
+					var userFrameLocationRaw = await prompt( 'When do you want me to sound? (frame number)' );
 					var userFrameLocation = parseInt(userFrameLocationRaw);
 					var frameLocation = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
 					var audioLocationInSamples = Math.round(samplesPerFrame * frameLocation);
 					
-					var userSoundLengthInFramesRaw = await prompt({ label : 'How long should I sound? (in frames)' } );
+					var userSoundLengthInFramesRaw = await prompt( 'How long should I sound? (in frames)' );
 					var userSoundLengthInFrames = parseInt(userSoundLengthInFramesRaw);
 					var soundLengthInFrames = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
 					var totalSamplesInSound = Math.round(soundLengthInFrames * samplesPerFrame);
 					var masterBufferData = masterBuffer.getChannelData(0);
 					var framesAudioData = bufferArray[k].getChannelData(0);
-					var repeatYesNo = await prompt({ label : 'Should I repeat? (1 for yes, 0 for no' });
+					var repeatYesNo = await prompt( 'Should I repeat? (1 for yes, 0 for no' );
 					
 					if (repeatYesNo == '1'){
-						var repeatIntervalInFramesRaw = await prompt({ label : 'How many frames between each repetition?' } )
+						var repeatIntervalInFramesRaw = await prompt( 'How many frames between each repetition?'  ) )
 						var repeatIntervalInFrames = parseInt(repeatIntervalInFramesRaw);
 						var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
-						var userRepeatAmountRaw = await prompt({ label : 'How many times should I play?' } )
+						var userRepeatAmountRaw = await prompt( 'How many times should I play?'  )
 						var userRepeatAmount = parseInt(userRepeatAmountRaw);
 						var repeatAmount = Math.min(Math.max(userRepeatAmount, 0), (totalFrameCount/repeatIntervalInFrames));
 						var repeatLocationInFrames = 0;
@@ -136,13 +141,11 @@ var loadingObjects = async function (e1) {
 					}
 				}, false);
 			}
-			console.dir(el)
-			console.dir(el.target)
-			canSonFiles[i] = e1.target.files[i];
+			canSonFiles[i] = el.target.files[i];
 			canSonArray[i] = new canSon((i+1));
 			canSonArray[i].readFile(canSonFiles[i]);
-			}
-		}		
+		}
+	}		
 	
 	for (var can_i = 0; can_i < totalFrameCount; can_i ++) {
 		// if (document.getElementById('timeline').childElementCount <= framerate + 1) {
@@ -159,7 +162,7 @@ var loadingObjects = async function (e1) {
 		timelineCan.width = 1920 * 0.15;
 		
 	}
-	
+
 	sliderMax = parseInt(totalFrameCount);
 	document.getElementById("timelineRangeStart").max = sliderMax;
 	document.getElementById("timelineRangeEnd").max = sliderMax;
@@ -217,21 +220,21 @@ function canSon(inum01) {
 	}, false);
 	
 	// click a button to sequence the image within a master buffer
-	currentButton.addEventListener('click', function() {
-		var userFrameLocation = parseInt(prompt({ label : 'When do you want me to sound? (frame number)' } ));
+	currentButton.addEventListener('click', async function() {
+		var userFrameLocation = parseInt(await prompt( 'When do you want me to sound? (frame number)'  ));
 		var frameLocation = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
 		var audioLocationInSamples = Math.round(samplesPerFrame * frameLocation);
-		var userSoundLengthInFrames = parseInt(prompt({ label : 'How long should I sound? (in frames)' } ));
+		var userSoundLengthInFrames = parseInt(awaitprompt( 'How long should I sound? (in frames)'  ));
 		var soundLengthInFrames = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
 		var totalSamplesInSound = Math.round(soundLengthInFrames * samplesPerFrame);
 		var masterBufferData = masterBuffer.getChannelData(0);
 		var framesAudioData = bufferArray[inum].getChannelData(0);
-		var repeatYesNo = prompt({ label : 'Should I repeat? (1 for yes, 0 for no)' });
+		var repeatYesNo = await prompt( 'Should I repeat? (1 for yes, 0 for no)' );
 		
 		if (repeatYesNo == 1){					
-			var repeatIntervalInFrames = parseInt(prompt({ label : 'How many frames between each repetition?' } ));
+			var repeatIntervalInFrames = parseInt(await prompt( 'How many frames between each repetition?' ));
 			var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
-			var userRepeatAmount = parseInt(prompt({ label : 'How many times should I play?' } ));
+			var userRepeatAmount = parseInt(await prompt( 'How many times should I play?'  ));
 			var repeatAmount = Math.min(Math.max(userRepeatAmount, 0), (totalFrameCount/repeatIntervalInFrames));
 			var repeatLocationInFrames = 0;
 			var repeatLocationInSamples = 0;
@@ -339,7 +342,7 @@ var makeASound = function(buffer01) {
 
 var makeASound02 = async function(buffer01) {	
 	var currentBuffer = buffer01;
-	var bufferLocationInFrames = await prompt({ 'label' : 'Play soundtrack from frame #:'});
+	var bufferLocationInFrames = await prompt('Play soundtrack from frame #:');
 	var bufferLocationInSeconds = bufferLocationInFrames / framerate;
 	var bufferTotalInSeconds = totalFrameCount / 24;
 	var source01 = audioCtx.createBufferSource(); //actual audio buffer
@@ -542,6 +545,9 @@ var importAfterEffectsScript = function(scriptImportText) {
 };
 
 (function () {
-	var x = document.getElementById("fileUpload");
-	x.addEventListener('change', loadingObjects, false);
+	$('#fileUpload').on('change', function () {
+		loadingObjects(this); 
+		document.getElementById('fileUpload').disabled = 'disabled'; 
+		document.getElementById('exportButtons').style.display = 'initial';
+	});
 })()
