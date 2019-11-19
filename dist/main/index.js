@@ -1,19 +1,23 @@
 'use strict';
 'use strict';
-const path = require('path');
-const { app, BrowserWindow, Menu } = require('electron');
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const path_1 = require("path");
+const electron_1 = require("electron");
 /// const {autoUpdater} = require('electron-updater');
-const { is } = require('electron-util');
-const unhandled = require('electron-unhandled');
-const debug = require('electron-debug');
-const contextMenu = require('electron-context-menu');
-const config = require('./config');
-const menu = require('./menu');
-unhandled();
-debug();
-contextMenu();
+const electron_util_1 = require("electron-util");
+const electron_unhandled_1 = __importDefault(require("electron-unhandled"));
+const electron_debug_1 = __importDefault(require("electron-debug"));
+const electron_context_menu_1 = __importDefault(require("electron-context-menu"));
+//import config from './config';
+const menu_1 = __importDefault(require("menu"));
+electron_unhandled_1.default();
+electron_debug_1.default();
+electron_context_menu_1.default();
 // Note: Must match `build.appId` in package.json
-app.setAppUserModelId('com.company.AppName');
+electron_1.app.setAppUserModelId('com.company.AppName');
 // Uncomment this before publishing your first version.
 // It's commented out as it throws an error if there are no published versions.
 // if (!is.development) {
@@ -27,8 +31,8 @@ app.setAppUserModelId('com.company.AppName');
 // Prevent window from being garbage collected
 let mainWindow;
 const createMainWindow = async () => {
-    const win = new BrowserWindow({
-        title: app.getName(),
+    const win = new electron_1.BrowserWindow({
+        title: electron_1.app.getName(),
         show: false,
         width: 600,
         height: 400,
@@ -44,14 +48,14 @@ const createMainWindow = async () => {
         // For multiple windows store them in an array
         mainWindow = undefined;
     });
-    await win.loadFile(path.join(__dirname, '../views/index.html'));
+    await win.loadFile(path_1.join(__dirname, '../views/index.html'));
     return win;
 };
 // Prevent multiple instances of the app
-if (!app.requestSingleInstanceLock()) {
-    app.quit();
+if (!electron_1.app.requestSingleInstanceLock()) {
+    electron_1.app.quit();
 }
-app.on('second-instance', () => {
+electron_1.app.on('second-instance', () => {
     if (mainWindow) {
         if (mainWindow.isMinimized()) {
             mainWindow.restore();
@@ -59,19 +63,19 @@ app.on('second-instance', () => {
         mainWindow.show();
     }
 });
-app.on('window-all-closed', () => {
-    if (!is.macos) {
-        app.quit();
+electron_1.app.on('window-all-closed', () => {
+    if (!electron_util_1.is.macos) {
+        electron_1.app.quit();
     }
 });
-app.on('activate', async () => {
+electron_1.app.on('activate', async () => {
     if (!mainWindow) {
         mainWindow = await createMainWindow();
     }
 });
 (async () => {
-    await app.whenReady();
-    Menu.setApplicationMenu(menu);
+    await electron_1.app.whenReady();
+    electron_1.Menu.setApplicationMenu(menu_1.default);
     mainWindow = await createMainWindow();
 })();
 //# sourceMappingURL=index.js.map

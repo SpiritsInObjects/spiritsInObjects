@@ -1,15 +1,15 @@
 'use strict';
 
 'use strict';
-const path = require('path');
-const {app, BrowserWindow, Menu} = require('electron');
+import { join as pathJoin } from 'path';
+import {app, BrowserWindow, Menu} from 'electron';
 /// const {autoUpdater} = require('electron-updater');
-const {is} = require('electron-util');
-const unhandled = require('electron-unhandled');
-const debug = require('electron-debug');
-const contextMenu = require('electron-context-menu');
-const config = require('./config');
-const menu = require('./menu');
+import { is } from 'electron-util';
+import unhandled from 'electron-unhandled';
+import debug from 'electron-debug';
+import contextMenu from 'electron-context-menu';
+//import config from './config';
+import menu from 'menu';
 
 unhandled();
 debug();
@@ -30,7 +30,7 @@ app.setAppUserModelId('com.company.AppName');
 // }
 
 // Prevent window from being garbage collected
-let mainWindow;
+let mainWindow : any;
 
 const createMainWindow = async () => {
 	const win = new BrowserWindow({
@@ -53,7 +53,7 @@ const createMainWindow = async () => {
 		mainWindow = undefined;
 	});
 
-	await win.loadFile(path.join(__dirname, '../views/index.html'));
+	await win.loadFile(pathJoin(__dirname, '../views/index.html'));
 
 	return win;
 };
