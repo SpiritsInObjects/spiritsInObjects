@@ -7,8 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "start": "./node_modules/.bin/electron dist/main.js",
-    "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main.js -d",
+    "start": "./node_modules/.bin/electron dist/main",
+    "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main -d",
     "compile": "sh ./scripts/compile.sh",
     "install": "./node_modules/.bin/electron-rebuild",
     "test": "./node_modules/.bin/mocha test",
@@ -51,7 +51,16 @@
     "mocha": "^6.2.2",
     "typescript": "^3.7.2"
   },
-  "dependencies": {},
+  "dependencies": {
+    "electron-context-menu": "^0.15.1",
+    "electron-debug": "^3.0.1",
+    "electron-prompt": "^1.4.0",
+    "electron-store": "^5.1.0",
+    "electron-unhandled": "^3.0.1",
+    "electron-updater": "^4.2.0",
+    "electron-util": "^0.13.0",
+    "jquery": "^3.4.1"
+  },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"
   }
