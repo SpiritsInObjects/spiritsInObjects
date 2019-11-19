@@ -39,6 +39,7 @@
   "homepage": "https://github.com/sixteenmillimeter/spiritsInObjects#readme",
   "devDependencies": {
     "@types/electron": "^1.6.10",
+    "@types/jquery": "^3.3.31",
     "@types/node": "^12.12.8",
     "chai": "^4.2.0",
     "electron": "^7.1.1",
@@ -58,8 +59,7 @@
     "electron-store": "^5.1.0",
     "electron-unhandled": "^3.0.1",
     "electron-updater": "^4.2.0",
-    "electron-util": "^0.13.0",
-    "jquery": "^3.4.1"
+    "electron-util": "^0.13.0"
   },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"
