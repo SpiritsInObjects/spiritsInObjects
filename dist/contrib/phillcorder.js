@@ -1,6 +1,6 @@
 var createDownloadLink = function (buffer) {
     
-    var worker = new Worker('js/recorderWorker.js');
+    var worker = new Worker('../contrib/recorderWorker.js');
     // get it started and send some config data...
     worker.postMessage({
       command: 'init',
