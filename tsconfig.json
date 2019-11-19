@@ -7,14 +7,20 @@
         "moduleResolution": "node",
         "sourceMap": true,
         "removeComments" : false,
-        "baseUrl" : "dist",
-        "outDir": "./dist/",
-        "rootDir" : "./src/",
+        "baseUrl" : "./dist/",
+        "outDir": "./dist/main/",
+        "rootDir" : "./src/main/",
         "paths" : {
         }
     },
     "exclude" : [
+        "./scripts"
+        "./docs",
         "./node_modules",
-        "./dist"
+        "./dist",
+        "./releases",
+        "./proto_imagetosound-nw",
+        "./test",
+        "./src/renderer/"
     ]
 }
