@@ -1,5 +1,5 @@
 'use strict';
-const { dialog } = require('electron').remote;
+const eprompt = require('electron-prompt');
 //var gui = require('nw.gui');
 var fs = require('fs'); //node.js filesystem
 var path = require('path');
@@ -24,7 +24,8 @@ var buttonImages = new Array();
 var sliderMax = 12;
 var sliderMin = 0;
 var fadeMultiplier = 1.0;
-function prompt(message) {
+async function prompt(message) {
+    return eprompt({ title, 'spiritsInObjects': , label: message });
 }
 var getTotalFrameCountOfSoundtrack = function (totalFrameCount01) {
     totalFrameCount = totalFrameCount01;

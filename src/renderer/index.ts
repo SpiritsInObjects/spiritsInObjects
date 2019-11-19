@@ -1,6 +1,6 @@
 'use strict';
 
-const { dialog } = require('electron').remote;
+const eprompt = require('electron-prompt')
 //var gui = require('nw.gui');
 var fs = require('fs'); //node.js filesystem
 var path = require('path');
@@ -31,7 +31,7 @@ var sliderMin = 0;
 var fadeMultiplier = 1.0;
 
 async function prompt (message) {
-	return 1
+	return eprompt({ title, 'spiritsInObjects', label : message })
 }
 
 
