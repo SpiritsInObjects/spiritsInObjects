@@ -77,6 +77,9 @@ var loadingObjects = async function (el) {
                     var masterBufferData = masterBuffer.getChannelData(0);
                     var framesAudioData = bufferArray[k].getChannelData(0);
                     var repeatYesNo = await eprompt('Should I repeat? (1 for yes, 0 for no');
+                    let rep_h;
+                    let rep_j;
+                    let rep_i;
                     if (repeatYesNo == '1') {
                         var repeatIntervalInFramesRaw = await eprompt('How many frames between each repetition?');
                         var repeatIntervalInFrames = parseInt(repeatIntervalInFramesRaw);
@@ -88,17 +91,17 @@ var loadingObjects = async function (el) {
                         var repeatLocationInSamples = 0;
                         // insert sample data into master soundtrack buffer
                         // for every total repetition possible, we insert a frame's audio data into the master soundtrack buffer
-                        for (var rep_h = 0; rep_h < repeatAmount; rep_h++) {
+                        for (rep_h = 0; rep_h < repeatAmount; rep_h++) {
                             repeatLocationInSamples = repeatIntervalInSamples * rep_h;
                             if (repeatLocationInSamples > masterBufferData.length - totalSamplesInSound) {
                                 break;
                             }
-                            for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
+                            for (rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
                                 masterBufferData[(audioLocationInSamples + repeatLocationInSamples) + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
                             }
                             // define array that stores image numbers for use in timeline
                             repeatLocationInFrames = repeatIntervalInFrames * rep_h;
-                            for (var rep_j = 0; rep_j < soundLengthInFrames; rep_j++) {
+                            for (rep_j = 0; rep_j < soundLengthInFrames; rep_j++) {
                                 if (frameLocation + repeatLocationInFrames + rep_j >= totalFrameCount) {
                                     break;
                                 }
@@ -111,11 +114,11 @@ var loadingObjects = async function (el) {
                         }
                     }
                     else {
-                        for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
+                        for (rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
                             masterBufferData[audioLocationInSamples + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
                         }
                         // define array that stores image numbers for use in timeline
-                        for (var rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j++) {
+                        for (rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j++) {
                             timelineArray[parseInt(frameLocation) + rep_j] = k;
                         }
                         let timelineRangeStart = $('timelineRangeStart').val();
