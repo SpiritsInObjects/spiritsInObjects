@@ -1,5 +1,5 @@
 var recLength : any = 0;
-var recBuffers : AudioBuffer[][] = [];
+var recBuffers : any[] = [];
 var sampleRate : any;
 var numChannels : any;
 
@@ -29,7 +29,7 @@ function init (config : any){
   initBuffers();
 }
 
-function record(inputBuffer : AudioBuffer){
+function record(inputBuffer : Float32Array[]){
   for (var channel = 0; channel < numChannels; channel++){
     recBuffers[channel].push(inputBuffer[channel]);
   }
@@ -73,7 +73,7 @@ function initBuffers(){
   }
 }
 
-function mergeBuffers (recBuffers : AudioBuffer, recLength : number) {
+function mergeBuffers (recBuffers : Float32Array[], recLength : number) {
   var result = new Float32Array(recLength);
   var offset = 0;
   for (var i = 0; i < recBuffers.length; i++){
@@ -83,7 +83,7 @@ function mergeBuffers (recBuffers : AudioBuffer, recLength : number) {
   return result;
 }
 
-function interleave (inputL : AudioBuffer, inputR : AudioBuffer) {
+function interleave (inputL : Float32Array, inputR : Float32Array) {
   var length = inputL.length + inputR.length;
   var result = new Float32Array(length);
 
