@@ -5,7 +5,8 @@
         "eslint:recommended"
     ],
     "rules": {
-       "no-set-state": "off"
+       "no-set-state": "off",
+       "no-console" : 0
     },
     "parserOptions": {
         "ecmaVersion": 2018
