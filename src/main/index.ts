@@ -9,7 +9,7 @@ import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
 //import config from './config';
-const { createMenu } = require('./menu.js');
+import { createMenu } from './menu.js';
 
 unhandled();
 contextMenu();

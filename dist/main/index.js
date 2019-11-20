@@ -12,7 +12,7 @@ const electron_unhandled_1 = __importDefault(require("electron-unhandled"));
 const electron_debug_1 = __importDefault(require("electron-debug"));
 const electron_context_menu_1 = __importDefault(require("electron-context-menu"));
 //import config from './config';
-const { createMenu } = require('./menu.js');
+const menu_js_1 = require("./menu.js");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
@@ -76,7 +76,7 @@ electron_1.app.on('activate', async () => {
     }
 });
 (async () => {
-    const menu = createMenu();
+    const menu = menu_js_1.createMenu();
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();
