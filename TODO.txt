@@ -7,14 +7,15 @@ images
 		iv) Playback generated audio using space bar 
 		v) Add additional default settings to reduce repetition of user interaction 
 		vi) Update and simplify the design of image sequence timeline UI 
-		vii) Add or remove frames from timeline viii) Convert images to grayscale before interpreting as sound
-	b) Port application from nw.js to Electron runtime 
+		vii) Add or remove frames from timeline 
+		viii) Convert images to grayscale before interpreting as sound
+x	b) Port application from nw.js to Electron runtime 
 	c) Add unit and integration testing 
 		i) Add unit tests using Mocha 
 		ii) Test integration and usability using Chai 
-	d) Port all existing Javascript to Typescript (1 week) 
-		i) Add type checking to development process 
-		ii) Allow compiling to different Javascript versions and platforms 
+x	d) Port all existing Javascript to Typescript (1 week) 
+x		i) Add type checking to development process 
+x		ii) Allow compiling to different Javascript versions and platforms 
 	e) Re-organize interface to allow for additional features 
 		i) Add UI enabling for the interoperability between generating audio and generating video or images from. 
 
