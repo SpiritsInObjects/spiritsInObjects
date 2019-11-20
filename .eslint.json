@@ -1,0 +1,17 @@
+{
+    "plugins": [
+    ],
+    "extends": [
+        "eslint:recommended"
+    ],
+    "rules": {
+       "no-set-state": "off"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
+
+    "env": {
+        "es6": true
+    }
+}
