@@ -18,7 +18,7 @@ if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
     electron_debug_1.default();
 }
 // Note: Must match `build.appId` in package.json
-electron_1.app.setAppUserModelId('edu.dartmouth.spiritsinobjects');
+electron_1.app.setAppUserModelId('spiritsinobjects');
 // Uncomment this before publishing your first version.
 // It's commented out as it throws an error if there are no published versions.
 // if (!is.development) {

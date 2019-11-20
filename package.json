@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "build": {
-    "appId": "your.id",
+    "appId": "spiritsinobjects",
     "mac": {
       "category": "public.app-category.video"
     },
