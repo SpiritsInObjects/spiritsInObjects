@@ -1,6 +1,6 @@
 'use strict';
 
-const eprompt = require('electron-prompt')
+const epromptRaw = require('electron-prompt')
 //var gui = require('nw.gui');
 var fs = require('fs'); //node.js filesystem
 var path = require('path');
@@ -12,8 +12,8 @@ var samprate = 48000;
 var samplesPerFrame = samprate/framerate;
 var gainNode = audioCtx.createGain();
 var bufferArray = new Array();
-var totalFrameCount = 0;
-var masterBuffer;
+var totalFrameCount : any = 0;
+var masterBuffer : AudioBuffer;
 var timelineArray = new Array();
 var timelineCanvasArray = new Array();
 
@@ -30,12 +30,11 @@ var sliderMin = 0;
 
 var fadeMultiplier = 1.0;
 
-async function prompt (message) {
-	return eprompt({ title, 'spiritsInObjects', label : message })
+async function eprompt (message : string) {
+	return epromptRaw({ title: 'spiritsInObjects', label : message })
 }
 
-
-var getTotalFrameCountOfSoundtrack = function(totalFrameCount01) {
+var getTotalFrameCountOfSoundtrack = function(totalFrameCount01 : any) {
 	totalFrameCount = totalFrameCount01;
 	masterBuffer = audioCtx.createBuffer(1, samplesPerFrame*totalFrameCount, samprate);
 	timelineArray.length = parseInt(totalFrameCount);
@@ -44,10 +43,9 @@ var getTotalFrameCountOfSoundtrack = function(totalFrameCount01) {
 	}
 }
 
-var loadingObjects = async function (el) {
-	console.trace()
-	console.dir(el)
-	const files = document.getElementById('fileUpload').files;
+var loadingObjects = async function (el : HTMLInputElement) {
+	const fileUploadElem : HTMLInputElement = document.getElementById('fileUpload') as HTMLInputElement;
+	const files : any = fileUploadElem.files;
 	if (files && files[0]) {
 		for (var i  = 0; i < files.length; i++){
 			if (i <= 0) {
@@ -60,10 +58,10 @@ var loadingObjects = async function (el) {
 				buttons[k] = document.createElement("button");
 				buttons[k].id = "button-" + k;
 				document.getElementById("imagebuttons").appendChild(buttons[k]);
-				document.getElementById("imagebuttons").style.zoom = 0.15;
+				$('#imagebuttons').css('zoom', 0.15);
 
-				var can = $("#mycanvas-" + k)[0];
-				var cxt = can.getContext("2d");
+				var can : HTMLCanvasElement = $("#mycanvas-" + k)[0] as HTMLCanvasElement;
+				var cxt : CanvasRenderingContext2D = can.getContext("2d");
 				var currentButton = $("#button-" + k)[0];
 
 				can.height = 1080;
@@ -76,28 +74,29 @@ var loadingObjects = async function (el) {
 
 				buttonImages[k] = document.createElement("img");
 				buttonImages[k].id = "buttonImage-" + k;
-				buttonImages[k].src = document.getElementById("mycanvas-" + k).toDataURL();
+				var can2 : HTMLCanvasElement = document.getElementById("mycanvas-" + k) as HTMLCanvasElement;
+				buttonImages[k].src = can2.toDataURL();
 				document.getElementById("button-" + k).appendChild(buttonImages[k]);
 				
 				currentButton.addEventListener('click', async function() {
-					var userFrameLocationRaw = await prompt( 'When do you want me to sound? (frame number)' );
+					var userFrameLocationRaw = await eprompt( 'When do you want me to sound? (frame number)' );
 					var userFrameLocation = parseInt(userFrameLocationRaw);
-					var frameLocation = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
+					var frameLocation : any = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
 					var audioLocationInSamples = Math.round(samplesPerFrame * frameLocation);
 					
-					var userSoundLengthInFramesRaw = await prompt( 'How long should I sound? (in frames)' );
+					var userSoundLengthInFramesRaw = await eprompt( 'How long should I sound? (in frames)' );
 					var userSoundLengthInFrames = parseInt(userSoundLengthInFramesRaw);
-					var soundLengthInFrames = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
+					var soundLengthInFrames : any = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
 					var totalSamplesInSound = Math.round(soundLengthInFrames * samplesPerFrame);
 					var masterBufferData = masterBuffer.getChannelData(0);
 					var framesAudioData = bufferArray[k].getChannelData(0);
-					var repeatYesNo = await prompt( 'Should I repeat? (1 for yes, 0 for no' );
+					var repeatYesNo = await eprompt( 'Should I repeat? (1 for yes, 0 for no' );
 					
 					if (repeatYesNo == '1'){
-						var repeatIntervalInFramesRaw = await prompt( 'How many frames between each repetition?'  ) )
+						var repeatIntervalInFramesRaw = await eprompt( 'How many frames between each repetition?' );
 						var repeatIntervalInFrames = parseInt(repeatIntervalInFramesRaw);
 						var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
-						var userRepeatAmountRaw = await prompt( 'How many times should I play?'  )
+						var userRepeatAmountRaw = await eprompt( 'How many times should I play?'  )
 						var userRepeatAmount = parseInt(userRepeatAmountRaw);
 						var repeatAmount = Math.min(Math.max(userRepeatAmount, 0), (totalFrameCount/repeatIntervalInFrames));
 						var repeatLocationInFrames = 0;
@@ -124,8 +123,10 @@ var loadingObjects = async function (el) {
 								}
 								timelineArray[(frameLocation + repeatLocationInFrames) + rep_j] = k;
 							}
-						
-						showSoundtrackTimeline(document.getElementById('timelineRangeStart').value, document.getElementById('timelineRangeEnd').value, document.getElementById('zoomSlider').value);
+							let timelineRangeStart = $('timelineRangeStart').val();
+							let timelineRangeEnd = $('timelineRangeEnd').val();
+							let zoomSlider = $('#zoomSlider').val();
+							showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
 						}
 					} else {
 						for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i ++) {
@@ -137,12 +138,15 @@ var loadingObjects = async function (el) {
 							timelineArray[parseInt(frameLocation) + rep_j] = k;
 						}
 
-						showSoundtrackTimeline(document.getElementById('timelineRangeStart').value, document.getElementById('timelineRangeEnd').value, document.getElementById('zoomSlider').value);
+						let timelineRangeStart = $('timelineRangeStart').val();
+						let timelineRangeEnd = $('timelineRangeEnd').val();
+						let zoomSlider = $('#zoomSlider').val();
+						showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
 					}
 				}, false);
 			}
-			canSonFiles[i] = el.target.files[i];
-			canSonArray[i] = new canSon((i+1));
+			canSonFiles[i] = el.files[i];
+			canSonArray[i] = new canSon(i + 1);
 			canSonArray[i].readFile(canSonFiles[i]);
 		}
 	}		
@@ -154,7 +158,7 @@ var loadingObjects = async function (el) {
 			document.getElementById('timeline').appendChild(timelineCanvasArray[can_i]);
 		// }
 		
-		var timelineCan = $("#canvasForTimeline" + can_i)[0];
+		var timelineCan = $("#canvasForTimeline" + can_i)[0] as HTMLCanvasElement;
 		timelineCan.style.border = "black 1px solid";
 		var timelineCxt = timelineCan.getContext("2d");
 		
@@ -164,121 +168,138 @@ var loadingObjects = async function (el) {
 	}
 
 	sliderMax = parseInt(totalFrameCount);
-	document.getElementById("timelineRangeStart").max = sliderMax;
-	document.getElementById("timelineRangeEnd").max = sliderMax;
-	document.getElementById("timelineRangeStart").min = sliderMin;
-	document.getElementById("timelineRangeEnd").min = sliderMin;
+	var timelineRangeStartElem : HTMLInputElement = document.getElementById('timelineRangeStart') as HTMLInputElement;
+	var timelineRangeEndElem : HTMLInputElement = document.getElementById('timelineRangeEnd') as HTMLInputElement;
+	timelineRangeStartElem.max = `${sliderMax}`;
+	timelineRangeEndElem.max = `${sliderMax}`;
+	timelineRangeStartElem.min = `${sliderMin}`;
+	timelineRangeEndElem.min = `${sliderMin}`;
 }
 
 // canvas sonification object constructor
-function canSon(inum01) {
-	var img = new Image();
-	var inum = inum01;
-	
-	myCanvasArray[inum] = document.createElement("canvas");
-	myCanvasArray[inum].id = "mycanvas-" + inum;
-	document.getElementById('canvases').appendChild(myCanvasArray[inum]);
-	
-	buttons[inum] = document.createElement("button");
-	buttons[inum].id = "button-" + inum;
-	document.getElementById("imagebuttons").appendChild(buttons[inum]);
-	document.getElementById("imagebuttons").style.zoom = 0.15;
-	
-	var can = $("#mycanvas-" + inum)[0];
-	var cxt = can.getContext("2d");
-	var currentButton = $("#button-" + inum)[0];
+class canSon {
+	private img : any;
+	private inum : number;
+	private can : HTMLCanvasElement;
+	private ctx : CanvasRenderingContext2D;
+
+	constructor (inum01 : number) {
+		this.img = new Image();
+		this.inum = inum01;
 		
-	this.readFile = function(e2) {
+		myCanvasArray[this.inum] = document.createElement("canvas");
+		myCanvasArray[this.inum].id = "mycanvas-" + this.inum;
+		document.getElementById('canvases').appendChild(myCanvasArray[this.inum]);
+		
+		buttons[this.inum] = document.createElement("button");
+		buttons[this.inum].id = "button-" + this.inum;
+		document.getElementById("imagebuttons").appendChild(buttons[this.inum]);
+		$('#imagebuttons').css('zoom', 0.15);
+		
+		this.can = $("#mycanvas-" + this.inum)[0] as HTMLCanvasElement;
+		this.ctx = this.can.getContext("2d");
+		var currentButton = $("#button-" + this.inum)[0];
+
+			
+		// click a canvas to hear its image
+		this.can.addEventListener('click', function() {
+			makeASound(bufferArray[this.inum]);
+		}.bind(this), false);
+		
+		// click a button to sequence the image within a master buffer
+		currentButton.addEventListener('click', async function() {
+			var userFrameLocation = parseInt(await eprompt( 'When do you want me to sound? (frame number)'  ));
+			var frameLocation : any = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
+			var audioLocationInSamples = Math.round(samplesPerFrame * frameLocation);
+			var userSoundLengthInFrames : any = parseInt(await eprompt( 'How long should I sound? (in frames)'  ));
+			var soundLengthInFrames : any = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
+			var totalSamplesInSound : any = Math.round(soundLengthInFrames * samplesPerFrame);
+			var masterBufferData = masterBuffer.getChannelData(0);
+			var framesAudioData = bufferArray[this.inum].getChannelData(0);
+			var repeatYesNo = await eprompt( 'Should I repeat? (1 for yes, 0 for no)' );
+			
+			if (repeatYesNo == 1){					
+				var repeatIntervalInFrames = parseInt(await eprompt( 'How many frames between each repetition?' ));
+				var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
+				var userRepeatAmount = parseInt(await eprompt( 'How many times should I play?'  ));
+				var repeatAmount = Math.min(Math.max(userRepeatAmount, 0), (totalFrameCount/repeatIntervalInFrames));
+				var repeatLocationInFrames = 0;
+				var repeatLocationInSamples = 0;
+			
+				// insert sample data into master soundtrack buffer
+				// for every total repetition possible, we insert a frame's audio data into the master soundtrack buffer
+				for (var rep_h = 0; rep_h < repeatAmount; rep_h ++){					
+					
+					repeatLocationInSamples = repeatIntervalInSamples * rep_h;
+					if (repeatLocationInSamples > masterBufferData.length - totalSamplesInSound) {
+						break;
+					}
+					
+					for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i ++) {
+						masterBufferData[(audioLocationInSamples + repeatLocationInSamples) + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
+					}
+					
+					// define array that stores image numbers for use in timeline
+					repeatLocationInFrames = repeatIntervalInFrames * rep_h;
+					for (var rep_j = 0; rep_j < soundLengthInFrames; rep_j ++) {
+						if (frameLocation + repeatLocationInFrames + rep_j >= totalFrameCount) {
+							break;
+						}
+						timelineArray[(frameLocation + repeatLocationInFrames) + rep_j] = this.inum;
+					}
+				
+					let timelineRangeStart = $('timelineRangeStart').val();
+					let timelineRangeEnd = $('timelineRangeEnd').val();
+					let zoomSlider = $('#zoomSlider').val();
+					showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+				}
+			} else {
+				for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i ++) {
+					masterBufferData[audioLocationInSamples + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
+				}
+				
+				// define array that stores image numbers for use in timeline
+				for (var rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j ++) {
+					timelineArray[parseInt(frameLocation) + rep_j] = this.inum;
+				}
+
+				let timelineRangeStart = $('timelineRangeStart').val();
+				let timelineRangeEnd = $('timelineRangeEnd').val();
+				let zoomSlider = $('#zoomSlider').val();
+				showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+			}
+		}.bind(this), false);
+
+	}
+		
+	readFile (e2 : any) {
 		var filename01 = e2;
 		var fr = new FileReader();
-		fr.onload = this.imageHandler;
+		fr.onload = this.imageHandler.bind(this);
 		fr.readAsDataURL(filename01);
 	}
 	
-	this.imageHandler = function(e3) {
-		img.src = e3.target.result;
-		img.onload = function() {
-			can.height = img.height;
-			can.width = img.width;
-			cxt.drawImage(img, 0, 0);
+	imageHandler (e3 : any) {
+		this.img.src = e3.target.result;
+		this.img.onload = function() {
+			this.can.height = this.img.height;
+			this.can.width = this.img.width;
+			this.cxt.drawImage(this.img, 0, 0);
 			document.getElementById("canvases").style.display = "none";
-			bufferArray[inum] = makeABuffer(can, cxt);
+			bufferArray[this.inum] = makeABuffer(this.can, this.cxt);
 
-			buttonImages[inum] = document.createElement("img");
-			buttonImages[inum].id = "buttonImage-" + inum;
-			buttonImages[inum].src = img.src;
-			document.getElementById("button-" + inum).appendChild(buttonImages[inum]);
+			buttonImages[this.inum] = document.createElement("img");
+			buttonImages[this.inum].id = "buttonImage-" + this.inum;
+			buttonImages[this.inum].src = this.img.src;
+			document.getElementById("button-" + this.inum).appendChild(buttonImages[this.inum]);
 			
 			// popup button creation 
 			//document.getElementById("popupImage01").src = img.src;
 		}
 	}
-	
-	// click a canvas to hear its image
-	can.addEventListener('click', function() {
-		makeASound(bufferArray[inum]);
-	}, false);
-	
-	// click a button to sequence the image within a master buffer
-	currentButton.addEventListener('click', async function() {
-		var userFrameLocation = parseInt(await prompt( 'When do you want me to sound? (frame number)'  ));
-		var frameLocation = Math.min(Math.max(userFrameLocation, 0), totalFrameCount);
-		var audioLocationInSamples = Math.round(samplesPerFrame * frameLocation);
-		var userSoundLengthInFrames = parseInt(awaitprompt( 'How long should I sound? (in frames)'  ));
-		var soundLengthInFrames = Math.min(Math.max(userSoundLengthInFrames, 0), (totalFrameCount - frameLocation));
-		var totalSamplesInSound = Math.round(soundLengthInFrames * samplesPerFrame);
-		var masterBufferData = masterBuffer.getChannelData(0);
-		var framesAudioData = bufferArray[inum].getChannelData(0);
-		var repeatYesNo = await prompt( 'Should I repeat? (1 for yes, 0 for no)' );
-		
-		if (repeatYesNo == 1){					
-			var repeatIntervalInFrames = parseInt(await prompt( 'How many frames between each repetition?' ));
-			var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
-			var userRepeatAmount = parseInt(await prompt( 'How many times should I play?'  ));
-			var repeatAmount = Math.min(Math.max(userRepeatAmount, 0), (totalFrameCount/repeatIntervalInFrames));
-			var repeatLocationInFrames = 0;
-			var repeatLocationInSamples = 0;
-		
-			// insert sample data into master soundtrack buffer
-			// for every total repetition possible, we insert a frame's audio data into the master soundtrack buffer
-			for (var rep_h = 0; rep_h < repeatAmount; rep_h ++){					
-				
-				repeatLocationInSamples = repeatIntervalInSamples * rep_h;
-				if (repeatLocationInSamples > masterBufferData.length - totalSamplesInSound) {
-					break;
-				}
-				
-				for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i ++) {
-					masterBufferData[(audioLocationInSamples + repeatLocationInSamples) + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
-				}
-				
-				// define array that stores image numbers for use in timeline
-				repeatLocationInFrames = repeatIntervalInFrames * rep_h;
-				for (var rep_j = 0; rep_j < soundLengthInFrames; rep_j ++) {
-					if (frameLocation + repeatLocationInFrames + rep_j >= totalFrameCount) {
-						break;
-					}
-					timelineArray[(frameLocation + repeatLocationInFrames) + rep_j] = inum;
-				}
-			
-			showSoundtrackTimeline(document.getElementById('timelineRangeStart').value, document.getElementById('timelineRangeEnd').value, document.getElementById('zoomSlider').value);
-			}
-		} else {
-			for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i ++) {
-				masterBufferData[audioLocationInSamples + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
-			}
-			
-			// define array that stores image numbers for use in timeline
-			for (var rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j ++) {
-				timelineArray[parseInt(frameLocation) + rep_j] = inum;
-			}
-
-			showSoundtrackTimeline(document.getElementById('timelineRangeStart').value, document.getElementById('timelineRangeEnd').value, document.getElementById('zoomSlider').value);
-		}
-	}, false);
 }
 
-var makeABuffer = function(can01, cxt01) {
+var makeABuffer = function(can01 : HTMLCanvasElement, cxt01 : CanvasRenderingContext2D) {
 	var img_can = can01;
 	var img_cxt = cxt01;
 	var img_data = img_cxt.getImageData(0, 0, img_can.width, img_can.height);
@@ -312,7 +333,7 @@ var makeABuffer = function(can01, cxt01) {
 	return myArrayBuffer;
 }
 
-var getInterpolatedLuminanceForImage = function(dat, imgwidth, row_i, row_j, alpha) {
+var getInterpolatedLuminanceForImage = function(dat : Uint8ClampedArray, imgwidth : number, row_i : number, row_j : number, alpha : any) {
 	var L = 0;
 	var locationOfSoundtrack = imgwidth * 0.72; // determines location of optical soundtrack
 	for (var col_i = 0; col_i < imgwidth; col_i += 4) {
@@ -328,7 +349,7 @@ var getInterpolatedLuminanceForImage = function(dat, imgwidth, row_i, row_j, alp
 	return L;
 }
 
-var makeASound = function(buffer01) {	
+var makeASound = function(buffer01 : AudioBuffer) {	
 	var currentBuffer = buffer01;
 	var source01 = audioCtx.createBufferSource(); //actual audio buffer
 	source01.buffer = currentBuffer;
@@ -340,9 +361,9 @@ var makeASound = function(buffer01) {
 	source01.start();
 }
 
-var makeASound02 = async function(buffer01) {	
+var makeASound02 = async function(buffer01 : AudioBuffer) {	
 	var currentBuffer = buffer01;
-	var bufferLocationInFrames = await prompt('Play soundtrack from frame #:');
+	var bufferLocationInFrames = await eprompt('Play soundtrack from frame #:');
 	var bufferLocationInSeconds = bufferLocationInFrames / framerate;
 	var bufferTotalInSeconds = totalFrameCount / 24;
 	var source01 = audioCtx.createBufferSource(); //actual audio buffer
@@ -356,7 +377,7 @@ var makeASound02 = async function(buffer01) {
 }
 
 // begin timeline stuff
-var showSoundtrackTimeline = function(sliderValueStart, sliderValueEnd, zoomSliderValue) {
+var showSoundtrackTimeline = function(sliderValueStart : any, sliderValueEnd : any, zoomSliderValue : any) {
 	//***** need to make x number of canvases here to display timeline images pending the interactions with some gui object ***********
 	
 	var timelineStart = parseInt(sliderValueStart);
@@ -368,7 +389,7 @@ var showSoundtrackTimeline = function(sliderValueStart, sliderValueEnd, zoomSlid
 	for (var can_i = 0; can_i < totalTimelineDisplay; can_i ++) {
 		var timeline_i = can_i + timelineStart;
 		
-		var timelineCan = $("#canvasForTimeline" + timeline_i)[0];
+		var timelineCan = $("#canvasForTimeline" + timeline_i)[0] as HTMLCanvasElement;
 		var timelineCxt = timelineCan.getContext("2d");
 		
 		timelineCan.height = 1080 * 0.15;
@@ -379,7 +400,7 @@ var showSoundtrackTimeline = function(sliderValueStart, sliderValueEnd, zoomSlid
 		
 		timelineCxt.font="200px Verdana";
 		timelineCxt.fillStyle = "black";
-		timelineCxt.fillText(can_i + timelineStart, 2, 210);
+		timelineCxt.fillText(can_i + timelineStart + '', 2, 210);
 	}
 	
 	for (var can_j = 0; can_j <= totalFrameCount - 1; can_j ++) {
@@ -400,8 +421,8 @@ var keysForBuffers = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 113, 119, 101, 114
 var buttonZooming = 0.15;
 var buttonZoomAmount = 0.9;
 
-document.addEventListener("keypress", function(e) {
-	var keycode = e.keycode || e.which;
+document.addEventListener("keypress", function(e : KeyboardEvent) {
+	var keycode = e.keyCode || e.which;
 	
 	for (var key_i = 0; key_i < keysForBuffers.length; key_i ++) {
 		if (keycode == keysForBuffers[key_i]) {
@@ -412,10 +433,10 @@ document.addEventListener("keypress", function(e) {
 	
 	if (keycode == 43) {
 		buttonZooming /= buttonZoomAmount;
-		document.getElementById("imagebuttons").style.zoom = buttonZooming;
+		document.getElementById("imagebuttons").style.zoom = `${buttonZooming}`;
 	} else if (keycode == 45) {
 		buttonZooming *= buttonZoomAmount;
-		document.getElementById("imagebuttons").style.zoom = buttonZooming;
+		document.getElementById("imagebuttons").style.zoom = `${buttonZooming}`;
 	} else if (keycode == 32) {
 		makeASound02(masterBuffer);
 	}
@@ -442,7 +463,7 @@ var createTextFile = function() {
 	var directoryName = path.dirname(myDirectory);
 	console.log(directoryName);
 	console.log(textForTextFile);
-	fs.writeFile( directoryName  + "/AEscriptFromImageToSoundApp.txt", textForTextFile, function(err) {
+	fs.writeFile( directoryName  + "/AEscriptFromImageToSoundApp.txt", textForTextFile, function ( err : Error ) {
 		if (err) {
 			alert("error");
 			console.log(err);
@@ -507,7 +528,7 @@ var createTextFile = function() {
 // end nw-contextmenu
 
 // function for handling imported aftereffects script and creating a sequence from past scripts....string parsing/formatting stuff
-var importAfterEffectsScript = function(scriptImportText) {
+var importAfterEffectsScript = function(scriptImportText : string) {
 	// get text from previous sequence
 	var pastedScript = scriptImportText;
 	// find beginning of previous script's timeline
@@ -528,17 +549,20 @@ var importAfterEffectsScript = function(scriptImportText) {
 		timelineArray[i] = importedTimelineArrayOfNumbers[i];
 	}
 	
-	showSoundtrackTimeline(document.getElementById('timelineRangeStart').value, document.getElementById('timelineRangeEnd').value, document.getElementById('zoomSlider').value);
+	let timelineRangeStart = $('timelineRangeStart').val();
+	let timelineRangeEnd = $('timelineRangeEnd').val();
+	let zoomSlider = $('#zoomSlider').val();
+	showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
 
 	// update timeline values, then create a for loop that goes through our new timeline, assigning image audio data to masterBufferData...this will make it so that we have to assign a totalFrameCount equal to the frame count for the imported script...otherwise, we'll get indexoutofrange errors on either side....
 	
-	for ( j = 0; j < importedTimelineLength; j++) {
+	for ( var j = 0; j < importedTimelineLength; j++) {
 		// create an array that stores the master buffer and current frame's audio data
 		var masterBufferData = masterBuffer.getChannelData(0);
 		var framesAudioData = bufferArray[ timelineArray[j] ].getChannelData(0);
 		var framesLengthInSamples = framesAudioData.length;
 		// create a for-loop that writes the current frame's audio data to the master buffer (masterBufferData) in the correct place
-		for ( k = 0; k < framesLengthInSamples; k++) {
+		for ( var k = 0; k < framesLengthInSamples; k++) {
 			masterBufferData[(j * framesLengthInSamples) + k] = framesAudioData[k];
 		}		
 	}
@@ -546,8 +570,23 @@ var importAfterEffectsScript = function(scriptImportText) {
 
 (function () {
 	$('#fileUpload').on('change', function () {
-		loadingObjects(this); 
-		document.getElementById('fileUpload').disabled = 'disabled'; 
-		document.getElementById('exportButtons').style.display = 'initial';
+		var el = $(this)[0] as HTMLInputElement;
+		loadingObjects(el); 
+		$('#fileUpload').attr('disabled', 'disabled'); 
+		$('#exportButtons').css('display', 'initial');
+	});
+
+	$('#timelineRangeStart').on('change', function () {
+		let timelineRangeStart = $('timelineRangeStart').val();
+		let timelineRangeEnd = $('timelineRangeEnd').val();
+		let zoomSlider = $('#zoomSlider').val();
+		showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+	});
+
+	$('#timelineRangeEnd').on('change', function () {
+		let timelineRangeStart = $('timelineRangeStart').val();
+		let timelineRangeEnd = $('timelineRangeEnd').val();
+		let zoomSlider = $('#zoomSlider').val();
+		showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
 	});
 })()

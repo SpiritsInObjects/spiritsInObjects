@@ -1,1 +1,1 @@
-declare module 'menu';
+declare module 'menu.js';

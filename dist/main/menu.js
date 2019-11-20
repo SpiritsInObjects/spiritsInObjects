@@ -1,4 +1,5 @@
 'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
 const path = require('path');
 const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
@@ -153,5 +154,9 @@ if (is.development) {
         submenu: debugSubmenu
     });
 }
-module.exports = Menu.buildFromTemplate(template);
+function createMenu() {
+    return Menu.buildFromTemplate(template);
+}
+exports.createMenu = createMenu;
+module.exports.createMenu = createMenu;
 //# sourceMappingURL=menu.js.map

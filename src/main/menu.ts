@@ -173,4 +173,8 @@ if (is.development) {
 	});
 }
 
-module.exports = Menu.buildFromTemplate(template);
+export function createMenu () {
+	return Menu.buildFromTemplate(template);
+}
+
+module.exports.createMenu = createMenu;

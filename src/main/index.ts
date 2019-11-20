@@ -9,7 +9,7 @@ import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
 //import config from './config';
-import menu from 'menu';
+const { createMenu } = require('./menu.js');
 
 unhandled();
 debug();
@@ -86,6 +86,7 @@ app.on('activate', async () => {
 });
 
 (async () => {
+	const menu = createMenu();
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();
