@@ -1,16 +1,25 @@
+interface Window { 
+  requestFileSystem?: any; 
+  webkitRequestFileSystem?: any;
+  resolveLocalFileSystemURL?: any;
+  webkitResolveLocalFileSystemURL?: any;
+}
+
+declare const FileError : any;
+declare const TEMPORARY : any;
 
 window.requestFileSystem = window.requestFileSystem ||
                            window.webkitRequestFileSystem;
 window.resolveLocalFileSystemURL = window.webkitResolveLocalFileSystemURL ||
-    window.webkitResolveLocalFileSystemURL;
+    window.webkitResolveLocalFileSystemURL; //returns the same method?
 
-var fs = null;
-var cwd = null;
+var fs : any = null;
+var cwd : any = null;
 var DONE_MSG = 'Donezo';
 var NOT_IMG_MSG = 'One or more files is not an image.';
 var footer = document.querySelector('footer');
 
-function setLoadingTxt(obj) {
+function setLoadingTxt (obj : any) {
   var el = document.querySelector('aside');
   if (obj && obj.txt) {
     var stayOpen = obj.stayOpen || false;
@@ -32,9 +41,9 @@ function setLoadingTxt(obj) {
   }
 }
 
-function writeFile(file, dirEntry, callback) {
-  dirEntry.getFile(file.name, {create: true}, function(fileEntry) {
-    fileEntry.createWriter(function(writer) {
+function writeFile(file : File, dirEntry : any, callback : Function) {
+  dirEntry.getFile(file.name, {create: true}, function(fileEntry : any) {
+    fileEntry.createWriter(function(writer : any) {
       writer.onwriteend = callback;
       writer.onerror = callback;
       writer.write(file);
@@ -42,7 +51,7 @@ function writeFile(file, dirEntry, callback) {
   }, onError);
 }
 
-function onError(e) {
+function onError(e : any) {
   switch (e.code) {
     case FileError.INVALID_MODIFICATION_ERR:
       setLoadingTxt({
@@ -56,17 +65,17 @@ function onError(e) {
   }
 }
 
-function toArray(list) {
+function toArray(list : any[]) {
   return Array.prototype.slice.call(list || [], 0);
 }
 
-function readDirectory(dirEntry, callback) {
+function readDirectory(dirEntry : any, callback : Function) {
   var dirReader = dirEntry.createReader();
-  var entries = [];
+  var entries : any[] = [];
 
   // Call the reader.readEntries() until no more results are returned.
   var readEntries = function() {
-     dirReader.readEntries (function(results) {
+     dirReader.readEntries (function(results : any) {
       if (!results.length) {
         callback(entries);
       } else {
@@ -79,9 +88,9 @@ function readDirectory(dirEntry, callback) {
   readEntries(); // Start reading dirs.
 }
 
-function getEntry(fullPath, callback) {
+function getEntry(fullPath : string, callback : Function) {
   var fsUrl = fs.root.toURL() + fullPath;
-  window.resolveLocalFileSystemURL(fsUrl, function(entry) {
+  window.resolveLocalFileSystemURL(fsUrl, function(entry : any) {
     if (entry.isDirectory) {
       cwd = entry;
     }
@@ -89,7 +98,7 @@ function getEntry(fullPath, callback) {
   });
 }
 
-function onThumbnailClick(e) {
+function onThumbnailClick(e : any) {
   var el = e.target.parentElement;
 
   if (el.tagName == 'FOOTER') {
@@ -101,22 +110,22 @@ function onThumbnailClick(e) {
   if (isDirectory) {
     getEntry(el.dataset.fullPath, renderImages);
   } else {
-    getEntry(el.dataset.fullPath, function(entry) {
+    getEntry(el.dataset.fullPath, function(entry : any) {
       window.open(entry.toURL());
     });
   }
 }
 
-function onClose(e) {
+function onClose(e : any) {
   e.stopPropagation();
 
   var el = e.target.parentElement;
 
   el.classList.add('slim');
 
-  var onTransitionEnd = function(e) {
+  var onTransitionEnd = function(e : any) {
     if (e.propertyName == 'width') {
-      getEntry(el.dataset.fullPath, function(entry) {
+      getEntry(el.dataset.fullPath, function(entry : any) {
         el.parentElement.removeChild(el);
 
         entry.isDirectory ? entry.removeRecursively(function() {}, onError) :
@@ -133,8 +142,8 @@ function onClose(e) {
   el.addEventListener('oTransitionEnd', onTransitionEnd);
 }
 
-function renderImages(dirEntry) {
-  readDirectory(dirEntry, function(entries) {
+function renderImages(dirEntry : any) {
+  readDirectory(dirEntry, function(entries : any) {
     // Handle no files case.
     if (!entries.length) {
       footer.textContent = 'Add some files chief!';
@@ -152,7 +161,7 @@ function renderImages(dirEntry) {
     span.addEventListener('click', onThumbnailClick);
     frag.appendChild(span);
 
-    entries.forEach(function(entry, i) {
+    entries.forEach(function(entry : any) {
       var div = document.createElement('div');
 
       div.dataset.fullPath = entry.fullPath;
@@ -163,7 +172,7 @@ function renderImages(dirEntry) {
         div.dataset.isDirectory = 'true';
       } else {
         //img.src = window.URL.createObjectURL(files[i]); // Equivalent to item.getAsFile().
-        entry.file(function(f) {
+        entry.file(function(f : File) {
           img.src = f.type.match('^image/') ? entry.toURL() : 'file.png';
         }, onError);
       }
@@ -192,7 +201,7 @@ function renderImages(dirEntry) {
   });
 }
 
-function onChange(e) {
+function onChange(e : any) {
   e.stopPropagation();
   e.preventDefault();
 
@@ -205,9 +214,9 @@ function onChange(e) {
     var files = e.target.files;
     var numWritten = 0;
 
-    [].forEach.call(files, function(f, i) {
+    [].forEach.call(files, function(f : File) {
       if (f.type.match('^image/')) {
-        writeFile(f, cwd, function(e) {
+        writeFile(f, cwd, function() {
           if (++numWritten) {
             setLoadingTxt({txt: DONE_MSG + ' writing ' + files.length + ' files.'});
             renderImages(cwd);
@@ -220,7 +229,7 @@ function onChange(e) {
     return;
   }
 
-  [].forEach.call(entries, function(entry) {
+  [].forEach.call(entries, function(entry : any) {
 
     if (entry.isDirectory) {
       setLoadingTxt({
@@ -235,7 +244,7 @@ function onChange(e) {
     }
 
     // Copy entry over to the local filesystem.
-    entry.copyTo(cwd, null, function(copiedEntry) {
+    entry.copyTo(cwd, null, function() {
       setLoadingTxt({txt: DONE_MSG});
       renderImages(cwd);
     }, onError);
@@ -243,7 +252,7 @@ function onChange(e) {
   });
 }
 
-function onDrop(e) {
+function onDrop(e : DragEvent) {
   e.preventDefault();
   e.stopPropagation();
 
@@ -264,14 +273,14 @@ function onDrop(e) {
       });
 
       // Copy the dropped DirectoryEntry over to our local filesystem.
-      entry.copyTo(cwd, null, function(copiedEntry) {
+      entry.copyTo(cwd, null, function() {
         setLoadingTxt({txt: DONE_MSG});
         renderImages(cwd);
       }, onError);  
     } else {
       if (entry.isFile && files[i].type.match('^image/')) {
         // Copy the dropped entry into local filesystem.
-        entry.copyTo(cwd, null, function(copiedEntry) {
+        entry.copyTo(cwd, null, function() {
           setLoadingTxt({txt: DONE_MSG});
           renderImages(cwd);
         }, onError); 
@@ -289,25 +298,25 @@ function init() {
 
   dropZone.addEventListener('drop', onDrop);
 
-  dropZone.addEventListener('dragover', function(e) {
+  dropZone.addEventListener('dragover', function(e : Event) {
     e.preventDefault(); // Necessary. Allows us to drop.
   });
 
-  dropZone.addEventListener('dragenter', function(e) {
-    e.target.classList.add('active');
+  dropZone.addEventListener('dragenter', function(e : Event) {
+    (e.target as HTMLElement).classList.add('active');
   });
 
-  dropZone.addEventListener('dragleave', function(e) {
-    e.target.classList.remove('active');
+  dropZone.addEventListener('dragleave', function(e : Event) {
+    (e.target as HTMLElement).classList.remove('active');
   });
 
-  window.addEventListener('keydown', function(e) {
+  window.addEventListener('keydown', function(e : KeyboardEvent) {
     if (e.keyCode == 27) { // ESC
       document.querySelector('details').open = false;
     }
   });
 
-  window.requestFileSystem(TEMPORARY, 1024 * 1204, function(fileSystem) {
+  window.requestFileSystem(TEMPORARY, 1024 * 1204, function(fileSystem : any) {
     fs = fileSystem;
     cwd = fs.root;
     renderImages(cwd);

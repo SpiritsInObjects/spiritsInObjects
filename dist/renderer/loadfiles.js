@@ -1,7 +1,7 @@
 window.requestFileSystem = window.requestFileSystem ||
     window.webkitRequestFileSystem;
 window.resolveLocalFileSystemURL = window.webkitResolveLocalFileSystemURL ||
-    window.webkitResolveLocalFileSystemURL;
+    window.webkitResolveLocalFileSystemURL; //returns the same method?
 var fs = null;
 var cwd = null;
 var DONE_MSG = 'Donezo';
@@ -128,7 +128,7 @@ function renderImages(dirEntry) {
         span.title = 'Move up a directory;';
         span.addEventListener('click', onThumbnailClick);
         frag.appendChild(span);
-        entries.forEach(function (entry, i) {
+        entries.forEach(function (entry) {
             var div = document.createElement('div');
             div.dataset.fullPath = entry.fullPath;
             var img = new Image();
@@ -170,9 +170,9 @@ function onChange(e) {
     if (!entries.length) {
         var files = e.target.files;
         var numWritten = 0;
-        [].forEach.call(files, function (f, i) {
+        [].forEach.call(files, function (f) {
             if (f.type.match('^image/')) {
-                writeFile(f, cwd, function (e) {
+                writeFile(f, cwd, function () {
                     if (++numWritten) {
                         setLoadingTxt({ txt: DONE_MSG + ' writing ' + files.length + ' files.' });
                         renderImages(cwd);
@@ -199,7 +199,7 @@ function onChange(e) {
             });
         }
         // Copy entry over to the local filesystem.
-        entry.copyTo(cwd, null, function (copiedEntry) {
+        entry.copyTo(cwd, null, function () {
             setLoadingTxt({ txt: DONE_MSG });
             renderImages(cwd);
         }, onError);
@@ -222,7 +222,7 @@ function onDrop(e) {
                 stayOpen: true
             });
             // Copy the dropped DirectoryEntry over to our local filesystem.
-            entry.copyTo(cwd, null, function (copiedEntry) {
+            entry.copyTo(cwd, null, function () {
                 setLoadingTxt({ txt: DONE_MSG });
                 renderImages(cwd);
             }, onError);
@@ -230,7 +230,7 @@ function onDrop(e) {
         else {
             if (entry.isFile && files[i].type.match('^image/')) {
                 // Copy the dropped entry into local filesystem.
-                entry.copyTo(cwd, null, function (copiedEntry) {
+                entry.copyTo(cwd, null, function () {
                     setLoadingTxt({ txt: DONE_MSG });
                     renderImages(cwd);
                 }, onError);
