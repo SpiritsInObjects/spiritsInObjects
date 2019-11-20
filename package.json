@@ -6,6 +6,26 @@
   "directories": {
     "doc": "docs"
   },
+  "build": {
+    "appId": "your.id",
+    "mac": {
+      "category": "public.app-category.video"
+    },
+    "files": [
+      "dist/contrib/jquery-1.11.3.min.js",
+      "dist/contrib/jquery.mobile-1.4.5.min.css",
+      "dist/contrib/jquery.mobile-1.4.5.min.js",
+      "dist/css/style.css",
+      "dist/main/index.js",
+      "dist/main/menu.js",
+      "dist/main/config.js",
+      "dist/renderer/index.js",
+      "dist/renderer/phillcorder.js",
+      "dist/renderer/recorder.js",
+      "dist/renderer/recorderWorker.js",
+      "dist/views/index.html"
+    ]
+  },
   "scripts": {
     "start": "./node_modules/.bin/electron dist/main",
     "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main -d",
