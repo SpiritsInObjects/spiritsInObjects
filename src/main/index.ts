@@ -1,6 +1,5 @@
-/*eslint node:true */
-
 'use strict';
+
 import { join as pathJoin } from 'path';
 import {app, BrowserWindow, Menu} from 'electron';
 /// const {autoUpdater} = require('electron-updater');

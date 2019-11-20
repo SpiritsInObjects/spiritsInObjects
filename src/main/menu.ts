@@ -1,5 +1,3 @@
-/*eslint node:true */
-
 'use strict';
 
 const path = require('path');
