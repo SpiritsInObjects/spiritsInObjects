@@ -4,7 +4,7 @@ interface Window { Recorder: any; }
 
 (function(window){
 
-  var WORKER_PATH = '../contrib/recorderWorker.js';
+  var WORKER_PATH = './recorderWorker.js';
 
   var Recorder = function (source : any, cfg: any) {
     var config = cfg || {};

@@ -4,7 +4,7 @@ declare const masterBuffer: AudioBuffer;
 
 var createDownloadLink = function (buffer : AudioBuffer) {
     
-    var worker = new Worker('../contrib/recorderWorker.js');
+    var worker = new Worker('./recorderWorker.js');
     // get it started and send some config data...
     worker.postMessage({
       command: 'init',
