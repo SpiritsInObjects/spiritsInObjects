@@ -1,6 +1,6 @@
 {
   "name": "spiritsinobjects",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Application for image sonification and sequencing",
   "main": "main.js",
   "directories": {
@@ -26,8 +26,8 @@
     "url": "git+https://github.com/sixteenmillimeter/spiritsInObjects.git"
   },
   "author": {
-    "name" : "Carlos Dominguez",
-    "url" : "https://github.com/carlosdominguez"
+    "name": "Carlos Dominguez",
+    "url": "https://github.com/carlosdominguez"
   },
   "contributors": [
     {
