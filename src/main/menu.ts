@@ -1,6 +1,6 @@
 'use strict';
 
-const path = require('path');
+//const path = require('path'); //need for icon
 const {app, Menu, shell} = require('electron');
 const {
 	is,
