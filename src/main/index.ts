@@ -12,8 +12,11 @@ import contextMenu from 'electron-context-menu';
 const { createMenu } = require('./menu.js');
 
 unhandled();
-debug();
 contextMenu();
+
+if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
+	debug();
+}
 
 // Note: Must match `build.appId` in package.json
 app.setAppUserModelId('edu.dartmouth.spiritsinobjects');

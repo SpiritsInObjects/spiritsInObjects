@@ -14,10 +14,12 @@ const electron_context_menu_1 = __importDefault(require("electron-context-menu")
 //import config from './config';
 const { createMenu } = require('./menu.js');
 electron_unhandled_1.default();
-electron_debug_1.default();
 electron_context_menu_1.default();
+if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
+    electron_debug_1.default();
+}
 // Note: Must match `build.appId` in package.json
-electron_1.app.setAppUserModelId('com.company.AppName');
+electron_1.app.setAppUserModelId('edu.dartmouth.spiritsinobjects');
 // Uncomment this before publishing your first version.
 // It's commented out as it throws an error if there are no published versions.
 // if (!is.development) {
