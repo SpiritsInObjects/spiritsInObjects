@@ -164,7 +164,7 @@ var loadingObjects = async function (el : HTMLInputElement) {
 		
 		var timelineCan = $("#canvasForTimeline" + can_i)[0] as HTMLCanvasElement;
 		timelineCan.style.border = "black 1px solid";
-		var timelinectx = timelineCan.getContext("2d");
+		//var timelinectx = timelineCan.getContext("2d");
 		
 		timelineCan.height = 1080 * 0.15;
 		timelineCan.width = 1920 * 0.15;
