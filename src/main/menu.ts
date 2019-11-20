@@ -1,4 +1,7 @@
+/*eslint node:true */
+
 'use strict';
+
 const path = require('path');
 const {app, Menu, shell} = require('electron');
 const {

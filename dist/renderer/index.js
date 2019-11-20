@@ -51,15 +51,15 @@ var loadingObjects = async function (el) {
                 document.getElementById("imagebuttons").appendChild(buttons[k]);
                 $('#imagebuttons').css('zoom', 0.15);
                 var can = $("#mycanvas-" + k)[0];
-                var cxt = can.getContext("2d");
+                var ctx = can.getContext("2d");
                 var currentButton = $("#button-" + k)[0];
                 can.height = 1080;
                 can.width = 1920;
-                cxt.rect(0, 0, 1920, 1080);
-                cxt.fillStyle = "rgb(128, 128, 128)";
-                cxt.fill();
+                ctx.rect(0, 0, 1920, 1080);
+                ctx.fillStyle = "rgb(128, 128, 128)";
+                ctx.fill();
                 document.getElementById("canvases").style.display = "none";
-                bufferArray[k] = makeABuffer(can, cxt);
+                bufferArray[k] = makeABuffer(can, ctx);
                 buttonImages[k] = document.createElement("img");
                 buttonImages[k].id = "buttonImage-" + k;
                 var can2 = document.getElementById("mycanvas-" + k);
@@ -138,7 +138,7 @@ var loadingObjects = async function (el) {
         // }
         var timelineCan = $("#canvasForTimeline" + can_i)[0];
         timelineCan.style.border = "black 1px solid";
-        var timelineCxt = timelineCan.getContext("2d");
+        var timelinectx = timelineCan.getContext("2d");
         timelineCan.height = 1080 * 0.15;
         timelineCan.width = 1920 * 0.15;
     }
@@ -237,9 +237,9 @@ class canSon {
         this.img.onload = function () {
             this.can.height = this.img.height;
             this.can.width = this.img.width;
-            this.cxt.drawImage(this.img, 0, 0);
+            this.ctx.drawImage(this.img, 0, 0);
             document.getElementById("canvases").style.display = "none";
-            bufferArray[this.inum] = makeABuffer(this.can, this.cxt);
+            bufferArray[this.inum] = makeABuffer(this.can, this.ctx);
             buttonImages[this.inum] = document.createElement("img");
             buttonImages[this.inum].id = "buttonImage-" + this.inum;
             buttonImages[this.inum].src = this.img.src;
@@ -249,10 +249,10 @@ class canSon {
         };
     }
 }
-var makeABuffer = function (can01, cxt01) {
+var makeABuffer = function (can01, ctx01) {
     var img_can = can01;
-    var img_cxt = cxt01;
-    var img_data = img_cxt.getImageData(0, 0, img_can.width, img_can.height);
+    var img_ctx = ctx01;
+    var img_data = img_ctx.getImageData(0, 0, img_can.width, img_can.height);
     var myArrayBuffer = audioCtx.createBuffer(1, samplesPerFrame, samprate); //holds image to sound data
     //fade variables
     var fadeLengthInSamples = 30.0;
@@ -327,14 +327,14 @@ var showSoundtrackTimeline = function (sliderValueStart, sliderValueEnd, zoomSli
     for (var can_i = 0; can_i < totalTimelineDisplay; can_i++) {
         var timeline_i = can_i + timelineStart;
         var timelineCan = $("#canvasForTimeline" + timeline_i)[0];
-        var timelineCxt = timelineCan.getContext("2d");
+        var timelinectx = timelineCan.getContext("2d");
         timelineCan.height = 1080 * 0.15;
         timelineCan.width = 1920 * 0.15;
-        timelineCxt.scale(0.15, 0.15);
-        timelineCxt.drawImage(myCanvasArray[timelineArray[can_i + timelineStart]], 0, 0);
-        timelineCxt.font = "200px Verdana";
-        timelineCxt.fillStyle = "black";
-        timelineCxt.fillText(can_i + timelineStart + '', 2, 210);
+        timelinectx.scale(0.15, 0.15);
+        timelinectx.drawImage(myCanvasArray[timelineArray[can_i + timelineStart]], 0, 0);
+        timelinectx.font = "200px Verdana";
+        timelinectx.fillStyle = "black";
+        timelinectx.fillText(can_i + timelineStart + '', 2, 210);
     }
     for (var can_j = 0; can_j <= totalFrameCount - 1; can_j++) {
         if (can_j >= timelineStart && can_j <= timelineEnd) {

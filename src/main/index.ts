@@ -1,4 +1,4 @@
-'use strict';
+/*eslint node:true */
 
 'use strict';
 import { join as pathJoin } from 'path';
