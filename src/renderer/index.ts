@@ -421,7 +421,7 @@ var keysForBuffers = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 113, 119, 101, 114
 var buttonZooming = 0.15;
 var buttonZoomAmount = 0.9;
 
-document.addEventListener("keypress", function(e : KeyboardEvent) {
+var onKeypress = function(e : KeyboardEvent) {
 	var keycode = e.keyCode || e.which;
 	
 	for (var key_i = 0; key_i < keysForBuffers.length; key_i ++) {
@@ -440,7 +440,7 @@ document.addEventListener("keypress", function(e : KeyboardEvent) {
 	} else if (keycode == 32) {
 		makeASound02(masterBuffer);
 	}
-}, false);
+}
 // end keyboard stuff
 
 // generating the aftereffects expressions script...still undecided whether to generate the code in application or create a separate text file...this does both anyways
@@ -569,6 +569,9 @@ var importAfterEffectsScript = function(scriptImportText : string) {
 };
 
 (function () {
+	
+	document.addEventListener('keypress', onKeypress, false);
+
 	$('#fileUpload').on('change', function () {
 		var el = $(this)[0] as HTMLInputElement;
 		loadingObjects(el); 

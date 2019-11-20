@@ -352,7 +352,7 @@ var showSoundtrackTimeline = function (sliderValueStart, sliderValueEnd, zoomSli
 var keysForBuffers = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 113, 119, 101, 114, 116, 121, 117, 105, 111, 112, 97, 115, 100, 102, 103, 104, 106, 107, 108, 59, 122, 120, 99, 118, 98, 110, 109, 44, 46, 47];
 var buttonZooming = 0.15;
 var buttonZoomAmount = 0.9;
-document.addEventListener("keypress", function (e) {
+var onKeypress = function (e) {
     var keycode = e.keyCode || e.which;
     for (var key_i = 0; key_i < keysForBuffers.length; key_i++) {
         if (keycode == keysForBuffers[key_i]) {
@@ -371,7 +371,7 @@ document.addEventListener("keypress", function (e) {
     else if (keycode == 32) {
         makeASound02(masterBuffer);
     }
-}, false);
+};
 // end keyboard stuff
 // generating the aftereffects expressions script...still undecided whether to generate the code in application or create a separate text file...this does both anyways
 var afterEffectsScript = document.createElement("p");
@@ -489,6 +489,7 @@ var importAfterEffectsScript = function (scriptImportText) {
     }
 };
 (function () {
+    document.addEventListener('keypress', onKeypress, false);
     $('#fileUpload').on('change', function () {
         var el = $(this)[0];
         loadingObjects(el);
