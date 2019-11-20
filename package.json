@@ -2,7 +2,7 @@
   "name": "spiritsinobjects",
   "version": "0.2.4",
   "description": "Application for image sonification and sequencing",
-  "main": "main.js",
+  "main": "dist/main/index.js",
   "directories": {
     "doc": "docs"
   },
