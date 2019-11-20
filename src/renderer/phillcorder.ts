@@ -1,4 +1,8 @@
-var createDownloadLink = function (buffer) {
+declare const samprate: any;
+declare const Recorder: any;
+declare const masterBuffer: AudioBuffer;
+
+var createDownloadLink = function (buffer : AudioBuffer) {
     
     var worker = new Worker('../contrib/recorderWorker.js');
     // get it started and send some config data...
@@ -28,4 +32,10 @@ var createDownloadLink = function (buffer) {
     worker.onmessage = function(e){
         Recorder.forceDownload(e.data, 'SomeFileName.wav');
     };
-}
+};
+
+(function () {
+  $('#createDownload').on('click', function () {
+		createDownloadLink(masterBuffer);
+	});
+})()
