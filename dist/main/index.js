@@ -36,8 +36,8 @@ const createMainWindow = async () => {
     const win = new electron_1.BrowserWindow({
         title: electron_1.app.getName(),
         show: false,
-        width: 600,
-        height: 400,
+        width: 1000,
+        height: 800,
         webPreferences: {
             nodeIntegration: true
         }
