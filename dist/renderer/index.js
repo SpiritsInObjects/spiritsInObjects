@@ -183,6 +183,9 @@ class canSon {
             var masterBufferData = masterBuffer.getChannelData(0);
             var framesAudioData = bufferArray[this.inum].getChannelData(0);
             var repeatYesNo = await eprompt('Should I repeat? (1 for yes, 0 for no)');
+            let rep_i;
+            let rep_j;
+            let rep_h;
             if (repeatYesNo == 1) {
                 var repeatIntervalInFrames = parseInt(await eprompt('How many frames between each repetition?'));
                 var repeatIntervalInSamples = Math.round(samplesPerFrame * repeatIntervalInFrames);
@@ -192,17 +195,17 @@ class canSon {
                 var repeatLocationInSamples = 0;
                 // insert sample data into master soundtrack buffer
                 // for every total repetition possible, we insert a frame's audio data into the master soundtrack buffer
-                for (var rep_h = 0; rep_h < repeatAmount; rep_h++) {
+                for (rep_h = 0; rep_h < repeatAmount; rep_h++) {
                     repeatLocationInSamples = repeatIntervalInSamples * rep_h;
                     if (repeatLocationInSamples > masterBufferData.length - totalSamplesInSound) {
                         break;
                     }
-                    for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
+                    for (rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
                         masterBufferData[(audioLocationInSamples + repeatLocationInSamples) + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
                     }
                     // define array that stores image numbers for use in timeline
                     repeatLocationInFrames = repeatIntervalInFrames * rep_h;
-                    for (var rep_j = 0; rep_j < soundLengthInFrames; rep_j++) {
+                    for (rep_j = 0; rep_j < soundLengthInFrames; rep_j++) {
                         if (frameLocation + repeatLocationInFrames + rep_j >= totalFrameCount) {
                             break;
                         }
@@ -215,11 +218,11 @@ class canSon {
                 }
             }
             else {
-                for (var rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
+                for (rep_i = 0; rep_i < totalSamplesInSound; rep_i++) {
                     masterBufferData[audioLocationInSamples + rep_i] = framesAudioData[rep_i % Math.floor(samplesPerFrame)];
                 }
                 // define array that stores image numbers for use in timeline
-                for (var rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j++) {
+                for (rep_j = 0; rep_j < parseInt(soundLengthInFrames); rep_j++) {
                     timelineArray[parseInt(frameLocation) + rep_j] = this.inum;
                 }
                 let timelineRangeStart = $('timelineRangeStart').val();
