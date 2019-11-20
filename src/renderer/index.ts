@@ -536,7 +536,7 @@ var createTextFile = function() {
 // end nw-contextmenu
 
 // function for handling imported aftereffects script and creating a sequence from past scripts....string parsing/formatting stuff
-var importAfterEffectsScript = function(scriptImportText : string) {
+var importAfterEffectsScript = function(scriptImportText : any) {
 	// get text from previous sequence
 	var pastedScript = scriptImportText;
 	// find beginning of previous script's timeline
@@ -577,7 +577,6 @@ var importAfterEffectsScript = function(scriptImportText : string) {
 };
 
 (function () {
-	
 	document.addEventListener('keypress', onKeypress, false);
 
 	$('#fileUpload').on('change', function () {
@@ -599,5 +598,28 @@ var importAfterEffectsScript = function(scriptImportText : string) {
 		let timelineRangeEnd = $('timelineRangeEnd').val();
 		let zoomSlider = $('#zoomSlider').val();
 		showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+	});
+
+	$('#zoomSlider').on('change', function () {
+		let timelineRangeStart = $('timelineRangeStart').val();
+		let timelineRangeEnd = $('timelineRangeEnd').val();
+		let zoomSlider = $('#zoomSlider').val();
+		showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+	});
+
+	$('#frameCountButton').on('click', function () {
+		let count = $('#frameCountInput').val();
+		getTotalFrameCountOfSoundtrack(count); 
+		$('textinput-hide').attr('disabled', 'disabled'); 
+		$('frameCountButton').attr('disabled', 'disabled');
+	});
+
+	$('#importAfterEffectsBtn').on('click', function () {
+		let scriptValue = $('#textareaForScript').val();
+		importAfterEffectsScript(scriptValue);
+	})
+
+	$('#createText').on('click', function () {
+		createTextFile();
 	});
 })()

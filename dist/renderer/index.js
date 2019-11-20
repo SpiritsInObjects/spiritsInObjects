@@ -514,4 +514,23 @@ var importAfterEffectsScript = function (scriptImportText) {
         let zoomSlider = $('#zoomSlider').val();
         showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
     });
+    $('#zoomSlider').on('change', function () {
+        let timelineRangeStart = $('timelineRangeStart').val();
+        let timelineRangeEnd = $('timelineRangeEnd').val();
+        let zoomSlider = $('#zoomSlider').val();
+        showSoundtrackTimeline(timelineRangeStart, timelineRangeEnd, zoomSlider);
+    });
+    $('#frameCountButton').on('click', function () {
+        let count = $('#frameCountInput').val();
+        getTotalFrameCountOfSoundtrack(count);
+        $('textinput-hide').attr('disabled', 'disabled');
+        $('frameCountButton').attr('disabled', 'disabled');
+    });
+    $('#importAfterEffectsBtn').on('click', function () {
+        let scriptValue = $('#textareaForScript').val();
+        importAfterEffectsScript(scriptValue);
+    });
+    $('#createText').on('click', function () {
+        createTextFile();
+    });
 })();
