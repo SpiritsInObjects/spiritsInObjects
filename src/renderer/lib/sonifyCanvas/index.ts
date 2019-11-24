@@ -21,8 +21,10 @@ function sonifyCanvas (audioCtx : AudioContext, canvas : HTMLCanvasElement, ctx 
 
     let fadeLengthInSamples = 30.0;
     let fadeIncrement = 1.0 / fadeLengthInSamples;
-
-    for (let sample : number = 0; sample < audioBuffer.length; sample ++) {
+    let sample : number = 0;
+    let len : number =  audioBuffer.length
+    
+    for (sample = 0; sample < len; sample++) {
         scaledStart = Math.floor(sample * heightMultiplier);
         scaledEnd   = scaledStart + 1;
         alpha = (sample * heightMultiplier) - scaledStart;
@@ -45,13 +47,15 @@ function getRowLuminance (data : Uint8ClampedArray, width : number, scaledStart 
     let luminance : number = 0;
     let L1 : number;
     let L2 : number;
+    let scaledStartWidth : number = scaledStart * width;
+    let scaledEndWidth: number = scaledEnd * width;
     // only calculate luma if the current column is within the soundtrack portion of the image
     for (let i : number = 0; i < width; i += 4) {
         // convert the RGB to HSL (we want L)
         if (i < locationOfSoundtrack) continue;
         
-        L1 = RED_MULTIPLIER * data[scaledStart * width + i * 4] +  GREEN_MULTIPLIER * data[scaledStart * width + i * 4 + 1] +  BLUE_MULTIPLIER * data[scaledStart * width + i * 4 + 2];
-        L2  = RED_MULTIPLIER * data[scaledEnd * width + i * 4] +  GREEN_MULTIPLIER * data[scaledEnd * width + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledEnd * width + i * 4 + 2];
+        L1 = RED_MULTIPLIER * data[scaledStartWidth + i * 4] +  GREEN_MULTIPLIER * data[scaledStartWidth + i * 4 + 1] +  BLUE_MULTIPLIER * data[scaledStartWidth + i * 4 + 2];
+        L2  = RED_MULTIPLIER * data[scaledEndWidth + i * 4] +  GREEN_MULTIPLIER * data[scaledEndWidth + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledEndWidth + i * 4 + 2];
         luminance += ( (1 - alpha) * L1 + alpha * L2 )  / 128.0 - 1.0;
     }
     luminance = luminance / (width / 4.0);

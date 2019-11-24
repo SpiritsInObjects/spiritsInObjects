@@ -17,7 +17,9 @@ function sonifyCanvas(audioCtx, canvas, ctx) {
     let imageDataWidth = imageData.width * 4;
     let fadeLengthInSamples = 30.0;
     let fadeIncrement = 1.0 / fadeLengthInSamples;
-    for (let sample = 0; sample < audioBuffer.length; sample++) {
+    let sample = 0;
+    let len = audioBuffer.length;
+    for (sample = 0; sample < len; sample++) {
         scaledStart = Math.floor(sample * heightMultiplier);
         scaledEnd = scaledStart + 1;
         alpha = (sample * heightMultiplier) - scaledStart;
