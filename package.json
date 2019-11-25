@@ -82,7 +82,8 @@
     "electron-store": "^5.1.0",
     "electron-unhandled": "^3.0.1",
     "electron-updater": "^4.2.0",
-    "electron-util": "^0.13.0"
+    "electron-util": "^0.13.0",
+    "ffmpeg-static": "^2.7.0"
   },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"
