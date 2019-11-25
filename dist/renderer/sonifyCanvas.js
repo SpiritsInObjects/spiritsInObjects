@@ -41,13 +41,15 @@ function getRowLuminance(data, width, scaledStart, scaledEnd, alpha) {
     let luminance = 0;
     let L1;
     let L2;
+    let scaledStartWidth = scaledStart * width;
+    let scaledEndWidth = scaledEnd * width;
     // only calculate luma if the current column is within the soundtrack portion of the image
     for (let i = 0; i < width; i += 4) {
         // convert the RGB to HSL (we want L)
         if (i < locationOfSoundtrack)
             continue;
-        L1 = RED_MULTIPLIER * data[scaledStart * width + i * 4] + GREEN_MULTIPLIER * data[scaledStart * width + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledStart * width + i * 4 + 2];
-        L2 = RED_MULTIPLIER * data[scaledEnd * width + i * 4] + GREEN_MULTIPLIER * data[scaledEnd * width + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledEnd * width + i * 4 + 2];
+        L1 = RED_MULTIPLIER * data[scaledStartWidth + i * 4] + GREEN_MULTIPLIER * data[scaledStartWidth + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledStartWidth + i * 4 + 2];
+        L2 = RED_MULTIPLIER * data[scaledEndWidth + i * 4] + GREEN_MULTIPLIER * data[scaledEndWidth + i * 4 + 1] + BLUE_MULTIPLIER * data[scaledEndWidth + i * 4 + 2];
         luminance += ((1 - alpha) * L1 + alpha * L2) / 128.0 - 1.0;
     }
     luminance = luminance / (width / 4.0);
