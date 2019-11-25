@@ -1,8 +1,8 @@
 'use strict';
 
 import { join as pathJoin } from 'path';
-import {app, BrowserWindow, Menu} from 'electron';
-/// const {autoUpdater} = require('electron-updater');
+import { app, BrowserWindow, Menu } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
@@ -13,25 +13,22 @@ import { createMenu } from './menu.js';
 unhandled();
 contextMenu();
 
-if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
+if (is.development) {
 	debug();
 }
 
-// Note: Must match `build.appId` in package.json
 app.setAppUserModelId('spiritsinobjects');
 
-// Uncomment this before publishing your first version.
-// It's commented out as it throws an error if there are no published versions.
-// if (!is.development) {
-// 	const FOUR_HOURS = 1000 * 60 * 60 * 4;
-// 	setInterval(() => {
-// 		autoUpdater.checkForUpdates();
-// 	}, FOUR_HOURS);
-//
-// 	autoUpdater.checkForUpdates();
-// }
+if (!is.development) {
+	  	const FOUR_HOURS = 1000 * 60 * 60 * 4;
+ 	setInterval(() => {
+ 		autoUpdater.checkForUpdates();
+ 	}, FOUR_HOURS);
+}
 
-// Prevent window from being garbage collected
+
+//autoUpdater.checkForUpdates();
+
 let mainWindow : any;
 
 const createMainWindow = async () => {

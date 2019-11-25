@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const electron_1 = require("electron");
-/// const {autoUpdater} = require('electron-updater');
+const electron_updater_1 = require("electron-updater");
 const electron_util_1 = require("electron-util");
 const electron_unhandled_1 = __importDefault(require("electron-unhandled"));
 const electron_debug_1 = __importDefault(require("electron-debug"));
@@ -14,22 +14,17 @@ const electron_context_menu_1 = __importDefault(require("electron-context-menu")
 const menu_js_1 = require("./menu.js");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
-if (process.argv.indexOf('-d') !== -1 || process.argv.indexOf('--dev')) {
+if (electron_util_1.is.development) {
     electron_debug_1.default();
 }
-// Note: Must match `build.appId` in package.json
 electron_1.app.setAppUserModelId('spiritsinobjects');
-// Uncomment this before publishing your first version.
-// It's commented out as it throws an error if there are no published versions.
-// if (!is.development) {
-// 	const FOUR_HOURS = 1000 * 60 * 60 * 4;
-// 	setInterval(() => {
-// 		autoUpdater.checkForUpdates();
-// 	}, FOUR_HOURS);
-//
-// 	autoUpdater.checkForUpdates();
-// }
-// Prevent window from being garbage collected
+if (!electron_util_1.is.development) {
+    const FOUR_HOURS = 1000 * 60 * 60 * 4;
+    setInterval(() => {
+        electron_updater_1.autoUpdater.checkForUpdates();
+    }, FOUR_HOURS);
+}
+//autoUpdater.checkForUpdates();
 let mainWindow;
 const createMainWindow = async () => {
     const win = new electron_1.BrowserWindow({
