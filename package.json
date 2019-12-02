@@ -31,7 +31,7 @@
     "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main -d",
     "compile": "sh ./scripts/compile.sh",
     "install": "./node_modules/.bin/electron-rebuild",
-    "test": "./node_modules/.bin/mocha test",
+    "test": "",
     "pretest": "",
     "version": "",
     "postversion": "git push && git push --tags",
