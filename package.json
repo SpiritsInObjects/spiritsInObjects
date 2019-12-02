@@ -16,7 +16,7 @@
       "dist/contrib/jquery.mobile-1.4.5.min.css",
       "dist/contrib/jquery.mobile-1.4.5.min.js",
       "dist/css/style.css",
-      "dist/main/index.js",
+      "dist/main/script.js",
       "dist/main/menu.js",
       "dist/main/config.js",
       "dist/renderer/index.js",
