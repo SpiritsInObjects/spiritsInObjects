@@ -31,24 +31,25 @@ if (!is.development) {
 
 let mainWindow : any;
 
+const BrowserOptions = {
+	title: app.name,
+	show: false,
+	width: 1000,
+	height: 800,
+	backgroundColor: 'rgb(220, 225, 220)',
+	webPreferences : {
+		nodeIntegration: true
+	}
+};
+
 const createMainWindow = async () => {
-	const win = new BrowserWindow({
-		title: app.getName(),
-		show: false,
-		width: 1000,
-		height: 800,
-		webPreferences : {
-			nodeIntegration: true
-		}
-	});
+	const win = new BrowserWindow(BrowserOptions);
 
 	win.on('ready-to-show', () => {
 		win.show();
 	});
 
 	win.on('closed', () => {
-		// Dereference the window
-		// For multiple windows store them in an array
 		mainWindow = undefined;
 	});
 

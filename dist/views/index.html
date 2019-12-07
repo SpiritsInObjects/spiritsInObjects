@@ -1,99 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <title>spiritsInObjects</title>
+        <link rel="stylesheet" type="text/css" href="../contrib/spin.css" />
+		<link rel="stylesheet" type="text/css" href="../css/style.css" />
+    </head>
+    <body>
+        <div id="menu">
+            <button id="visualizeBtn">Visualize</button>
+            <button id="sonifyBtn" class="active">Sonify</button>
+            
+        </div>
+        <div id="sonify" class="show">
+            <div id="theatre">
+                <canvas id="canvas"></canvas>
+                <video id="video" muted autoplay></video>
+            </div>
+            <div id="timeline">
 
-	<head>
-		
-		<meta content="user-scalable = yes"></meta>
-		<link rel="stylesheet" href="../contrib/jquery.mobile-1.4.5.min.css" />
-		<link href="../css/style.css" rel="stylesheet" type="text/css" media="all">
+            </div>
+            <div class="options">
+                <input type="file" id="fileSource" placeholder="File(s)" title="Select a video or image sequence" />
+                <select id="videoSource" required title="Select a camera video source">
+                    <option disabled selected value="">Camera</option>
+                </select>
+            </div>
+            <div class="options">
+                <button id="play" disabled>Play</button>
+                <button id="save" disabled>Save</button>
+             </div>
+        </div>
+        <div id="visualize">
 
-	</head>
-	
-	<body>		
-		<div id="intro" style="zoom: 0.8">
-			<div class="ui-grid-a" id="inputStuff" style="padding-top: 40px; padding-left: 200px; padding-right: 200px;">
-				<div class="ui-block-a" style="padding-left: 10px; padding-right: 10px;">
-					<form id="inputFrameCount" name="formFrameCount" onsubmit="return false;">
-						<label for="textinput-hide" class="ui-hidden-accessible">Total Frame Count</label>
-						<input type="text" name="field" id="textinput-hide" id="frameCountInput" placeholder="Total Frame Count" value="" />
-						<input type="button" id="frameCountButton" value="Set Frame Count" />
-					</form>
-					<br>
-					<section id="fileinput">
-						<div>
-							<input id="fileUpload" type="file" accept="image/*" multiple method="#files" >
-							</input>
-						</div>
-					</section>
-				</div>
-				<div class="ui-block-b" style="padding-left: 10px; padding-right: 10px;">
-					<div id="exportButtons" style="display: none;">
-						<div id="exportArea">
-							<button id="createDownload">export a wav file</button>
-						</div>
-						<br>
-						<div id="scriptTextField" style="zoom:0.8">
-							<label for="textareaForScript"> After Effects Script: </label>
-								<textarea cols="40" rows="8" name="textareaForScript" id="textareaForScript" placeholder="paste After Effects script here"></textarea>
-						</div>	
-						<button id="importAfterEffectsBtn"> Import </button>
-						<br>
-						<div id="scriptLocation">
-							<button id="createText">generate AfterEffects expressions script</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<p><br></p>
-		
-		<div id="canvases">
-		</div>
-		
-		<div id="buttons">
-			<div class="ui-grid-solo">
-				<div class="ui-block-a" id="imagebuttons">
-				</div>
-			</div>
-		</div>
-		
-		<p><br></p>
-		
-		<div id="interaction" style="zoom: 0.8">
-			<div class="ui-grid-a" style="padding: 30px;">
-				<div class="ui-block-a" style="width:65%; padding-left: 10px; padding-right: 10px;">
-					<div data-role="rangeslider">
-						<label for="range-1a" style="font: 16px Arial">Timeline Range:</label>
-						<input type="range" name="range-1a" id="timelineRangeStart" value="0" />
-						<label for="range-1b" style="font: 16px Arial">Timeline Range:</label>
-						<input type="range" name="range-1b" id="timelineRangeEnd" value="0" />
-					</div>
-				</div>
-				<div class="ui-block-b" style="width:35%; padding-left: 10px; padding-right: 10px;">
-					<div id="zoomDiv">
-						<form onsubmit="return false;">
-							<label for="slider-1" style="font: 16px Arial">Timeline Zoom:</label>
-							<input type="range" name="slider-1" id="zoomSlider" min="0.1" max="3.0" value="0.1" step="0.01"/>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<div id="result">
-			<div class="ui-grid-a" style="padding: 10px; align: center;">
-				<div class="ui-block-a" id="timeline" style="width:100%">
-				</div>	
-			</div>
-		</div>
-	<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-	<script src="../contrib/jquery-1.11.3.min.js"></script>
-	<script src="../contrib/jquery.mobile-1.4.5.min.js"></script>
-	<script src="../renderer/phillcorder.js"></script>
-	<script src="../renderer/recorder.js"></script>
-	<script src="../renderer/script.js"></script>
-
-</body>
-
+        </div>
+        <div id="dragOverlay">
+            <div class="outline">
+                <div id="dndfilename"></div>
+            </div>
+        </div>
+        <script src="../contrib/spin.js"></script>
+        <script src="../renderer/spinner.js"></script>
+        <script src="../renderer/video.js"></script>
+        <script src="../renderer/index.js"></script>
+    </body>
 </html>
