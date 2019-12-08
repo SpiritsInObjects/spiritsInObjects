@@ -1,4 +1,5 @@
 'use strict';
+//import { ipcRenderer } from 'electron';
 function containsFiles(evt) {
     if (evt.dataTransfer.types) {
         for (var i = 0; i < evt.dataTransfer.types.length; i++) {
@@ -53,7 +54,6 @@ function bindListeners() {
     //dropArea.addEventListener('dragend', dragLeave, false);
     fileSource.addEventListener('click', fileSourceClick, false);
 }
-const test = {};
 (function main() {
     const camera = new Camera();
     console.log('ready');

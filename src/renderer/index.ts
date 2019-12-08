@@ -2,14 +2,6 @@
 
 //import { ipcRenderer } from 'electron';
 
-interface Camera {
-    //
-}
-
-interface CameraConstructor {
-    new (): Camera;
-}
-
 function containsFiles(evt : DragEvent) {
     if (evt.dataTransfer.types) {
         for (var i = 0; i < evt.dataTransfer.types.length; i++) {
@@ -73,8 +65,6 @@ function bindListeners () {
 
     fileSource.addEventListener('click', fileSourceClick, false);
 }
-
-const test : TEST = {};
 
 (function main () {
     const camera = new Camera()

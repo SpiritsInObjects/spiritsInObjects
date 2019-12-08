@@ -4,7 +4,7 @@ interface DeviceInfo {
     kind : string
 }
 
-class Camera {
+export class Camera {
     private element : HTMLVideoElement;
     private select : HTMLSelectElement;
     private stream : any;

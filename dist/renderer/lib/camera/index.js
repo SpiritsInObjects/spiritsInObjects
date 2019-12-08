@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class Camera {
     constructor() {
         this.element = document.createElement('video');
@@ -56,4 +58,5 @@ class Camera {
         }
     }
 }
+exports.Camera = Camera;
 //# sourceMappingURL=index.js.map
