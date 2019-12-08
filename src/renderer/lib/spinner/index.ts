@@ -1,13 +1,19 @@
 'use strict';
 
-interface Spinner{
-    stop : Function;
+interface Spinner {
+    stop(): any;
+    spin( element : HTMLElement): any;
 }
 
+interface SpinnerConstructor {
+    new (options: any): Spinner;
+}
+
+var Spinner: SpinnerConstructor;
 const Spinners : any = {};
 
 function showSpinner (id : string) {
-    const SpinnerOptions = {
+    const SpinnerOptions : any = {
         lines: 13,
         length: 38,
         width: 17,
@@ -17,7 +23,7 @@ function showSpinner (id : string) {
         color: '#ffffff', 
         fadeColor: 'transparent',
         speed: 1,
-        rotate: 0, // The rotation offset
+        rotate: 0,
         animation: 'spinner-line-fade-quick',
         direction: 1,
         zIndex: 2e9,
@@ -27,7 +33,7 @@ function showSpinner (id : string) {
         shadow: '0 0 1px transparent',
         position: 'absolute'
     };
-    const target = document.getElementById(id);
+    const target : HTMLElement = document.getElementById(id);
     Spinners[id] = new Spinner(SpinnerOptions).spin(target);
 }
 

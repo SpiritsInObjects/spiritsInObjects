@@ -4,12 +4,14 @@ interface DeviceInfo {
     kind : string
 }
 
-class Video {
+class Camera {
     private element : HTMLVideoElement;
     private select : HTMLSelectElement;
     private stream : any;
     constructor() {
-        this.element = document.getElementById('video') as HTMLVideoElement;
+        this.element = document.createElement('video') as HTMLVideoElement;
+        this.element.setAttribute('playsinline', 'true')
+        this.element.setAttribute('webkit-playsinline', 'true')
         this.select = document.getElementById('videoSource') as HTMLSelectElement;
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()

@@ -12,17 +12,16 @@
       "category": "public.app-category.video"
     },
     "files": [
-      "dist/contrib/jquery-1.11.3.min.js",
-      "dist/contrib/jquery.mobile-1.4.5.min.css",
-      "dist/contrib/jquery.mobile-1.4.5.min.js",
+      "dist/contrib/spin.js",
+      "dist/contrib/spin.css",
       "dist/css/style.css",
       "dist/main/script.js",
       "dist/main/menu.js",
       "dist/main/config.js",
       "dist/renderer/index.js",
-      "dist/renderer/phillcorder.js",
-      "dist/renderer/recorder.js",
-      "dist/renderer/recorderWorker.js",
+      "dist/renderer/lib/sonifyCanvas/index.js",
+      "dist/renderer/lib/camera/index.js",
+      "dist/renderer/lib/spinner/index.js",
       "dist/views/index.html"
     ]
   },
@@ -62,6 +61,7 @@
   "homepage": "https://github.com/sixteenmillimeter/spiritsInObjects#readme",
   "devDependencies": {
     "@types/electron": "^1.6.10",
+    "@types/fs-extra": "^8.0.1",
     "@types/jquery": "^3.3.31",
     "@types/node": "^12.12.8",
     "chai": "^4.2.0",
@@ -83,7 +83,8 @@
     "electron-unhandled": "^3.0.1",
     "electron-updater": "^4.2.0",
     "electron-util": "^0.13.0",
-    "ffmpeg-static": "^2.7.0"
+    "ffmpeg-static": "^2.7.0",
+    "fs-extra": "^8.1.0"
   },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"

@@ -1,15 +1,18 @@
+*{
+	font-family: 'Helvetica', Arial, sans-serif;
+}
+
 html,
 body{
 	margin: 0;
 	padding: 0;
-	background: rgb(220, 225, 220);
+	background: rgb(220, 220, 225);
 }
 
 #menu{
-	//border-bottom: 1px solid rgba(90, 90, 90, 0.5);
 	box-shadow:0 1px 3px rgba(100, 100, 100, 0.3);
-	//margin: 0 20px;
 	margin: 0;
+
 	button {
 		display: inline-block;
 		-webkit-appearance: none;
@@ -17,8 +20,8 @@ body{
 		border: none;
 		width: 50%;
 		font-size: 20px;
-		padding-top: 15px;
-		padding-bottom: 20px;
+		padding-top: 8px;
+		padding-bottom: 12px;
 		text-transform: uppercase;
 		color: #999;
 		outline: none;
@@ -48,16 +51,97 @@ body{
 	width: 720px;
 	height: 405px;
 	margin: 20px auto 0;
+	position: relative;
 }
 
 #canvas{
 	background: #000;
 }
 
+#startSelect,
+#endSelect{
+	width: 1px;
+	height: 405px;
+	position: absolute;
+	background: #f00;
+	top: 0;
+	cursor: e-resize;
+	&::before{  
+		display: block;
+		content: " ";
+		width: 0; 
+		height: 0; 
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-top: 5px solid #f00;
+		margin-left: -5px;
+    	margin-top: -5px;
+	}
+	&::after{  
+		display: block;
+		content: " ";
+		width: 0; 
+		height: 0; 
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-bottom: 5px solid #f00;
+		margin-left: -5px;
+    	margin-top: 405px;
+	}
+}
+
+#timeline{
+	margin-top: 15px;
+	height: 80px;
+	background: rgba(0, 0, 0, 0.1);
+	overflow-y: hidden;
+	overflow-x: scroll;
+	.frame{
+		display: inline-block;
+		height: 60px;
+		width: 80px;
+		margin-top: 2px;
+		margin-left: 3px;
+		border-radius: 3px;
+		background: #999;
+		cursor: pointer;
+	}
+}
+
 #visualize {
 	display: none;
 	&.show{
 		display: block;
+	}
+}
+.optionWrapper{
+	height: 100px;
+}
+.options {
+	width: 50%;
+	height: 100px;
+	float: left;
+
+	select,
+	input[type=text],
+	button{
+		display: block;
+		-webkit-appearance: none;
+		border: 2px solid rgba(100, 100, 100, 0.3);
+		outline: 0;
+		border-radius: 3px;
+		width: 200px;
+		height: 30px;
+		line-height: 30px;
+		margin: 5px auto 0;
+		padding: 0;
+		box-sizing: border-box;
+		cursor: pointer;
+		text-align: center;
+		background: transparent;
+	}
+	select{
+		text-align-last: center;
 	}
 }
 
@@ -68,7 +152,7 @@ body{
 	height: 100vh;
 	left: 0;
 	top: 0;
-	background: rgba(0, 0, 0, 0.1);
+	background: rgba(0, 0, 0, 0.3);
 	&.show{
 		display: block;
 	}
@@ -77,7 +161,16 @@ body{
 		width: 75%;
 		height: 75vh;
 		margin: 12.5vh auto 0;
-		border: 10px dotted rgba(255, 255, 255, 0.3);
+		border: 10px dashed rgba(255, 255, 255, 0.5);
 		border-radius: 40px;
 	}
+}
+
+#dndfilename{
+	color: rgba(255, 255, 255, 0.5);
+	font-weight: bold;
+	font-size: 50px;
+	line-height: 80vh;
+	text-align: center;
+	text-transform: uppercase;
 }

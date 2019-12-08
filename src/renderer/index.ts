@@ -2,6 +2,14 @@
 
 //import { ipcRenderer } from 'electron';
 
+interface Camera {
+    //
+}
+
+interface CameraConstructor {
+    new (): Camera;
+}
+
 function containsFiles(evt : DragEvent) {
     if (evt.dataTransfer.types) {
         for (var i = 0; i < evt.dataTransfer.types.length; i++) {
@@ -32,33 +40,44 @@ function dragLeave (evt: Event) {
 }
 
 function drop ( evt : DragEvent ) {
+    const files : any[] = evt.dataTransfer.files as any; //squashes ts error
     console.log('drop');
     console.dir(evt.dataTransfer.files);
     
     evt.stopPropagation();
     evt.preventDefault();
         
-    for (let file of evt.dataTransfer.files ) {
+    for (let file of files ) {
         let fileReader : FileReader = new FileReader();
         fileReader.onload = (function(file) {
              console.dir(file);
-        })(file);
+        })(file) as any; //dirty ts hack
         fileReader.readAsDataURL(file);
     }
 }
 
+function fileSourceClick () {
+    document.getElementById('fileSource').click();
+}
+
 function bindListeners () {
-    const dropArea = document.getElementById('dragOverlay');
+    const dropArea : HTMLElement = document.getElementById('dragOverlay');
+    const fileSource : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
 
     document.addEventListener('dragenter',  dragEnter, false);
+
     dropArea.addEventListener('dragleave',  dragLeave, false);
     dropArea.addEventListener('dragover',   dragEnter, false);
     dropArea.addEventListener('drop',       drop, false);
     //dropArea.addEventListener('dragend', dragLeave, false);
+
+    fileSource.addEventListener('click', fileSourceClick, false);
 }
 
+const test : TEST = {};
+
 (function main () {
-    const video = new Video()
+    const camera = new Camera()
     console.log('ready');
     bindListeners();
 })()

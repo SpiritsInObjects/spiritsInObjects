@@ -2,17 +2,23 @@
     "compilerOptions": {
         "module": "commonjs",
         "esModuleInterop": true,
-        "target": "ES2017",
+        "target": "ES2018",
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
         "removeComments" : false,
         "baseUrl" : "./dist/",
-        "outDir": "./dist/main/",
-        "rootDir" : "./src/main/",
-        "lib" : [ "es6" ],
+        "outDir": "./dist/renderer/",
+        "rootDir" : "./src/renderer/",
+        "lib" : [ 
+            "ES2017",
+            "ES2016",
+            "ES2018",
+            "dom" 
+        ],
         "paths" : {
         }
+
     },
     "exclude" : [
         "./scripts",
@@ -22,6 +28,6 @@
         "./releases",
         "./proto_imagetosound-nw",
         "./test",
-        "./src/renderer/"
+        "./src/main/"
     ]
 }

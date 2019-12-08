@@ -534,3 +534,4 @@ var importAfterEffectsScript = function (scriptImportText) {
         createTextFile();
     });
 })();
+//# sourceMappingURL=script.js.map

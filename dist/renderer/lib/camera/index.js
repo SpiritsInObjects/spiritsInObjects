@@ -1,6 +1,8 @@
-class Video {
+class Camera {
     constructor() {
-        this.element = document.getElementById('video');
+        this.element = document.createElement('video');
+        this.element.setAttribute('playsinline', 'true');
+        this.element.setAttribute('webkit-playsinline', 'true');
         this.select = document.getElementById('videoSource');
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()
@@ -54,3 +56,4 @@ class Video {
         }
     }
 }
+//# sourceMappingURL=index.js.map

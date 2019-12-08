@@ -1,5 +1,4 @@
 'use strict';
-//import { ipcRenderer } from 'electron';
 function containsFiles(evt) {
     if (evt.dataTransfer.types) {
         for (var i = 0; i < evt.dataTransfer.types.length; i++) {
@@ -28,28 +27,36 @@ function dragLeave(evt) {
     //console.log('dragLeave');
 }
 function drop(evt) {
+    const files = evt.dataTransfer.files; //squashes ts error
     console.log('drop');
     console.dir(evt.dataTransfer.files);
     evt.stopPropagation();
     evt.preventDefault();
-    for (let file of evt.dataTransfer.files) {
+    for (let file of files) {
         let fileReader = new FileReader();
         fileReader.onload = (function (file) {
             console.dir(file);
-        })(file);
+        })(file); //dirty ts hack
         fileReader.readAsDataURL(file);
     }
 }
+function fileSourceClick() {
+    document.getElementById('fileSource').click();
+}
 function bindListeners() {
     const dropArea = document.getElementById('dragOverlay');
+    const fileSource = document.getElementById('fileSourceProxy');
     document.addEventListener('dragenter', dragEnter, false);
     dropArea.addEventListener('dragleave', dragLeave, false);
     dropArea.addEventListener('dragover', dragEnter, false);
     dropArea.addEventListener('drop', drop, false);
     //dropArea.addEventListener('dragend', dragLeave, false);
+    fileSource.addEventListener('click', fileSourceClick, false);
 }
+const test = {};
 (function main() {
-    const video = new Video();
+    const camera = new Camera();
     console.log('ready');
     bindListeners();
 })();
+//# sourceMappingURL=index.js.map

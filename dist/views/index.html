@@ -14,33 +14,37 @@
         <div id="sonify" class="show">
             <div id="theatre">
                 <canvas id="canvas"></canvas>
-                <video id="video" muted autoplay></video>
+                <div id="startSelect" style="left: 70%;"></div>
+                <div id="endSelect" style="left: 100%;"></div>
             </div>
             <div id="timeline">
-
+                <div class="frame"></div>
             </div>
-            <div class="options">
-                <input type="file" id="fileSource" placeholder="File(s)" title="Select a video or image sequence" />
-                <select id="videoSource" required title="Select a camera video source">
-                    <option disabled selected value="">Camera</option>
-                </select>
+            <div class="optionWrapper"></div>
+                <div class="options">
+                    <input type="text" id="fileSourceProxy" placeholder="File(s)" title="Select a video or image sequence" />
+                    <select id="videoSource" required title="Select a camera video source">
+                        <option disabled selected value="">Camera</option>
+                    </select>
+                    <input type="file" id="fileSource" placeholder="File(s)" title="Select a video or image sequence" width="1" height="1" style="width:1px;height:1px;opacity:0.1;" readonly disabled />
+                </div>
+                <div class="options">
+                    <button id="play" disabled>Play</button>
+                    <button id="save" disabled>Save</button>
+                </div>
             </div>
-            <div class="options">
-                <button id="play" disabled>Play</button>
-                <button id="save" disabled>Save</button>
-             </div>
         </div>
         <div id="visualize">
 
         </div>
         <div id="dragOverlay">
             <div class="outline">
-                <div id="dndfilename"></div>
+                <div id="dndfilename">Drop here</div>
             </div>
         </div>
         <script src="../contrib/spin.js"></script>
-        <script src="../renderer/spinner.js"></script>
-        <script src="../renderer/video.js"></script>
+        <script src="../renderer/lib/spinner/index.js"></script>
+        <script src="../renderer/lib/camera/index.js"></script>
         <script src="../renderer/index.js"></script>
     </body>
 </html>

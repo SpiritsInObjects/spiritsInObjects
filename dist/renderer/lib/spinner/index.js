@@ -1,4 +1,5 @@
 'use strict';
+var Spinner;
 const Spinners = {};
 function showSpinner(id) {
     const SpinnerOptions = {
@@ -32,3 +33,4 @@ function hideSpinner(id) {
         //
     }
 }
+//# sourceMappingURL=index.js.map
