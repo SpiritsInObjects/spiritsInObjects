@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 class Camera {
     constructor() {
         this.element = document.createElement('video');
@@ -9,7 +7,6 @@ class Camera {
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()
             .then(this.gotDevices.bind(this))
-            .then(this.getStream.bind(this))
             .catch((err) => { console.error(err); });
     }
     gotDevices(deviceInfos) {
@@ -46,7 +43,9 @@ class Camera {
         }
         navigator.mediaDevices.getUserMedia(constraints)
             .then(this.gotStream.bind(this))
-            .catch((err) => { console.error(err); });
+            .catch((err) => {
+            console.error(err);
+        });
     }
     gotStream(stream) {
         this.stream = stream;
@@ -58,5 +57,4 @@ class Camera {
         }
     }
 }
-exports.Camera = Camera;
 //# sourceMappingURL=index.js.map

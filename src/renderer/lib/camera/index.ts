@@ -4,7 +4,7 @@ interface DeviceInfo {
     kind : string
 }
 
-export class Camera {
+class Camera {
     private element : HTMLVideoElement;
     private select : HTMLSelectElement;
     private stream : any;
@@ -16,7 +16,6 @@ export class Camera {
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()
             .then(this.gotDevices.bind(this))
-            .then(this.getStream.bind(this))
             .catch((err : Error) => { console.error(err) });
     }
     gotDevices(deviceInfos : DeviceInfo[]) {
@@ -53,7 +52,9 @@ export class Camera {
         }
         navigator.mediaDevices.getUserMedia(constraints)
             .then(this.gotStream.bind(this))
-            .catch((err : Error) => { console.error(err) });
+            .catch((err : Error) => { 
+                console.error(err) 
+            });
     }
     gotStream(stream : any) {
         this.stream = stream; 

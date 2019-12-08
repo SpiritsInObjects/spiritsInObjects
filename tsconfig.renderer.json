@@ -4,7 +4,6 @@
         "esModuleInterop": true,
         "target": "ES2018",
         "noImplicitAny": true,
-        "moduleResolution": "node",
         "sourceMap": true,
         "removeComments" : false,
         "baseUrl" : "./dist/",
