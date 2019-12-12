@@ -1,14 +1,22 @@
 'use strict';
 
 //import { ipcRenderer } from 'electron';
+const { extname }  = require('path');
+const { dialog } = require('electron').remote;
 
+let state : State;
+let camera : Camera;
 
 (function main () {
+    const EXTENSIONS : string[] = ['.mp4', '.mkv', '.mpg'];
+    let startMoving : boolean = false;
+    let endMoving : boolean = false;
+
     function containsFiles(evt : DragEvent) {
         if (evt.dataTransfer.types) {
             for (var i = 0; i < evt.dataTransfer.types.length; i++) {
                 if (evt.dataTransfer.types[i] == "Files") {
-                    console.dir(evt.dataTransfer.files.length)
+                    //console.dir(evt.dataTransfer.files.length)
                     return true;
                 }
             }
@@ -19,8 +27,8 @@
     function dragEnter (evt: DragEvent) {
         if (containsFiles(evt)) {
             document.getElementById('dragOverlay').classList.add('show');
-            console.log('dragEnter');
-            console.dir(evt);
+            //console.log('dragEnter');
+            //console.dir(evt);
         }
     }
     
@@ -48,28 +56,148 @@
             })(file) as any; //dirty ts hack
             fileReader.readAsDataURL(file);
         }
+
+        dragLeave(evt);
     }
-    
-    function fileSourceClick () {
-        console.log('happens')
-        document.getElementById('fileSource').click();
+
+    async function fileSelect () {
+        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
+        const options : any = {
+            title: `Select video or image sequence`,
+            properties: [`openFile`],
+            defaultPath: 'c:/',
+            filters: [
+                {
+                    name: 'All Files',
+                    extensions: ['*']
+                },
+            ]
+        }
+        let files : any;
+        let valid : boolean = false;
+        let pathStr : string;
+        let displayName : string;
+        let ext : string;
+
+        try {
+            files = await dialog.showOpenDialog(options);
+        } catch (err ) {
+            console.error(err)
+        }
+
+        if (!files || !files.filePaths || files.filePaths.length === 0) {
+            return false;
+        }
+        pathStr = files.filePaths[0]
+        if (pathStr && pathStr !== '') {
+            ext = extname(pathStr.toLowerCase());
+            valid = EXTENSIONS.indexOf(ext) === -1 ? false : true;
+            if (!valid) {
+                console.log(`Cannot select file ${pathStr} is invald`)
+                return false;
+            }
+            console.log(`Selected file ${pathStr.split('/').pop()}`);
+            state.files = [pathStr];
+            displayName = pathStr.split('/').pop();
+            elem.value = displayName;
+        }
     }
+
+    function beginMoveStart (evt: MouseEvent) {
+        startMoving = true;
+    }
+
+    function endMoveStart (evt: MouseEvent) {
+        startMoving = false;
+    }
+
+    function moveStart (evt : MouseEvent) {
+        let theatre : HTMLElement;
+        let width : number;
+        let leftX : number;
+        let newLeftX : number;
+        let maxX : number;
+        let ratio : number;
+
+        if (startMoving) {
+            theatre = document.getElementById('theatre');
+            width = theatre.clientWidth;
+            leftX = theatre.offsetLeft;
+            maxX = document.getElementById('endSelect').offsetLeft - 1;
+            newLeftX = evt.pageX - leftX;
+            if (newLeftX <= 0) {
+                newLeftX = 0;
+            }
+            if (newLeftX >= maxX) {
+                newLeftX = maxX;
+            }
+            ratio = newLeftX / width;
+            document.getElementById('startSelect').style.left = `${ratio * 100}%`;
+        }
+    }
+
+    function beginMoveEnd (evt: MouseEvent) {
+        endMoving = true;
+    }
+
+    function endMoveEnd (evt: MouseEvent) {
+        endMoving = false;
+    }
+
+    function moveEnd (evt : MouseEvent) {
+        let theatre : HTMLElement;
+        let width : number;
+        let leftX : number;
+        let newLeftX : number;
+        let minX : number;
+        let ratio : number;
+
+        if (endMoving) {
+            theatre = document.getElementById('theatre');
+            width = theatre.clientWidth;
+            leftX = theatre.offsetLeft;
+            
+            minX = document.getElementById('startSelect').offsetLeft + 1;
+            newLeftX = evt.pageX - leftX;
+            if (newLeftX <= minX) {
+                newLeftX = minX;
+            }
+            if (newLeftX >= width) {
+                newLeftX = width;
+            }
+            ratio = newLeftX / width;
+            document.getElementById('endSelect').style.left = `${ratio * 100}%`
+        }
+    }
+
     
     function bindListeners () {
         const dropArea : HTMLElement = document.getElementById('dragOverlay');
-        const fileSource : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
-    
+        const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
+        const startSelect : HTMLElement = document.getElementById('startSelect');
+        const endSelect : HTMLElement = document.getElementById('endSelect');
+
         document.addEventListener('dragenter',  dragEnter, false);
     
         dropArea.addEventListener('dragleave',  dragLeave, false);
         dropArea.addEventListener('dragover',   dragEnter, false);
-        dropArea.addEventListener('drop',       drop, false);
-        //dropArea.addEventListener('dragend', dragLeave, false);
+        document.addEventListener('drop',       drop,      false);
+        dropArea.addEventListener('dragend',    dragLeave, false);
+        dropArea.addEventListener('dragexit',   dragLeave, false);
     
-        fileSource.addEventListener('click', fileSourceClick, false);
-    }
+        fileSourceProxy.addEventListener('click', fileSelect, false);
 
-    const camera : Camera = new Camera() as Camera
-    console.log('ready');
+        startSelect.addEventListener('mousedown', beginMoveStart, false);
+        endSelect.addEventListener('mousedown', beginMoveEnd, false);
+
+        document.addEventListener('mousemove', moveStart, false);
+        document.addEventListener('mousemove', moveEnd, false);
+        document.addEventListener('mouseup', endMoveStart, false);
+        document.addEventListener('mouseup', endMoveEnd, false);
+    }
+     //@ts-ignore why are you like this
+    state = new State();
+    camera = new Camera();
+
     bindListeners();
 })()

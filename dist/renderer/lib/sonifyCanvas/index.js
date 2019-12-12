@@ -52,7 +52,8 @@ class Sonify {
         return audioBuffer;
     }
     getRowLuminance(data, width, scaledStart, scaledEnd, alpha) {
-        const locationOfSoundtrack = width * 0.72; // determines location of optical soundtrack
+        //@ts-ignore
+        const locationOfSoundtrack = width * state.start; // determines location of optical soundtrack
         let luminance = 0;
         let L1;
         let L2;

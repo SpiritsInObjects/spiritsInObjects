@@ -20,6 +20,7 @@
       "dist/main/config.js",
       "dist/renderer/index.js",
       "dist/renderer/lib/sonifyCanvas/index.js",
+      "dist/renderer/lib/state/index.js",
       "dist/renderer/lib/camera/index.js",
       "dist/renderer/lib/spinner/index.js",
       "dist/views/index.html"
@@ -64,6 +65,7 @@
     "@types/fs-extra": "^8.0.1",
     "@types/jquery": "^3.3.31",
     "@types/node": "^12.12.8",
+    "@types/spin.js": "^3.0.0",
     "chai": "^4.2.0",
     "electron": "^7.1.1",
     "electron-installer-common": "^0.7.3",
@@ -84,7 +86,8 @@
     "electron-updater": "^4.2.0",
     "electron-util": "^0.13.0",
     "ffmpeg-static": "^2.7.0",
-    "fs-extra": "^8.1.0"
+    "fs-extra": "^8.1.0",
+    "spin.js": "^4.1.0"
   },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"

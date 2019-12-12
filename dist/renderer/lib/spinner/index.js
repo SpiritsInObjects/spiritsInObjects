@@ -1,5 +1,4 @@
 'use strict';
-var Spinner;
 const Spinners = {};
 function showSpinner(id) {
     const SpinnerOptions = {
@@ -23,7 +22,9 @@ function showSpinner(id) {
         position: 'absolute'
     };
     const target = document.getElementById(id);
-    Spinners[id] = new Spinner(SpinnerOptions).spin(target);
+    //@ts-ignore just fuck it
+    Spinners[id] = new Spinner(SpinnerOptions);
+    Spinners[id].spin(target);
 }
 function hideSpinner(id) {
     try {

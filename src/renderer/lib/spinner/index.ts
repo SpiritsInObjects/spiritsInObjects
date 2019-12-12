@@ -1,15 +1,5 @@
 'use strict';
 
-interface Spinner {
-    stop(): any;
-    spin( element : HTMLElement): any;
-}
-
-interface SpinnerConstructor {
-    new (options: any): Spinner;
-}
-
-var Spinner: SpinnerConstructor;
 const Spinners : any = {};
 
 function showSpinner (id : string) {
@@ -34,7 +24,9 @@ function showSpinner (id : string) {
         position: 'absolute'
     };
     const target : HTMLElement = document.getElementById(id);
-    Spinners[id] = new Spinner(SpinnerOptions).spin(target);
+    //@ts-ignore just fuck it
+    Spinners[id] = new Spinner(SpinnerOptions) as any;
+    Spinners[id].spin(target);
 }
 
 function hideSpinner (id : string) {

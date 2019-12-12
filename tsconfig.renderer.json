@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "none",
         "esModuleInterop": true,
         "target": "ES2018",
         "noImplicitAny": true,
@@ -9,6 +9,7 @@
         "baseUrl" : "./dist/",
         "outDir": "./dist/renderer/",
         "rootDir" : "./src/renderer/",
+        "typeRoots": ["node_modules/@types"],
         "lib" : [ 
             "ES2017",
             "ES2016",

@@ -14,7 +14,7 @@
         <div id="sonify" class="show">
             <div id="theatre">
                 <canvas id="canvas"></canvas>
-                <div id="startSelect" style="left: 70%;"></div>
+                <div id="startSelect" style="left: 72%;"></div>
                 <div id="endSelect" style="left: 100%;"></div>
             </div>
             <div id="timeline">
@@ -26,7 +26,6 @@
                     <select id="videoSource" required title="Select a camera video source">
                         <option disabled selected value="">Camera</option>
                     </select>
-                    <input type="file" id="fileSource" placeholder="File(s)" title="Select a video or image sequence" width="1" height="1" style="width:1px;height:1px;opacity:0.1;" />
                 </div>
                 <div class="options">
                     <button id="play" disabled>Play</button>
@@ -43,6 +42,7 @@
             </div>
         </div>
         <script src="../contrib/spin.js"></script>
+        <script src="../renderer/lib/state/index.js"></script>
         <script src="../renderer/lib/spinner/index.js"></script>
         <script src="../renderer/lib/camera/index.js"></script>
         <script src="../renderer/index.js"></script>
