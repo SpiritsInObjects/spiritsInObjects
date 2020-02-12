@@ -9,6 +9,7 @@ class State {
         this.camera = null;
         this.start = .72;
         this.end = 1.0;
+        this.framerate = 24;
     }
     async save() {
         const storage = {

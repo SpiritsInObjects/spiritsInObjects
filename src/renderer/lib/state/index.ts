@@ -18,7 +18,7 @@ class State {
     public camera : string = null;
     public start : number = .72;
     public end : number = 1.0;
-
+    public framerate : number = 24;
 
     constructor () {
 

@@ -2,7 +2,11 @@
 //import { ipcRenderer } from 'electron';
 const { extname } = require('path');
 const { dialog } = require('electron').remote;
+let audioContext;
 let state;
+let video;
+let camera;
+let sonify;
 (function main() {
     const EXTENSIONS = ['.mp4', '.mkv', '.mpg'];
     let startMoving = false;
@@ -86,6 +90,7 @@ let state;
             }
             console.log(`Selected file ${pathStr.split('/').pop()}`);
             state.files = [pathStr];
+            video.file(pathStr);
             displayName = pathStr.split('/').pop();
             elem.value = displayName;
         }
@@ -148,11 +153,20 @@ let state;
             document.getElementById('endSelect').style.left = `${ratio * 100}%`;
         }
     }
+    function keyDown(evt) {
+        if (evt.which === 32) {
+            video.play();
+        }
+    }
+    function videoPlay(evt) {
+        video.play();
+    }
     function bindListeners() {
         const dropArea = document.getElementById('dragOverlay');
         const fileSourceProxy = document.getElementById('fileSourceProxy');
         const startSelect = document.getElementById('startSelect');
         const endSelect = document.getElementById('endSelect');
+        const playButton = document.getElementById('play');
         document.addEventListener('dragenter', dragEnter, false);
         dropArea.addEventListener('dragleave', dragLeave, false);
         dropArea.addEventListener('dragover', dragEnter, false);
@@ -166,10 +180,22 @@ let state;
         document.addEventListener('mousemove', moveEnd, false);
         document.addEventListener('mouseup', endMoveStart, false);
         document.addEventListener('mouseup', endMoveEnd, false);
+        document.addEventListener('keydown', keyDown, false);
+        playButton.addEventListener('click', videoPlay, false);
     }
+    audioContext = new AudioContext();
     //@ts-ignore why are you like this
     state = new State();
-    const camera = new Camera();
+    video = new Video();
+    camera = new Camera(video);
+    sonify = new Sonify(audioContext, video.canvas);
     bindListeners();
 })();
+function playFrame() {
+    const source = audioContext.createBufferSource();
+    source.buffer = sonify.sonifyCanvas();
+    source.connect(audioContext.destination);
+    // play audio
+    source.start();
+}
 //# sourceMappingURL=index.js.map

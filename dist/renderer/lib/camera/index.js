@@ -1,8 +1,6 @@
 class Camera {
-    constructor() {
-        this.element = document.createElement('video');
-        this.element.setAttribute('playsinline', 'true');
-        this.element.setAttribute('webkit-playsinline', 'true');
+    constructor(video) {
+        this.video = video;
         this.select = document.getElementById('videoSource');
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()
@@ -49,12 +47,7 @@ class Camera {
     }
     gotStream(stream) {
         this.stream = stream;
-        if (typeof this.element.srcObject !== 'undefined') {
-            this.element.srcObject = stream;
-        }
-        else {
-            this.element.src = stream;
-        }
+        this.video.stream(stream);
     }
 }
 //# sourceMappingURL=index.js.map

@@ -5,13 +5,11 @@ interface DeviceInfo {
 }
 
 class Camera {
-    private element : HTMLVideoElement;
+    private video : Video
     private select : HTMLSelectElement;
     private stream : any;
-    constructor() {
-        this.element = document.createElement('video') as HTMLVideoElement;
-        this.element.setAttribute('playsinline', 'true')
-        this.element.setAttribute('webkit-playsinline', 'true')
+    constructor (video : Video) {
+        this.video = video;
         this.select = document.getElementById('videoSource') as HTMLSelectElement;
         this.select.onchange = this.getStream.bind(this);
         navigator.mediaDevices.enumerateDevices()
@@ -56,12 +54,8 @@ class Camera {
                 console.error(err) 
             });
     }
-    gotStream(stream : any) {
+    gotStream(stream : MediaStream) {
         this.stream = stream; 
-        if (typeof this.element.srcObject !== 'undefined') {
-            this.element.srcObject = stream;
-        } else { 
-            this.element.src = stream;
-        }
+        this.video.stream(stream);
     }
 }
