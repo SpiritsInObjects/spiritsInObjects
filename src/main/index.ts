@@ -2,17 +2,21 @@
 
 import { join as pathJoin } from 'path';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
-import { exec } from 'child_process';
 import { autoUpdater } from 'electron-updater';
 import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
-import ffmpeg from 'ffmpeg-static';
-import ffprobe from 'ffprobe-static';
+import watch from 'node-watch';
+import { pathExists, unlink, writeFileSync } from 'fs-extra';
+import getPixels from 'get-pixels';
+
+import { ffmpeg } from './lib/ffmpeg';
+import { SonifyNode } from './lib/sonify';
 
 //import config from './config';
 import { createMenu } from './menu.js';
+import { fstat, writeFile } from 'fs';
 
 unhandled();
 contextMenu();
@@ -28,6 +32,17 @@ if (!is.development) {
  	setInterval(() => {
  		autoUpdater.checkForUpdates();
  	}, FOUR_HOURS);
+}
+
+async function pixels (filePath : string) {
+	return new Promise((resolve : Function, reject : Function ) => {
+		return getPixels(filePath, (err : Error, imageData : any) => {
+			if (err) {
+				return reject(err);
+			}
+			return resolve(imageData);
+		}
+	});
 }
 
 //autoUpdater.checkForUpdates();
@@ -54,34 +69,13 @@ const createMainWindow = async () => {
 
 	win.on('closed', () => {
 		mainWindow = undefined;
+		app.quit();
 	});
 
 	await win.loadFile(pathJoin(__dirname, '../views/index.html'));
 
 	return win;
 };
-
-async function execAsync (cmd : string) {
-	return new Promise((resolve : Function, reject : Function) => {
-		return exec(cmd, (err: Error, stdio : string, stderr : string) => {
-			if (err) {
-				return reject(err);
-			}
-			return resolve(stdio + stderr);
-		})
-	})
-}
-
-async function ffprobeInfo (filePath : string) : Promise<any> {
-	const cmd : string = `${ffprobe.path} -v quiet -print_format json -show_format -show_streams "${filePath}"`;
-	let res : any;
-	try {
-		res = await execAsync(cmd)
-	} catch (err) {
-		console.error(err)
-	}
-	return JSON.parse(res)
-}
 
 // Prevent multiple instances of the app
 if (!app.requestSingleInstanceLock()) {
@@ -110,18 +104,75 @@ app.on('activate', async () => {
 	}
 });
 
-ipcMain.on('ffmpeg', async (evt : Event, args : any) => {
-	let cmd : string = `${ffmpeg.path} `
+ipcMain.on('sonify', async (evt : Event, args : any) => {
+	const startTime : number = +new Date();
+	//const monoBuffer : Float32Array = new Float32Array(args.state.frames * args.state.samplerate);
+	let tmp : any;
+	let watcher : any;
+	let video : SonifyNode;
+	let filePath : string;
+	let i : number = 0;
+	let imageData : any;
+	let arrBuffer : Float32Array;
+	let endTime : number;
+	let frameStart : number;
+	let ms : number;
+	
+	console.log(args.state)
+
+	try {
+		tmp = await ffmpeg.exportPath();
+	} catch (err) {
+		console.error(err);
+	}
+
+	video = new SonifyNode(args.state);
+	
+	for (i = 0; i < args.state.frames; i++) {
+		frameStart = +new Date();
+		try {
+			filePath = await ffmpeg.exportFrame(args.state.files[0], i);
+		} catch (err) {
+			console.error(err);
+			continue;
+		}
+		try {
+			imageData = await pixels(filePath);
+		} catch (err) {
+			console.error(err);
+			continue;
+		}
+		try {
+			arrBuffer = video.sonify(imageData.data);
+		} catch (err) {
+			console.error(err);
+		}
+		ms = (+new Date()) - frameStart;
+		console.log(`progress : ${i / args.state.frames}`);
+		mainWindow.webContents.send('sonify_progress', { i, frames : args.state.frames, ms, samples : arrBuffer });
+		//monoBuffer.set(arrBuffer, i * arrBuffer.length);
+		writeFileSync('./buffer.json', JSON.stringify(arrBuffer, null, '\t'), 'utf8');
+		process.exit();
+
+		try {
+			unlink(filePath);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+	endTime = +new Date();
+	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime });
+	//console.dir(monoBuffer);
 });
 
-ipcMain.on('ffprobe', async (evt : Event, args : any) => {
+ipcMain.on('info', async (evt : Event, args : any) => {
 	let res : any;
 	try {
-		res = await ffprobeInfo(args.filePath)
+		res = await ffmpeg.info(args.filePath)
 	} catch (err) {
 		console.error(err)
 	}
-	mainWindow.webContents.send('ffprobe', res);
+	mainWindow.webContents.send('info', res);
 });
 
 (async () => {

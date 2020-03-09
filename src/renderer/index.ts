@@ -1,8 +1,10 @@
 'use strict';
 
-//import { ipcRenderer } from 'electron';
-const { extname }  = require('path');
+import { extname } from 'path';
+
+const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
+const humanizeDuration = require('humanize-duration');
 
 let audioContext : AudioContext;
 let state : State;
@@ -11,9 +13,32 @@ let camera : Camera;
 let sonify : Sonify;
 
 (function main () {
-    const EXTENSIONS : string[] = ['.mp4', '.mkv', '.mpg'];
+    const extensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
     let startMoving : boolean = false;
     let endMoving : boolean = false;
+
+    async function confirm (message : string) {
+        const config = {
+            buttons : ['Yes', 'Cancel'],
+            message
+        }
+        const res = await dialog.showMessageBox(config);
+        return res.response === 0;
+    };
+
+    function overlayShow (msg : string = '') {
+        document.getElementById('overlayMsg').innerText = msg;
+        document.getElementById('overlay').classList.add('show');
+    }
+    
+    function overlayHide () {
+        try {
+            document.getElementById('overlay').classList.remove('show');
+        } catch (err) {
+            console.error(err);
+        }
+        document.getElementById('overlayMsg').innerText = '';
+    }
 
     function containsFiles(evt : DragEvent) {
         if (evt.dataTransfer.types) {
@@ -44,13 +69,15 @@ let sonify : Sonify;
         //console.log('dragLeave');
     }
     
-    function drop ( evt : DragEvent ) {
-        const files : any[] = evt.dataTransfer.files as any; //squashes ts error
+    function dropFunc ( evt : DragEvent ) {
         console.log('drop');
-        console.dir(evt.dataTransfer.files);
-        
-        evt.stopPropagation();
         evt.preventDefault();
+        const files : any[] = evt.dataTransfer.files as any; //squashes ts error
+        
+        console.dir(evt.dataTransfer);
+        
+        //evt.stopPropagation();
+        //
             
         for (let file of files ) {
             let fileReader : FileReader = new FileReader();
@@ -59,7 +86,6 @@ let sonify : Sonify;
             })(file) as any; //dirty ts hack
             fileReader.readAsDataURL(file);
         }
-
         dragLeave(evt);
     }
 
@@ -78,6 +104,7 @@ let sonify : Sonify;
         }
         let files : any;
         let valid : boolean = false;
+        let proceed : boolean = false;
         let pathStr : string;
         let displayName : string;
         let ext : string;
@@ -91,20 +118,80 @@ let sonify : Sonify;
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
-        pathStr = files.filePaths[0]
+
+        pathStr = files.filePaths[0];
+
         if (pathStr && pathStr !== '') {
             ext = extname(pathStr.toLowerCase());
-            valid = EXTENSIONS.indexOf(ext) === -1 ? false : true;
+            valid = extensions.indexOf(ext) === -1 ? false : true;
+
             if (!valid) {
                 console.log(`Cannot select file ${pathStr} is invald`)
                 return false;
             }
             console.log(`Selected file ${pathStr.split('/').pop()}`);
-            state.files = [pathStr];
+            
             video.file(pathStr);
+
             displayName = pathStr.split('/').pop();
             elem.value = displayName;
+
+            ipcRenderer.send('file', { filePath : pathStr });
+
+            state.files = [pathStr];
+            state.save();
+
+            proceed = await confirm(`Sonify ${displayName}?`);
+
+            if (proceed) {
+                sonifyStart(displayName);
+            }
         }
+    }
+    let audioBuffer : AudioBuffer;
+    let monoBuffer : Float32Array;  
+    //@ts-ignore
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function sonifyStart (displayName : string) {
+        audioBuffer = audioCtx.createBuffer(1, state.samplerate * state.frames, state.samplerate);
+        monoBuffer = audioBuffer.getChannelData(0);   
+
+        overlayShow(`Sonifying ${displayName}...`);
+        ipcRenderer.send('sonify', { state : state.get() });
+    }
+
+    let avgMs : number = -1;
+    const progressBar : any = document.getElementById('overlayProgressBar');
+    const progressMsg : any = document.getElementById('overlayProgressMsg')
+    function onSonifyProgress (evt : Event, args : any) {
+        let timeLeft : number;
+        let timeStr : string;
+        if (avgMs !== -1) {
+            timeLeft = (args.frames - args.i) * args.ms;
+        } else {
+            avgMs = (avgMs + args.ms) / 2;
+            timeLeft = (args.frames - args.i) * avgMs;
+        }
+        timeStr = humanizeDuration(timeLeft)
+        progressMsg.innerText = `Time left: ~${timeStr}`;
+        progressBar.style.width = `${(args.i / args.frames) * 100}%`;
+
+        console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
+        console.log( args.i * args.samples.length + ' -> ' + (args.i + 1) * args.samples.length)
+        for (let i : number = args.i * args.samples.length; i < (args.i + 1) * args.samples.length; i++) {
+            monoBuffer[i] = args.samples[i];
+        }
+    }
+
+    function onSonifyComplete (evt : Event, args : any) {
+        avgMs = -1;
+        overlayHide();
+        setTimeout(() => {
+            var source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioCtx.destination);
+            source.start();
+        })
     }
 
     function beginMoveStart (evt: MouseEvent) {
@@ -195,7 +282,8 @@ let sonify : Sonify;
     
         dropArea.addEventListener('dragleave',  dragLeave, false);
         dropArea.addEventListener('dragover',   dragEnter, false);
-        document.addEventListener('drop',       drop,      false);
+        dropArea.addEventListener('drop',       dropFunc, false);
+        document.addEventListener('drop',       dropFunc, false);
         dropArea.addEventListener('dragend',    dragLeave, false);
         dropArea.addEventListener('dragexit',   dragLeave, false);
     
@@ -211,14 +299,17 @@ let sonify : Sonify;
 
         document.addEventListener('keydown', keyDown, false);
         playButton.addEventListener('click', videoPlay, false);
+
+        ipcRenderer.on('sonify_complete', onSonifyComplete);
+        ipcRenderer.on('sonify_progress', onSonifyProgress);
     }
     
     audioContext = new AudioContext();
     //@ts-ignore why are you like this
     state = new State();
-    video = new Video();
+    video = new Video(state);
     camera = new Camera(video);
-    sonify = new Sonify(audioContext, video.canvas);
+    sonify = new Sonify(state, audioContext, video.canvas);
 
     bindListeners();
 })()

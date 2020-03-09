@@ -5,14 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const electron_1 = require("electron");
-const child_process_1 = require("child_process");
 const electron_updater_1 = require("electron-updater");
 const electron_util_1 = require("electron-util");
 const electron_unhandled_1 = __importDefault(require("electron-unhandled"));
 const electron_debug_1 = __importDefault(require("electron-debug"));
 const electron_context_menu_1 = __importDefault(require("electron-context-menu"));
-const ffmpeg_static_1 = __importDefault(require("ffmpeg-static"));
-const ffprobe_static_1 = __importDefault(require("ffprobe-static"));
+const fs_extra_1 = require("fs-extra");
+const get_pixels_1 = __importDefault(require("get-pixels"));
+const ffmpeg_1 = require("./lib/ffmpeg");
+const sonify_1 = require("./lib/sonify");
 //import config from './config';
 const menu_js_1 = require("./menu.js");
 electron_unhandled_1.default();
@@ -26,6 +27,16 @@ if (!electron_util_1.is.development) {
     setInterval(() => {
         electron_updater_1.autoUpdater.checkForUpdates();
     }, FOUR_HOURS);
+}
+async function pixels(filePath) {
+    return new Promise((resolve, reject) => {
+        return get_pixels_1.default(filePath, (err, imageData) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(imageData);
+        });
+    });
 }
 //autoUpdater.checkForUpdates();
 let mainWindow;
@@ -46,20 +57,11 @@ const createMainWindow = async () => {
     });
     win.on('closed', () => {
         mainWindow = undefined;
+        electron_1.app.quit();
     });
     await win.loadFile(path_1.join(__dirname, '../views/index.html'));
     return win;
 };
-async function execAsync(cmd) {
-    return new Promise((resolve, reject) => {
-        return child_process_1.exec(cmd, (err, stdio, stderr) => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(stdio + stderr);
-        });
-    });
-}
 // Prevent multiple instances of the app
 if (!electron_1.app.requestSingleInstanceLock()) {
     electron_1.app.quit();
@@ -82,19 +84,75 @@ electron_1.app.on('activate', async () => {
         mainWindow = await createMainWindow();
     }
 });
-electron_1.ipcMain.on('ffmpeg', async (evt, args) => {
-    let cmd = `${ffmpeg_static_1.default.path} `;
-});
-electron_1.ipcMain.on('ffprobe', async (evt, args) => {
-    const cmd = `${ffprobe_static_1.default.path} -v quiet -print_format json -show_format -show_streams "${args.filePath}"`;
-    let res;
+electron_1.ipcMain.on('sonify', async (evt, args) => {
+    const startTime = +new Date();
+    //const monoBuffer : Float32Array = new Float32Array(args.state.frames * args.state.samplerate);
+    let tmp;
+    let watcher;
+    let video;
+    let filePath;
+    let i = 0;
+    let imageData;
+    let arrBuffer;
+    let endTime;
+    let frameStart;
+    let ms;
+    console.log(args.state);
     try {
-        res = await execAsync(cmd);
+        tmp = await ffmpeg_1.ffmpeg.exportPath();
     }
     catch (err) {
         console.error(err);
     }
-    mainWindow.webContents.send('ffprobe', JSON.parse(res));
+    video = new sonify_1.SonifyNode(args.state);
+    for (i = 0; i < args.state.frames; i++) {
+        frameStart = +new Date();
+        try {
+            filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.files[0], i);
+        }
+        catch (err) {
+            console.error(err);
+            continue;
+        }
+        try {
+            imageData = await pixels(filePath);
+        }
+        catch (err) {
+            console.error(err);
+            continue;
+        }
+        try {
+            arrBuffer = video.sonify(imageData.data);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        ms = (+new Date()) - frameStart;
+        console.log(`progress : ${i / args.state.frames}`);
+        mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms, samples: arrBuffer });
+        //monoBuffer.set(arrBuffer, i * arrBuffer.length);
+        fs_extra_1.writeFileSync('./buffer.json', JSON.stringify(arrBuffer, null, '\t'), 'utf8');
+        process.exit();
+        try {
+            fs_extra_1.unlink(filePath);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+    endTime = +new Date();
+    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime });
+    //console.dir(monoBuffer);
+});
+electron_1.ipcMain.on('info', async (evt, args) => {
+    let res;
+    try {
+        res = await ffmpeg_1.ffmpeg.info(args.filePath);
+    }
+    catch (err) {
+        console.error(err);
+    }
+    mainWindow.webContents.send('info', res);
 });
 (async () => {
     const menu = menu_js_1.createMenu();

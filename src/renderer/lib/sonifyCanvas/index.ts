@@ -1,5 +1,6 @@
 'use strict';
 
+
 //https://stackoverflow.com/questions/37459231/webaudio-seamlessly-playing-sequence-of-audio-chunks?answertab=votes#tab-top
 class SoundBuffer {
     private chunks : Array<AudioBufferSourceNode> = [];
@@ -7,7 +8,7 @@ class SoundBuffer {
     private startTime: number = 0;
     private lastChunkOffset: number = 0;
 
-    constructor(public ctx:AudioContext, public sampleRate:number,public bufferSize:number = 6, private debug = true) { }
+    constructor(public ctx:AudioContext, public sampleRate:number, public bufferSize:number = 6, private debug = true) { }
 
     private createChunk(chunk:Float32Array)  {
         var audioBuffer = this.ctx.createBuffer(2, chunk.length, this.sampleRate);
@@ -27,13 +28,13 @@ class SoundBuffer {
         return source;
     }
 
-    private log(data:string) {
+    private log (data : string) {
         if (this.debug) {
             console.log(new Date().toUTCString() + " : " + data);
         }
     }
 
-    public addChunk(data: Float32Array) {
+    public addChunk(data : Float32Array) {
         if (this.isPlaying && (this.chunks.length > this.bufferSize)) {
             this.log("chunk discarded");
             return; // throw away
@@ -65,12 +66,13 @@ class SoundBuffer {
 
 /** class representing image sonification of the canvas */
 class Sonify {
+    private state : State;
     private audioContext : AudioContext;
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
-    private framerate = state.framerate || 24;
-    private samprate = 48000;
-    private samplesPerFrame = this.samprate / this.framerate;
+    private framerate : number = 24;
+    private samprate : number = 48000;
+    private samplesPerFrame : number = this.samprate / this.framerate;
 
     private RED_MULTIPLIER : number = 0.3;
     private GREEN_MULTIPLIER : number = 0.59;
@@ -85,10 +87,13 @@ class Sonify {
      * @param canvas 
      */
 
-    constructor (audioContext : AudioContext, canvas : HTMLCanvasElement) {
+    constructor (state : State, audioContext : AudioContext, canvas : HTMLCanvasElement) {
+        this.state = state;
         this.audioContext = audioContext;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
+        this.framerate = this.state.framerate;
+        this.samplesPerFrame = this.samprate / this.framerate;
     }
 
     public sonifyCanvas () : AudioBuffer {
@@ -111,7 +116,7 @@ class Sonify {
         let fadeLengthInSamples : number = 30.0;
         let fadeIncrement : number = 1.0 / fadeLengthInSamples;
         let sample : number = 0;
-        let len : number =  audioBuffer.length
+        let len : number =  audioBuffer.length;
         
         for (sample = 0; sample < len; sample++) {
             scaledStart = Math.floor(sample * heightMultiplier);

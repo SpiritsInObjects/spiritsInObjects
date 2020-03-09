@@ -89,6 +89,9 @@
     "ffmpeg-static": "^2.7.0",
     "ffprobe-static": "^3.0.0",
     "fs-extra": "^8.1.0",
+    "get-pixels": "^3.3.2",
+    "humanize-duration": "^3.21.0",
+    "node-watch": "^0.6.3",
     "spin.js": "^4.1.0"
   },
   "optionalDependencies": {

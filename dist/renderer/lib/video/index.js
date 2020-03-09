@@ -1,26 +1,29 @@
 'use strict';
 class Video {
-    constructor() {
+    constructor(state) {
         this.element = document.getElementById('video');
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
         this.framerate = 24;
+        this.frames = 0;
+        this.samplerate = 48000;
         this.interval = null;
         this.playing = false;
         this.streaming = false;
+        this.state = state;
         this.ipcRenderer = require('electron').ipcRenderer;
         this.element.setAttribute('playsinline', 'true');
         this.element.setAttribute('webkit-playsinline', 'true');
         this.element.setAttribute('muted', 'true');
         this.element.muted = true;
-        this.ipcRenderer.on('ffprobe', this.onffprobe.bind(this));
+        this.ipcRenderer.on('info', this.oninfo.bind(this));
     }
     stream(stream) {
         this.element.srcObject = stream;
         //this.element.load();
     }
     file(filePath) {
-        this.ipcRenderer.send('ffprobe', { filePath });
+        this.ipcRenderer.send('info', { filePath });
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
         this.element.appendChild(this.source);
@@ -36,9 +39,10 @@ class Video {
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
     }
-    onffprobe(evt, args) {
+    oninfo(evt, args) {
         let fpsRaw;
         let videoStream;
+        let secondsRaw;
         videoStream = args.streams.find((stream) => {
             if (stream.codec_type === 'video') {
                 return stream;
@@ -46,8 +50,18 @@ class Video {
             return false;
         });
         fpsRaw = videoStream.r_frame_rate;
+        secondsRaw = videoStream.duration;
         this.framerate = parseFloat(fpsRaw);
-        state.framerate = this.framerate;
+        this.frames = Math.floor(this.framerate * parseFloat(secondsRaw));
+        this.width = videoStream.width;
+        this.height = videoStream.height;
+        //this.samplerate = this.height * 24;
+        this.state.framerate = this.framerate;
+        this.state.frames = this.frames;
+        this.state.width = this.width;
+        this.state.height = this.height;
+        //this.state.samplerate = this.samplerate;
+        this.state.save();
     }
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);

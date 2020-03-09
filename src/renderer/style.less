@@ -154,6 +154,50 @@ body{
 	}
 }
 
+#overlay {
+	display: none;
+	position: absolute;
+	width: 100%;
+	height: 100vh;
+	left: 0;
+	top: 0;
+	background: rgba(0, 0, 0, 0.6);
+	&.show{
+		display: block;
+	}
+}
+
+#overlayMsg {
+	width: 25%;
+	height: 25vh;
+	margin: 25vh auto 0;
+	color: rgba(255, 255, 255, 0.8);
+	text-align: center;
+}
+
+#overlayProgress {
+	border: 1px solid white;
+	border-radius : 6px;
+	width: 300px;
+	height: 20px;
+	background: transparent;
+	overflow: hidden;
+	margin: 0 auto;
+}
+
+#overlayProgressBar{
+	background:white;
+	float: left;
+	width: 0%;
+	height: 20px;
+}
+
+#overlayProgressMsg{
+	color: white;
+	width: 300px;
+	margin : 10px auto;
+}
+
 #dragOverlay {
 	display: none;
 	position: absolute;
@@ -172,6 +216,7 @@ body{
 		margin: 12.5vh auto 0;
 		border: 10px dashed rgba(255, 255, 255, 0.5);
 		border-radius: 40px;
+		pointer-events: none;
 	}
 }
 
@@ -182,4 +227,5 @@ body{
 	line-height: 80vh;
 	text-align: center;
 	text-transform: uppercase;
+	pointer-events: none;
 }

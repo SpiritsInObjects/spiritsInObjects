@@ -74,19 +74,28 @@ class Sonify {
      * @param audioContext
      * @param canvas
      */
-    constructor(audioContext, canvas) {
-        this.framerate = state.framerate;
+    constructor(state, audioContext, canvas) {
+        this.framerate = 24;
         this.samprate = 48000;
         this.samplesPerFrame = this.samprate / this.framerate;
         this.RED_MULTIPLIER = 0.3;
         this.GREEN_MULTIPLIER = 0.59;
         this.BLUE_MULTIPLIER = 0.11;
+        this.state = state;
         this.audioContext = audioContext;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
+        this.framerate = this.state.framerate;
+        this.samplesPerFrame = this.samprate / this.framerate;
     }
     sonifyCanvas() {
         let heightMultiplier = (this.canvas.height / this.samplesPerFrame); //Ratio of sample size to height of frame
+        //OPTIMIZATION POTENTIAL
+        //Only get image data after the start and to the end of the frame.
+        //Will potentially save 72% of loop in getRowLuminance() routine.
+        //Micro-benchmarking has shown that starting loop iterator after 0 does
+        //not gain any performance benefits, so this getImageData call is
+        //the next target for benchmarks.
         let imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height); //Get Uint8ClampedArray of pixel data from canvas
         let audioBuffer = this.audioContext.createBuffer(1, this.samplesPerFrame, this.samprate); //Create AudioBuffer to support
         let monoBuffer = audioBuffer.getChannelData(0); //Get single channel buffer from AudioBuffer
@@ -114,6 +123,7 @@ class Sonify {
             }
             monoBuffer[scaledStart] = this.getRowLuminance(imageData.data, imageDataWidth, scaledStart, scaledEnd, alpha) * fadeMultiplier;
         }
+        //returns entire audiobuffer, maybe only Float32Array?
         return audioBuffer;
     }
     getRowLuminance(data, width, scaledStart, scaledEnd, alpha) {
