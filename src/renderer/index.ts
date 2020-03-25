@@ -153,8 +153,8 @@ let sonify : Sonify;
     //@ts-ignore
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function sonifyStart (displayName : string) {
-        audioBuffer = audioCtx.createBuffer(1, state.samplerate * state.frames, state.samplerate);
-        monoBuffer = audioBuffer.getChannelData(0);   
+        //audioBuffer = audioCtx.createBuffer(1, state.samplerate * state.frames, state.samplerate);
+        //monoBuffer = audioBuffer.getChannelData(0);   
 
         overlayShow(`Sonifying ${displayName}...`);
         ipcRenderer.send('sonify', { state : state.get() });
@@ -178,19 +178,19 @@ let sonify : Sonify;
 
         console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
         console.log( args.i * args.samples.length + ' -> ' + (args.i + 1) * args.samples.length)
-        for (let i : number = args.i * args.samples.length; i < (args.i + 1) * args.samples.length; i++) {
-            monoBuffer[i] = args.samples[i];
-        }
+        //for (let i : number = args.i * args.samples.length; i < (args.i + 1) * args.samples.length; i++) {
+            //monoBuffer[i] = args.samples[i];
+        //}
     }
 
     function onSonifyComplete (evt : Event, args : any) {
         avgMs = -1;
         overlayHide();
         setTimeout(() => {
-            var source = audioCtx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioCtx.destination);
-            source.start();
+            //var source = audioCtx.createBufferSource();
+            //source.buffer = audioBuffer;
+            //source.connect(audioCtx.destination);
+            //source.start();
         })
     }
 

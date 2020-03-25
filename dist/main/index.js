@@ -12,10 +12,11 @@ const electron_debug_1 = __importDefault(require("electron-debug"));
 const electron_context_menu_1 = __importDefault(require("electron-context-menu"));
 const fs_extra_1 = require("fs-extra");
 const get_pixels_1 = __importDefault(require("get-pixels"));
+const wavefile_1 = require("wavefile");
 const ffmpeg_1 = require("./lib/ffmpeg");
 const sonify_1 = require("./lib/sonify");
-//import config from './config';
-const menu_js_1 = require("./menu.js");
+//import config from './lib/config';
+const menu_1 = require("./lib/menu");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -87,6 +88,7 @@ electron_1.app.on('activate', async () => {
 electron_1.ipcMain.on('sonify', async (evt, args) => {
     const startTime = +new Date();
     //const monoBuffer : Float32Array = new Float32Array(args.state.frames * args.state.samplerate);
+    let wav = new wavefile_1.WaveFile();
     let tmp;
     let watcher;
     let video;
@@ -105,6 +107,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
     }
     video = new sonify_1.SonifyNode(args.state);
+    let arr = new Float32Array(args.state.samplerate);
     for (i = 0; i < args.state.frames; i++) {
         frameStart = +new Date();
         try {
@@ -129,16 +132,21 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         }
         ms = (+new Date()) - frameStart;
         console.log(`progress : ${i / args.state.frames}`);
-        mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms, samples: arrBuffer });
+        mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms }); //samples : arrBuffer
         //monoBuffer.set(arrBuffer, i * arrBuffer.length);
-        fs_extra_1.writeFileSync('./buffer.json', JSON.stringify(arrBuffer, null, '\t'), 'utf8');
-        process.exit();
         try {
             fs_extra_1.unlink(filePath);
         }
         catch (err) {
             console.error(err);
         }
+        if (i === 24) {
+            fs_extra_1.writeFileSync('./buffer.json', JSON.stringify(arr, null, '\t'), 'utf8');
+            wav.fromScratch(1, args.state.samplerate, '8', arr);
+            fs_extra_1.writeFileSync('./buffer.wav', wav.toBuffer());
+            process.exit();
+        }
+        arr.set(arrBuffer, i * arrBuffer.length);
     }
     endTime = +new Date();
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime });
@@ -155,7 +163,7 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     mainWindow.webContents.send('info', res);
 });
 (async () => {
-    const menu = menu_js_1.createMenu();
+    const menu = menu_1.createMenu();
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();

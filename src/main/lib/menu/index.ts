@@ -10,7 +10,7 @@ const {
 	openNewGitHubIssue,
 	debugInfo
 } = require('electron-util');
-const config = require('./config');
+const config = require('../config');
 
 const showPreferences = () => {
 	// Show the app's preferences here

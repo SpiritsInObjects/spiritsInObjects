@@ -39,6 +39,17 @@ class Video {
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
     }
+    parseFps(line) {
+        let fps;
+        const parts = line.split('/');
+        if (parts.length > 1) {
+            fps = parseFloat(parts[0]) / parseFloat(parts[1]);
+        }
+        else {
+            fps = parseFloat(parts[0]);
+        }
+        return fps;
+    }
     oninfo(evt, args) {
         let fpsRaw;
         let videoStream;
@@ -51,16 +62,16 @@ class Video {
         });
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
-        this.framerate = parseFloat(fpsRaw);
+        this.framerate = this.parseFps(fpsRaw);
         this.frames = Math.floor(this.framerate * parseFloat(secondsRaw));
         this.width = videoStream.width;
         this.height = videoStream.height;
-        //this.samplerate = this.height * 24;
+        this.samplerate = this.height * 24;
         this.state.framerate = this.framerate;
         this.state.frames = this.frames;
         this.state.width = this.width;
         this.state.height = this.height;
-        //this.state.samplerate = this.samplerate;
+        this.state.samplerate = this.samplerate;
         this.state.save();
     }
     draw() {

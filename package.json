@@ -92,7 +92,8 @@
     "get-pixels": "^3.3.2",
     "humanize-duration": "^3.21.0",
     "node-watch": "^0.6.3",
-    "spin.js": "^4.1.0"
+    "spin.js": "^4.1.0",
+    "wavefile": "^11.0.0"
   },
   "optionalDependencies": {
     "electron-installer-debian": "^2.0.0"

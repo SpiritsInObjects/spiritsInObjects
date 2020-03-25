@@ -10,12 +10,13 @@ import contextMenu from 'electron-context-menu';
 import watch from 'node-watch';
 import { pathExists, unlink, writeFileSync } from 'fs-extra';
 import getPixels from 'get-pixels';
+import { WaveFile } from 'wavefile';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonify';
 
-//import config from './config';
-import { createMenu } from './menu.js';
+//import config from './lib/config';
+import { createMenu } from './lib/menu';
 import { fstat, writeFile } from 'fs';
 
 unhandled();
@@ -41,7 +42,7 @@ async function pixels (filePath : string) {
 				return reject(err);
 			}
 			return resolve(imageData);
-		}
+		});
 	});
 }
 
@@ -107,6 +108,7 @@ app.on('activate', async () => {
 ipcMain.on('sonify', async (evt : Event, args : any) => {
 	const startTime : number = +new Date();
 	//const monoBuffer : Float32Array = new Float32Array(args.state.frames * args.state.samplerate);
+	let wav = new WaveFile();
 	let tmp : any;
 	let watcher : any;
 	let video : SonifyNode;
@@ -127,6 +129,8 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	}
 
 	video = new SonifyNode(args.state);
+
+	let arr : Float32Array = new Float32Array(args.state.samplerate);
 	
 	for (i = 0; i < args.state.frames; i++) {
 		frameStart = +new Date();
@@ -149,16 +153,22 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		}
 		ms = (+new Date()) - frameStart;
 		console.log(`progress : ${i / args.state.frames}`);
-		mainWindow.webContents.send('sonify_progress', { i, frames : args.state.frames, ms, samples : arrBuffer });
+		mainWindow.webContents.send('sonify_progress', { i, frames : args.state.frames, ms }); //samples : arrBuffer
 		//monoBuffer.set(arrBuffer, i * arrBuffer.length);
-		writeFileSync('./buffer.json', JSON.stringify(arrBuffer, null, '\t'), 'utf8');
-		process.exit();
 
 		try {
 			unlink(filePath);
 		} catch (err) {
 			console.error(err);
 		}
+
+		if (i === 24) {
+			writeFileSync('./buffer.json', JSON.stringify(arr, null, '\t'), 'utf8');
+			wav.fromScratch(1, args.state.samplerate, '8', arr);
+			writeFileSync('./buffer.wav', wav.toBuffer());
+			process.exit();
+		}
+		arr.set(arrBuffer, i * arrBuffer.length);
 	}
 	endTime = +new Date();
 	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime });

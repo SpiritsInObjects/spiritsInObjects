@@ -51,6 +51,17 @@ class Video {
         document.getElementById('play').removeAttribute('disabled');
     }
 
+    private parseFps (line : string) {
+        let fps : number;
+        const parts = line.split('/');
+        if (parts.length > 1) {
+            fps = parseFloat(parts[0]) / parseFloat(parts[1]);
+        } else {
+            fps = parseFloat(parts[0]);
+        }
+        return fps;
+    }
+
     private oninfo (evt : Event, args : any) {
         let fpsRaw : string;
         let videoStream : any;
@@ -66,17 +77,17 @@ class Video {
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
 
-        this.framerate = parseFloat(fpsRaw);
+        this.framerate = this.parseFps(fpsRaw);
         this.frames = Math.floor(this.framerate * parseFloat(secondsRaw));
         this.width = videoStream.width;
         this.height = videoStream.height;
-        //this.samplerate = this.height * 24;
+        this.samplerate = this.height * 24;
 
         this.state.framerate = this.framerate;
         this.state.frames = this.frames;
         this.state.width = this.width;
         this.state.height = this.height;
-        //this.state.samplerate = this.samplerate;
+        this.state.samplerate = this.samplerate;
         this.state.save();
     }
 

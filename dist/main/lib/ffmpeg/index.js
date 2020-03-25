@@ -69,6 +69,30 @@ class ffmpeg {
         }
         return str;
     }
+    static parseStderr(line) {
+        //frame= 6416 fps= 30 q=31.0 size=   10251kB time=00:03:34.32 bitrate= 391.8kbits/s speed=   1x
+        let obj = {};
+        if (line.substring(0, 'frame='.length) === 'frame=') {
+            try {
+                obj.frame = line.split('frame=')[1].split('fps=')[0];
+                obj.frame = parseInt(obj.frame);
+                obj.fps = line.split('fps=')[1].split('q=')[0];
+                obj.fps = parseFloat(obj.fps);
+                obj.time = line.split('time=')[1].split('bitrate=')[0];
+                obj.speed = line.split('speed=')[1].trim().replace('x', '');
+                obj.speed = parseFloat(obj.speed);
+                obj.size = line.split('size=')[1].split('time=')[0].trim();
+            }
+            catch (err) {
+                console.error(err);
+                console.log(line);
+                process.exit();
+            }
+        }
+        else {
+        }
+        return obj;
+    }
     static async exportPath() {
         try {
             await fs_extra_1.unlink(tmp);
@@ -95,14 +119,44 @@ class ffmpeg {
             '-y',
             output
         ];
-        let res;
-        try {
-            res = await spawnAsync(bin, args);
-        }
-        catch (err) {
-            console.error(err);
-        }
-        return tmp;
+        return new Promise((resolve, reject) => {
+            const child = child_process_1.spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            child.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(tmp);
+                }
+                else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            child.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            child.stderr.on('data', (data) => {
+                const line = data.toString();
+                const obj = this.parseStderr(line);
+                /*if (obj.frame && input.frames) {
+                    obj.progress = obj.frame / input.frames;
+                }
+                if (obj.frame && obj.speed && input.frames && input.fps) {
+                    //scale by speed
+                    obj.remaining = ((input.frames - obj.frame) / input.fps) / obj.speed;
+                    obj.estimated = input.seconds / obj.speed;
+                    if (obj.estimated > estimated) {
+                        estimated = obj.estimated;
+                    }
+                }
+                if (obj.frame) {
+                    log.info(`${input.name} ${obj.frame}/${input.frames} ${Math.round(obj.progress * 1000) / 10}% ${Math.round(obj.remaining)} seconds remaining of ${Math.round(obj.estimated)}`);
+                    if (onProgress) onProgress(obj);
+                }*/
+            });
+            return child;
+        });
     }
     /**
      * Export a single frame from a video.

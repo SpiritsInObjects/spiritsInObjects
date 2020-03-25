@@ -1,7 +1,5 @@
 'use strict';
 
-import { runInThisContext } from "vm";
-
 /** class representing image sonification of the canvas */
 export class SonifyNode {
     private framerate : number = 24;
@@ -28,7 +26,7 @@ export class SonifyNode {
     constructor (state : any) {
         this.framerate = state.framerate;
         this.samprate = state.samplerate;
-        this.samplesPerFrame = this.samprate / this.framerate;
+        this.samplesPerFrame = state.height;//this.samprate / this.framerate;
         this.width = state.width;
         this.height = state.height;
         this.start = state.start;
@@ -37,7 +35,7 @@ export class SonifyNode {
 
     public sonify (imageData : Uint8Array) : Float32Array {
         let monoBuffer : Float32Array = new Float32Array(this.samplesPerFrame);
-        let heightMultiplier : number = this.height / this.samplesPerFrame;
+        let heightMultiplier : number = 1.0; //this.height / this.samplesPerFrame;
         let scaledStart : number;
         let scaledEnd : number;
         let alpha : number;
@@ -83,7 +81,9 @@ export class SonifyNode {
             L2  = this.RED_MULTIPLIER * data[scaledEndWidth + i * 4] +  this.GREEN_MULTIPLIER * data[scaledEndWidth + i * 4 + 1] + this.BLUE_MULTIPLIER * data[scaledEndWidth + i * 4 + 2];
             luminance += ( (1 - alpha) * L1 + alpha * L2 )  / 128.0 - 1.0;
         }
+        //console.log(luminance)
         luminance = luminance / (width / 4.0);
+        //console.log(luminance)
         return luminance;
     }
 }

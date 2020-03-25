@@ -18,7 +18,7 @@ class SonifyNode {
         this.BLUE_MULTIPLIER = 0.11;
         this.framerate = state.framerate;
         this.samprate = state.samplerate;
-        this.samplesPerFrame = this.samprate / this.framerate;
+        this.samplesPerFrame = state.height; //this.samprate / this.framerate;
         this.width = state.width;
         this.height = state.height;
         this.start = state.start;
@@ -26,7 +26,7 @@ class SonifyNode {
     }
     sonify(imageData) {
         let monoBuffer = new Float32Array(this.samplesPerFrame);
-        let heightMultiplier = this.height / this.samplesPerFrame;
+        let heightMultiplier = 1.0; //this.height / this.samplesPerFrame;
         let scaledStart;
         let scaledEnd;
         let alpha;
@@ -70,7 +70,9 @@ class SonifyNode {
             L2 = this.RED_MULTIPLIER * data[scaledEndWidth + i * 4] + this.GREEN_MULTIPLIER * data[scaledEndWidth + i * 4 + 1] + this.BLUE_MULTIPLIER * data[scaledEndWidth + i * 4 + 2];
             luminance += ((1 - alpha) * L1 + alpha * L2) / 128.0 - 1.0;
         }
+        //console.log(luminance)
         luminance = luminance / (width / 4.0);
+        //console.log(luminance)
         return luminance;
     }
 }

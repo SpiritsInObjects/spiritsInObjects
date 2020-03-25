@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //const path = require('path'); //need for icon
 const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
-const config = require('./config');
+const config = require('../config');
 const showPreferences = () => {
     // Show the app's preferences here
 };
@@ -159,4 +159,4 @@ function createMenu() {
 }
 exports.createMenu = createMenu;
 module.exports.createMenu = createMenu;
-//# sourceMappingURL=menu.js.map
+//# sourceMappingURL=index.js.map
