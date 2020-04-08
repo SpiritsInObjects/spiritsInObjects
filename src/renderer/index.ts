@@ -12,7 +12,7 @@ let video : Video;
 let camera : Camera;
 let sonify : Sonify;
 
-(function main () {
+(async function main () {
     const extensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
     let startMoving : boolean = false;
     let endMoving : boolean = false;
@@ -138,7 +138,7 @@ let sonify : Sonify;
 
             ipcRenderer.send('file', { filePath : pathStr });
 
-            state.files = [pathStr];
+            state.set('files', [pathStr]);
             state.save();
 
             proceed = await confirm(`Sonify ${displayName}?`);
@@ -153,11 +153,13 @@ let sonify : Sonify;
     //@ts-ignore
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function sonifyStart (displayName : string) {
-        //audioBuffer = audioCtx.createBuffer(1, state.samplerate * state.frames, state.samplerate);
-        //monoBuffer = audioBuffer.getChannelData(0);   
-
+        const sonifyState : any = {
+            samplerate : state.get('samplerate'),
+	        frames : state.get('frames'),
+			files : state.get('files')
+        }
         overlayShow(`Sonifying ${displayName}...`);
-        ipcRenderer.send('sonify', { state : state.get() });
+        ipcRenderer.send('sonify', { state : sonifyState });
     }
 
     let avgMs : number = -1;
@@ -307,6 +309,13 @@ let sonify : Sonify;
     audioContext = new AudioContext();
     //@ts-ignore why are you like this
     state = new State();
+
+    try {
+        await state.start()
+    } catch (err) {
+        console.error(err)
+    }
+
     video = new Video(state);
     camera = new Camera(video);
     sonify = new Sonify(state, audioContext, video.canvas);

@@ -4,7 +4,6 @@ const path_1 = require("path");
 class Visualize {
     constructor(filePath) {
         this.viewElement = document.getElementById('visualize');
-        this.viewCtx = this.viewElement.getContext('2d');
         this.type = 'midi'; //or audio
         this.frame = 0;
         this.filePath = filePath;

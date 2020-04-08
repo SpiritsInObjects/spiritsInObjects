@@ -18,12 +18,24 @@ class Video {
 
     constructor (state : State) {
         this.state = state;
+
         this.ipcRenderer = require('electron').ipcRenderer;
         this.element.setAttribute('playsinline', 'true');
         this.element.setAttribute('webkit-playsinline', 'true');
         this.element.setAttribute('muted', 'true');
         this.element.muted = true;
+        
         this.ipcRenderer.on('info', this.oninfo.bind(this));
+
+        this.restoreState();
+    }
+
+    private restoreState () {
+        this.framerate = this.state.get('framerate')
+        this.frames = this.state.get('frames')
+        this.width = this.state.get('width')
+        this.height = this.state.get('height')
+        this.samplerate = this.state.get('samplerate')
     }
 
     public stream (stream : MediaStream) {
@@ -83,11 +95,11 @@ class Video {
         this.height = videoStream.height;
         this.samplerate = this.height * 24;
 
-        this.state.framerate = this.framerate;
-        this.state.frames = this.frames;
-        this.state.width = this.width;
-        this.state.height = this.height;
-        this.state.samplerate = this.samplerate;
+        this.state.set('framerate', this.framerate);
+        this.state.set('frames', this.frames);
+        this.state.set('width', this.width);
+        this.state.set('height', this.height);
+        this.state.set('samplerate', this.samplerate);
         this.state.save();
     }
 

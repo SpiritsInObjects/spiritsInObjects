@@ -67,11 +67,11 @@ class Video {
         this.width = videoStream.width;
         this.height = videoStream.height;
         this.samplerate = this.height * 24;
-        this.state.framerate = this.framerate;
-        this.state.frames = this.frames;
-        this.state.width = this.width;
-        this.state.height = this.height;
-        this.state.samplerate = this.samplerate;
+        this.state.set('framerate', this.framerate);
+        this.state.set('frames', this.frames);
+        this.state.set('width', this.width);
+        this.state.set('height', this.height);
+        this.state.set('samplerate', this.samplerate);
         this.state.save();
     }
     draw() {

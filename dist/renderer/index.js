@@ -119,7 +119,7 @@ let sonify;
             displayName = pathStr.split('/').pop();
             elem.value = displayName;
             ipcRenderer.send('file', { filePath: pathStr });
-            state.files = [pathStr];
+            state.set('files', [pathStr]);
             state.save();
             proceed = await confirm(`Sonify ${displayName}?`);
             if (proceed) {
@@ -132,10 +132,13 @@ let sonify;
     //@ts-ignore
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function sonifyStart(displayName) {
-        //audioBuffer = audioCtx.createBuffer(1, state.samplerate * state.frames, state.samplerate);
-        //monoBuffer = audioBuffer.getChannelData(0);   
+        const sonifyState = {
+            samplerate: state.get('samplerate'),
+            frames: state.get('frames'),
+            files: state.get('files')
+        };
         overlayShow(`Sonifying ${displayName}...`);
-        ipcRenderer.send('sonify', { state: state.get() });
+        ipcRenderer.send('sonify', { state: sonifyState });
     }
     let avgMs = -1;
     const progressBar = document.getElementById('overlayProgressBar');

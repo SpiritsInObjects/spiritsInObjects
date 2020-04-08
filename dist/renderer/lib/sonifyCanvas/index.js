@@ -85,7 +85,7 @@ class Sonify {
         this.audioContext = audioContext;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
-        this.framerate = this.state.framerate;
+        this.framerate = this.state.get('framerate');
         this.samplesPerFrame = this.samprate / this.framerate;
     }
     sonifyCanvas() {

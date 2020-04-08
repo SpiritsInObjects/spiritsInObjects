@@ -1,37 +1,38 @@
 'use strict';
 const { homedir } = require('os');
 const { join } = require('path');
-const { outputFile, readFile, pathExists } = require('fs-extra');
+const { outputFile, readFile, pathExists, ensureDir } = require('fs-extra');
 class State {
     constructor() {
         this.localFile = join(homedir(), '.spiritsInObjects/state.sio');
-        this.files = [];
-        this.camera = null;
-        this.start = .72;
-        this.end = 1.0;
-        this.framerate = 24;
-        this.frames = 0;
-        this.width = 0;
-        this.height = 0;
-        this.samplerate = 0;
+        this.storage = {};
+        this.startup();
         this.restore();
+    }
+    async startup() {
+        const stateDir = join(homedir(), '.spiritsInObjects');
+        let dirExists;
+        try {
+            dirExists = await pathExists(stateDir);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        if (!dirExists) {
+            try {
+                await ensureDir(stateDir);
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
     }
     /**
      * Save the state as JSON to local file in the home directory
      */
     async save() {
-        const storage = {
-            files: this.files,
-            camera: this.camera,
-            start: this.start,
-            end: this.end,
-            framerate: this.framerate,
-            frames: this.frames,
-            width: this.width,
-            samplerate: this.samplerate
-        };
         try {
-            await outputFile(this.localFile, JSON.stringify(storage, null, '\t'), 'utf8');
+            await outputFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
         }
         catch (err) {
             console.error(err);
@@ -41,7 +42,6 @@ class State {
      * Restore the state from the saved JSON file to the state class
      */
     async restore() {
-        let storage;
         let raw;
         let fileExists = false;
         try {
@@ -62,39 +62,33 @@ class State {
         }
         if (raw) {
             try {
-                storage = JSON.parse(raw);
+                this.storage = JSON.parse(raw);
             }
             catch (err) {
-                console.log(err);
-                console.log(raw);
+                console.error(err);
+                console.error(raw);
                 return false;
             }
-            this.files = storage.files;
-            this.camera = storage.camera;
-            this.start = storage.start;
-            this.end = storage.end;
-            this.framerate = storage.framerate;
-            this.frames = storage.frames;
-            this.width = storage.width;
-            this.height = storage.height;
-            this.samplerate = storage.samplerate;
         }
     }
     /**
-     * Get the current state as an object.
+     * Get the current state of a key or the entire storage object.
+     *
+     * @param key Name of key to retrieve.
      */
-    get() {
-        return {
-            files: this.files,
-            camera: this.camera,
-            start: this.start,
-            end: this.end,
-            framerate: this.framerate,
-            frames: this.frames,
-            width: this.width,
-            height: this.height,
-            samplerate: this.samplerate
-        };
+    get(key) {
+        if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
+            return this.storage[key];
+        }
+        return null;
+    }
+    /**
+     * Set a value on the storage object.
+     * @param key Name of key in storage object
+     * @param value Value of key
+     */
+    set(key, value) {
+        this.storage[key] = value;
     }
 }
 //# sourceMappingURL=index.js.map

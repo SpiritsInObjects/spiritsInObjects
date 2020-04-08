@@ -2,9 +2,10 @@
 
 const { homedir } = require('os');
 const { join } = require('path');
-const { outputFile, readFile, pathExists } = require('fs-extra')
+const { outputFile, readFile, pathExists, ensureDir } = require('fs-extra')
 
 interface StateStorage {
+    [key: string]: any;
     files? : string[];
     camera? : string;
     start? : number;
@@ -17,38 +18,46 @@ interface StateStorage {
 }
 
 class State {
-    private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' )
+    private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' );
+    private storage : StateStorage = {} as StateStorage;
     
-    public files : string[] = [];
-    public camera : string = null;
-    public start : number = .72;
-    public end : number = 1.0;
-    public framerate : number = 24;
-    public frames : number = 0;
-    public width : number = 0;
-    public height : number = 0;
-    public samplerate : number = 0;
-
     constructor () {
-        this.restore();
+        
+    }
+
+    public async start () {
+        const stateDir : string = join(homedir(), '.spiritsInObjects');
+        let dirExists : boolean;
+        try {
+            dirExists = await pathExists(stateDir)
+        } catch (err) {
+            throw err
+        }
+        if (!dirExists) {
+            try {
+                await ensureDir(stateDir)
+            } catch (err) {
+                throw err
+            }
+            try {
+                this.save()
+            } catch (err) {
+                throw err
+            }
+        }
+        try {
+            await this.restore()
+        } catch (err) {
+            throw err
+        }
     }
 
     /**
      * Save the state as JSON to local file in the home directory
      */
     public async save () {
-        const storage : StateStorage = {
-            files:  this.files,
-            camera : this.camera,
-            start : this.start,
-            end : this.end,
-            framerate : this.framerate,
-            frames : this.frames,
-            width : this.width,
-            samplerate : this.samplerate
-        };
         try {
-            await outputFile(this.localFile, JSON.stringify(storage, null, '\t'), 'utf8');
+            await outputFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
         } catch (err) {
             console.error(err);
         }
@@ -58,7 +67,6 @@ class State {
      * Restore the state from the saved JSON file to the state class
      */
     public async restore () {
-        let storage : StateStorage;
         let raw : string;
         let fileExists : boolean = false;
 
@@ -80,38 +88,33 @@ class State {
         }
         if (raw) {
             try {
-                storage = JSON.parse(raw) as StateStorage;
+                this.storage = JSON.parse(raw) as StateStorage;
             } catch (err) {
-                console.log(err);
-                console.log(raw);
+                console.error(err);
+                console.error(raw);
                 return false;
             }
-            this.files = storage.files;
-            this.camera = storage.camera;
-            this.start = storage.start;
-            this.end = storage.end;
-            this.framerate = storage.framerate;
-            this.frames = storage.frames;
-            this.width = storage.width;
-            this.height = storage.height;
-            this.samplerate = storage.samplerate;
         }
     }
 
     /**
-     * Get the current state as an object.
+     * Get the current state of a key or the entire storage object.
+     * 
+     * @param key Name of key to retrieve.
      */
-    public get () : StateStorage {
-        return {
-            files:  this.files,
-            camera : this.camera,
-            start : this.start,
-            end : this.end,
-            framerate : this.framerate,
-            frames : this.frames,
-            width : this.width,
-            height : this.height,
-            samplerate : this.samplerate
-        };
+    public get (key? : string) : any {
+        if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
+            return this.storage[key];
+        }
+        return null
+    }
+
+    /**
+     * Set a value on the storage object.
+     * @param key Name of key in storage object
+     * @param value Value of key
+     */
+    public set (key: string, value : any) {
+        this.storage[key] = value;
     }
 }

@@ -4,7 +4,6 @@ import { basename, extname } from 'path';
 
 class Visualize {
     private viewElement : HTMLCanvasElement = document.getElementById('visualize') as HTMLCanvasElement;
-    private viewCtx : CanvasRenderingContext2D = this.viewElement.getContext('2d');
     public type : string = 'midi'; //or audio
     public filePath : string;
     public fileName : string;
