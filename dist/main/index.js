@@ -13,10 +13,12 @@ const electron_context_menu_1 = __importDefault(require("electron-context-menu")
 const fs_extra_1 = require("fs-extra");
 const get_pixels_1 = __importDefault(require("get-pixels"));
 const wavefile_1 = require("wavefile");
+const os_1 = require("os");
 const ffmpeg_1 = require("./lib/ffmpeg");
-const sonify_1 = require("./lib/sonify");
+const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
+const sox_1 = require("./lib/sox");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -87,11 +89,10 @@ electron_1.app.on('activate', async () => {
 });
 electron_1.ipcMain.on('sonify', async (evt, args) => {
     const startTime = +new Date();
-    //const monoBuffer : Float32Array = new Float32Array(args.state.frames * args.state.samplerate);
     let wav = new wavefile_1.WaveFile();
     let tmp;
     let watcher;
-    let video;
+    let sonify;
     let filePath;
     let i = 0;
     let imageData;
@@ -99,15 +100,19 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     let endTime;
     let frameStart;
     let ms;
+    let arr = new Float32Array(args.state.height * args.state.frames);
+    let tmpExists = false;
+    let tmpAudio;
+    let normalAudio;
     console.log(args.state);
     try {
         tmp = await ffmpeg_1.ffmpeg.exportPath();
+        tmpExists = true;
     }
     catch (err) {
         console.error(err);
     }
-    video = new sonify_1.SonifyNode(args.state);
-    let arr = new Float32Array(args.state.samplerate);
+    sonify = new sonifyNode_1.SonifyNode(args.state);
     for (i = 0; i < args.state.frames; i++) {
         frameStart = +new Date();
         try {
@@ -118,39 +123,59 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             continue;
         }
         try {
+            tmpExists = await fs_extra_1.pathExists(filePath);
+        }
+        catch (err) {
+            console.error(err);
+            continue;
+        }
+        if (!tmpExists) {
+            console.warn(`Frame ${filePath} does not exist`);
+            continue;
+        }
+        try {
             imageData = await pixels(filePath);
         }
         catch (err) {
             console.error(err);
             continue;
         }
-        try {
-            arrBuffer = video.sonify(imageData.data);
-        }
-        catch (err) {
-            console.error(err);
-        }
+        arrBuffer = sonify.sonify(imageData.data);
         ms = (+new Date()) - frameStart;
         console.log(`progress : ${i / args.state.frames}`);
-        mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms }); //samples : arrBuffer
-        //monoBuffer.set(arrBuffer, i * arrBuffer.length);
+        mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms });
+        arr.set(arrBuffer, i * arrBuffer.length);
         try {
             fs_extra_1.unlink(filePath);
         }
         catch (err) {
             console.error(err);
         }
-        if (i === 24) {
-            fs_extra_1.writeFileSync('./buffer.json', JSON.stringify(arr, null, '\t'), 'utf8');
-            wav.fromScratch(1, args.state.samplerate, '8', arr);
-            fs_extra_1.writeFileSync('./buffer.wav', wav.toBuffer());
-            process.exit();
-        }
         arr.set(arrBuffer, i * arrBuffer.length);
     }
+    console.log(`All frames exported and sonified for ${args.state.files[0]}`);
+    wav.fromScratch(1, args.state.samplerate, '32f', arr);
+    console.log('Created wav from raw sample data');
+    tmpAudio = path_1.join(os_1.tmpdir(), 'tmp_audio.wav');
+    normalAudio = path_1.join(os_1.tmpdir(), 'normal_audio.wav');
+    try {
+        await fs_extra_1.writeFile(tmpAudio, wav.toBuffer());
+        console.log(`Saved temporary audio file to ${tmpAudio}`);
+    }
+    catch (err) {
+        console.error(err);
+    }
+    try {
+        await sox_1.sox.postProcess(tmpAudio, normalAudio);
+        console.log(`Normalized audio file to ${normalAudio}`);
+    }
+    catch (err) {
+        console.error(err);
+        console.log('Normalization failed, using tmp file.');
+        tmpAudio = normalAudio;
+    }
     endTime = +new Date();
-    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime });
-    //console.dir(monoBuffer);
+    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: normalAudio });
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
     let res;
@@ -161,6 +186,17 @@ electron_1.ipcMain.on('info', async (evt, args) => {
         console.error(err);
     }
     mainWindow.webContents.send('info', res);
+});
+electron_1.ipcMain.on('save', async (evt, args) => {
+    if (args.savePath && !args.savePath.canceled) {
+        try {
+            await fs_extra_1.copyFile(args.filePath, args.savePath.filePath);
+            console.log(`Saved file as ${args.savePath.filePath}`);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
 });
 (async () => {
     const menu = menu_1.createMenu();

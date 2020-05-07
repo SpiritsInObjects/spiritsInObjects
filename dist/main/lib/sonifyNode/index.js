@@ -1,42 +1,30 @@
 'use strict';
-/** class representing image sonification of the canvas */
-class Sonify {
+Object.defineProperty(exports, "__esModule", { value: true });
+class SonifyNode {
     /**
      * @constructor
      *
      * Creates Sonify class using a global AudioContext and canvas element
      *
-     * @param audioContext
-     * @param canvas
+     * @param {object} state
      */
-    constructor(state, canvas) {
+    constructor(state) {
         this.framerate = 24;
         this.samplerate = 48000;
         this.samplesPerFrame = this.samplerate / this.framerate;
-        this.start = 0.72;
-        this.end = 1.0;
         this.RED_MULTIPLIER = 0.3;
         this.GREEN_MULTIPLIER = 0.59;
         this.BLUE_MULTIPLIER = 0.11;
-        this.canvas = canvas;
-        this.ctx = this.canvas.getContext('2d');
-        if (state.get('framerate'))
-            this.framerate = state.get('framerate');
-        if (state.get('start'))
-            this.start = state.get('start');
-        if (state.get('end'))
-            this.end = state.get('end');
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-        this.samplesPerFrame = this.height;
-        this.samplerate = this.samplesPerFrame * this.framerate;
+        this.framerate = state.framerate;
+        this.samplerate = state.samplerate;
+        this.samplesPerFrame = state.height;
+        this.width = state.width;
+        this.height = state.height;
+        this.start = state.start;
+        this.end = state.end;
         this.startLocation = Math.floor(this.width * this.start) * 4;
         this.endLocation = Math.floor(this.width * this.end) * 4;
         this.max = (Math.floor(this.width * this.end) - Math.floor(this.width * this.start)) * 255;
-    }
-    sonifyCanvas() {
-        let image = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        return this.sonify(image.data);
     }
     sonify(imageData) {
         const monoBuffer = new Float32Array(this.samplesPerFrame);
@@ -64,7 +52,6 @@ class Sonify {
         return this.map_range(luminance, 0, this.max, -0.999999, 0.999999);
     }
 }
-if (typeof module !== 'undefined') {
-    module.exports = Sonify;
-}
+exports.SonifyNode = SonifyNode;
+module.exports.SonifyNode = SonifyNode;
 //# sourceMappingURL=index.js.map

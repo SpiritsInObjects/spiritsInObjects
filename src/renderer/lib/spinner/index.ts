@@ -5,9 +5,9 @@ const Spinners : any = {};
 function showSpinner (id : string) {
     const SpinnerOptions : any = {
         lines: 13,
-        length: 38,
-        width: 17,
-        radius: 45,
+        length: 24,
+        width: 14,
+        radius: 30,
         scale: 1,
         corners: 1,
         color: '#ffffff', 
@@ -18,14 +18,16 @@ function showSpinner (id : string) {
         direction: 1,
         zIndex: 2e9,
         className: 'spinner',
-        top: '50%', 
+        top: '0', 
         left: '50%', 
         shadow: '0 0 1px transparent',
         position: 'absolute'
     };
     const target : HTMLElement = document.getElementById(id);
-    //@ts-ignore just fuck it
-    Spinners[id] = new Spinner(SpinnerOptions) as any;
+    if (typeof Spinners[id] === 'undefined') {
+        //@ts-ignore just fuck it
+        Spinners[id] = new Spinner(SpinnerOptions) as any;
+    }
     Spinners[id].spin(target);
 }
 

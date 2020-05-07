@@ -16,6 +16,7 @@ body {
   -webkit-appearance: none;
   background: none;
   border: none;
+  border-radius: 0;
   width: 50%;
   font-size: 20px;
   padding-top: 8px;
@@ -24,6 +25,8 @@ body {
   color: #999;
   outline: none;
   cursor: pointer;
+  margin: 0;
+  height: 40px;
 }
 #menu button.active {
   background: rgba(0, 0, 0, 0.1);
@@ -125,12 +128,20 @@ body {
 }
 .options select,
 .options input[type=text],
+.options input[type=number],
+.options input[type=submit],
 .options button {
   display: block;
+}
+select,
+input[type=text],
+input[type=number],
+input[type=submit],
+button {
   -webkit-appearance: none;
   border: 2px solid rgba(100, 100, 100, 0.3);
   outline: 0;
-  border-radius: 3px;
+  border-radius: 5px;
   width: 200px;
   height: 30px;
   line-height: 30px;
@@ -141,8 +152,33 @@ body {
   text-align: center;
   background: transparent;
 }
-.options select {
+input[type=text],
+input[type=number],
+input[type=submit] {
+  background: #fff;
+}
+select {
   text-align-last: center;
+}
+#nextFrame,
+#prevFrame,
+#play {
+  width: 80px;
+}
+#videoControl {
+  padding-top: 20px;
+}
+#videoControl > div {
+  width: 456px;
+  margin: 0 auto;
+}
+#videoControl > div *:last-child {
+  float: none;
+}
+#videoControl button,
+#videoControl input {
+  float: left;
+  margin-right: 4px;
 }
 #overlay {
   display: none;
@@ -158,10 +194,16 @@ body {
 }
 #overlayMsg {
   width: 25%;
-  height: 25vh;
+  height: 15vh;
   margin: 25vh auto 0;
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
+}
+#overlaySpinner {
+  width: 200px;
+  height: 100px;
+  position: relative;
+  margin: 0 auto;
 }
 #overlayProgress {
   border: 1px solid white;
@@ -182,6 +224,7 @@ body {
   color: white;
   width: 300px;
   margin: 10px auto;
+  text-align: center;
 }
 #dragOverlay {
   display: none;

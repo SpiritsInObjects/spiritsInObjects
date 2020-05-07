@@ -3,39 +3,52 @@
 class Video {
     public element : HTMLVideoElement = document.getElementById('video') as HTMLVideoElement;
     public canvas : HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
+    public playButton : HTMLButtonElement = document.getElementById('play') as HTMLButtonElement;
+    public prev : HTMLButtonElement = document.getElementById('prevFrame') as HTMLButtonElement;
+    public next : HTMLButtonElement = document.getElementById('nextFrame') as HTMLButtonElement;
+    public current : HTMLButtonElement = document.getElementById('currentFrame') as HTMLInputElement;
+
     private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
     private source : HTMLSourceElement;
+
     public width : number;
     public height : number;
     public framerate : number = 24;
     public frames : number = 0;
     public samplerate : number = 48000;
-    private ipcRenderer : any;
+
     private interval : any = null;
     private playing : boolean = false;
     private streaming : boolean = false;
+
     private state : State;
+    private ui : any;
 
-    constructor (state : State) {
+    constructor (state : State, ui : any) {
         this.state = state;
+        this.ui = ui;
 
-        this.ipcRenderer = require('electron').ipcRenderer;
         this.element.setAttribute('playsinline', 'true');
         this.element.setAttribute('webkit-playsinline', 'true');
         this.element.setAttribute('muted', 'true');
         this.element.muted = true;
         
-        this.ipcRenderer.on('info', this.oninfo.bind(this));
+        this.playButton.addEventListener('click', this.playButtonOnClick.bind(this), false);
+        this.next.addEventListener('click', this.nextFrame.bind(this));
+        this.prev.addEventListener('click', this.prevFrame.bind(this));
+        this.current.addEventListener('change', this.editFrame.bind(this));
 
         this.restoreState();
     }
 
     private restoreState () {
-        this.framerate = this.state.get('framerate')
-        this.frames = this.state.get('frames')
-        this.width = this.state.get('width')
-        this.height = this.state.get('height')
-        this.samplerate = this.state.get('samplerate')
+        this.framerate = this.state.get('framerate');
+        this.frames = this.state.get('frames');
+        this.width = this.state.get('width');
+        this.height = this.state.get('height');
+        this.samplerate = this.state.get('samplerate');
+
+        this.ui.updateSliders(this.width, this.height);
     }
 
     public stream (stream : MediaStream) {
@@ -44,7 +57,6 @@ class Video {
     }
 
     public file (filePath : string) {
-        this.ipcRenderer.send('info', { filePath } );
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
         this.element.appendChild(this.source);
@@ -57,9 +69,10 @@ class Video {
         this.height = this.element.videoHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
-        this.draw();
-        this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
 
+        this.ui.updateSliders(this.width, this.height);
+        setTimeout(this.draw.bind(this), 100);
+        this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
     }
 
@@ -74,7 +87,7 @@ class Video {
         return fps;
     }
 
-    private oninfo (evt : Event, args : any) {
+    public oninfo (evt : Event, args : any) {
         let fpsRaw : string;
         let videoStream : any;
         let secondsRaw : string;
@@ -105,19 +118,75 @@ class Video {
 
     public draw () {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
-        //playFrame();
     }
 
     public play () {
+        let frame : number;
         if (!this.playing) {
             this.element.play();
             this.interval = setInterval(this.draw.bind(this), Math.round(1000 / this.framerate));
             this.playing = true;
         } else {
-            clearInterval(this.interval)
+            clearInterval(this.interval);
             this.interval = null;
             this.element.pause();
             this.playing = false;
         }
+        frame = this.currentFrame();
+        this.current.value = String(frame);
+    }
+
+    private playButtonOnClick (evt : MouseEvent) {
+        this.play();
+    }
+
+    public set (pathStr : string) {
+        const displayName : string = pathStr.split('/').pop();
+        console.log(`Selected file ${displayName}`);
+            
+        this.file(pathStr);
+
+        return displayName;
+    }
+
+    public currentFrame () {
+        const seconds : number = this.element.currentTime;
+        return Math.round(seconds * this.framerate);
+    }
+
+    public setFrame (frame : number) {
+        const seconds : number = frame / this.framerate;
+        this.element.currentTime = seconds;
+        this.current.value = String(frame);
+    }
+
+    public nextFrame () {
+        let frame : number = this.currentFrame();
+        console.log(frame);
+        frame++;
+        console.log(frame);
+        if (frame > this.frames) {
+            frame = this.frames;
+        }
+        console.log(frame);
+        this.setFrame(frame);
+    }
+    public prevFrame () {
+        let frame : number = this.currentFrame();
+        frame--;
+        if (frame < 0) {
+            frame = 0;
+        }
+        this.setFrame(frame);
+    }
+    public editFrame () {
+        let frame : number = parseInt(this.current.value);
+        if (frame < 0) {
+            frame = 0;
+        }
+        if (frame > this.frames) {
+            frame = this.frames;
+        }
+        this.setFrame(frame);
     }
 }

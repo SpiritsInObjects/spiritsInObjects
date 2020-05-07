@@ -1,6 +1,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
+const os_1 = require("os");
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
@@ -9,7 +10,8 @@ let state;
 let video;
 let camera;
 let sonify;
-(function main() {
+let ui;
+(async function main() {
     const extensions = ['.mp4', '.mkv', '.mpg', '.mpeg'];
     let startMoving = false;
     let endMoving = false;
@@ -23,6 +25,7 @@ let sonify;
     }
     ;
     function overlayShow(msg = '') {
+        showSpinner('overlaySpinner');
         document.getElementById('overlayMsg').innerText = msg;
         document.getElementById('overlay').classList.add('show');
     }
@@ -34,6 +37,7 @@ let sonify;
             console.error(err);
         }
         document.getElementById('overlayMsg').innerText = '';
+        hideSpinner('overlaySpinner');
     }
     function containsFiles(evt) {
         if (evt.dataTransfer.types) {
@@ -94,7 +98,7 @@ let sonify;
         let files;
         let valid = false;
         let proceed = false;
-        let pathStr;
+        let filePath;
         let displayName;
         let ext;
         try {
@@ -106,20 +110,17 @@ let sonify;
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
-        pathStr = files.filePaths[0];
-        if (pathStr && pathStr !== '') {
-            ext = path_1.extname(pathStr.toLowerCase());
+        filePath = files.filePaths[0];
+        if (filePath && filePath !== '') {
+            ext = path_1.extname(filePath.toLowerCase());
             valid = extensions.indexOf(ext) === -1 ? false : true;
             if (!valid) {
-                console.log(`Cannot select file ${pathStr} is invald`);
+                console.log(`Cannot select file ${filePath} is invald`);
                 return false;
             }
-            console.log(`Selected file ${pathStr.split('/').pop()}`);
-            video.file(pathStr);
-            displayName = pathStr.split('/').pop();
-            elem.value = displayName;
-            ipcRenderer.send('file', { filePath: pathStr });
-            state.set('files', [pathStr]);
+            displayName = video.set(filePath);
+            ipcRenderer.send('info', { filePath });
+            state.set('files', [filePath]);
             state.save();
             proceed = await confirm(`Sonify ${displayName}?`);
             if (proceed) {
@@ -127,20 +128,29 @@ let sonify;
             }
         }
     }
-    let audioBuffer;
-    let monoBuffer;
-    //@ts-ignore
-    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function sonifyStart(displayName) {
-        const sonifyState = {
-            samplerate: state.get('samplerate'),
-            frames: state.get('frames'),
-            files: state.get('files')
+    async function fileSave(filePath) {
+        const options = {
+            defaultPath: os_1.homedir()
         };
+        let savePath;
+        try {
+            savePath = await dialog.showSaveDialog(null, options);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        if (savePath) {
+            ipcRenderer.send('save', { filePath, savePath });
+        }
+    }
+    const audioCtx = new window.AudioContext();
+    function sonifyStart(displayName) {
+        const sonifyState = state.get();
         overlayShow(`Sonifying ${displayName}...`);
         ipcRenderer.send('sonify', { state: sonifyState });
     }
     let avgMs = -1;
+    let timeAvg = -1;
     const progressBar = document.getElementById('overlayProgressBar');
     const progressMsg = document.getElementById('overlayProgressMsg');
     function onSonifyProgress(evt, args) {
@@ -148,102 +158,32 @@ let sonify;
         let timeStr;
         if (avgMs !== -1) {
             timeLeft = (args.frames - args.i) * args.ms;
+            timeAvg = timeLeft;
         }
         else {
             avgMs = (avgMs + args.ms) / 2;
             timeLeft = (args.frames - args.i) * avgMs;
+            timeAvg = (timeAvg + timeLeft) / 2;
         }
-        timeStr = humanizeDuration(timeLeft);
-        progressMsg.innerText = `Time left: ~${timeStr}`;
+        timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+        progressMsg.innerText = `~${timeStr}`;
         progressBar.style.width = `${(args.i / args.frames) * 100}%`;
         console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
-        console.log(args.i * args.samples.length + ' -> ' + (args.i + 1) * args.samples.length);
-        //for (let i : number = args.i * args.samples.length; i < (args.i + 1) * args.samples.length; i++) {
-        //monoBuffer[i] = args.samples[i];
-        //}
     }
     function onSonifyComplete(evt, args) {
         avgMs = -1;
+        timeAvg = -1;
         overlayHide();
-        setTimeout(() => {
-            //var source = audioCtx.createBufferSource();
-            //source.buffer = audioBuffer;
-            //source.connect(audioCtx.destination);
-            //source.start();
-        });
-    }
-    function beginMoveStart(evt) {
-        startMoving = true;
-    }
-    function endMoveStart(evt) {
-        startMoving = false;
-    }
-    function moveStart(evt) {
-        let theatre;
-        let width;
-        let leftX;
-        let newLeftX;
-        let maxX;
-        let ratio;
-        if (startMoving) {
-            theatre = document.getElementById('theatre');
-            width = theatre.clientWidth;
-            leftX = theatre.offsetLeft;
-            maxX = document.getElementById('endSelect').offsetLeft - 1;
-            newLeftX = evt.pageX - leftX;
-            if (newLeftX <= 0) {
-                newLeftX = 0;
-            }
-            if (newLeftX >= maxX) {
-                newLeftX = maxX;
-            }
-            ratio = newLeftX / width;
-            document.getElementById('startSelect').style.left = `${ratio * 100}%`;
-        }
-    }
-    function beginMoveEnd(evt) {
-        endMoving = true;
-    }
-    function endMoveEnd(evt) {
-        endMoving = false;
-    }
-    function moveEnd(evt) {
-        let theatre;
-        let width;
-        let leftX;
-        let newLeftX;
-        let minX;
-        let ratio;
-        if (endMoving) {
-            theatre = document.getElementById('theatre');
-            width = theatre.clientWidth;
-            leftX = theatre.offsetLeft;
-            minX = document.getElementById('startSelect').offsetLeft + 1;
-            newLeftX = evt.pageX - leftX;
-            if (newLeftX <= minX) {
-                newLeftX = minX;
-            }
-            if (newLeftX >= width) {
-                newLeftX = width;
-            }
-            ratio = newLeftX / width;
-            document.getElementById('endSelect').style.left = `${ratio * 100}%`;
-        }
+        fileSave(args.tmpAudio);
     }
     function keyDown(evt) {
         if (evt.which === 32) {
             video.play();
         }
     }
-    function videoPlay(evt) {
-        video.play();
-    }
     function bindListeners() {
         const dropArea = document.getElementById('dragOverlay');
         const fileSourceProxy = document.getElementById('fileSourceProxy');
-        const startSelect = document.getElementById('startSelect');
-        const endSelect = document.getElementById('endSelect');
-        const playButton = document.getElementById('play');
         document.addEventListener('dragenter', dragEnter, false);
         dropArea.addEventListener('dragleave', dragLeave, false);
         dropArea.addEventListener('dragover', dragEnter, false);
@@ -252,30 +192,43 @@ let sonify;
         dropArea.addEventListener('dragend', dragLeave, false);
         dropArea.addEventListener('dragexit', dragLeave, false);
         fileSourceProxy.addEventListener('click', fileSelect, false);
-        startSelect.addEventListener('mousedown', beginMoveStart, false);
-        endSelect.addEventListener('mousedown', beginMoveEnd, false);
-        document.addEventListener('mousemove', moveStart, false);
-        document.addEventListener('mousemove', moveEnd, false);
-        document.addEventListener('mouseup', endMoveStart, false);
-        document.addEventListener('mouseup', endMoveEnd, false);
         document.addEventListener('keydown', keyDown, false);
-        playButton.addEventListener('click', videoPlay, false);
         ipcRenderer.on('sonify_complete', onSonifyComplete);
         ipcRenderer.on('sonify_progress', onSonifyProgress);
+        ipcRenderer.on('info', (evt, args) => {
+            video.oninfo(evt, args);
+            sonify = new Sonify(state, video.canvas);
+        });
     }
     audioContext = new AudioContext();
     //@ts-ignore why are you like this
     state = new State();
-    video = new Video(state);
+    try {
+        await state.start();
+    }
+    catch (err) {
+        console.error(err);
+    }
+    //@ts-ignore
+    ui = new UI(state);
+    video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, audioContext, video.canvas);
+    sonify = new Sonify(state, video.canvas); //need to refresh when settings change
     bindListeners();
 })();
 function playFrame() {
     const source = audioContext.createBufferSource();
-    source.buffer = sonify.sonifyCanvas();
+    let buf = audioContext.createBuffer(1, video.height, video.samplerate);
+    let mono = buf.getChannelData(0);
+    let tmp;
+    sonify = new Sonify(state, video.canvas);
+    tmp = sonify.sonifyCanvas();
+    mono.set(tmp, 0);
+    source.buffer = buf;
     source.connect(audioContext.destination);
-    // play audio
     source.start();
+}
+function playLive() {
+    setInterval(playFrame, 1000 / 24);
 }
 //# sourceMappingURL=index.js.map

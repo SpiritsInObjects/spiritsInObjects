@@ -7,7 +7,7 @@ const fs_extra_1 = require("fs-extra");
 const crypto_1 = require("crypto");
 const bin = require('ffmpeg-static').path;
 const ffprobe = require('ffprobe-static').path;
-const tmp = path_1.join(os_1.tmpdir(), 'sio');
+let tmp;
 async function spawnAsync(bin, args) {
     return new Promise((resolve, reject) => {
         const child = child_process_1.spawn(bin, args);
@@ -94,6 +94,7 @@ class ffmpeg {
         return obj;
     }
     static async exportPath() {
+        tmp = path_1.join(os_1.tmpdir(), 'sio');
         try {
             await fs_extra_1.unlink(tmp);
         }

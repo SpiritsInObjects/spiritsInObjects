@@ -2,7 +2,7 @@
 
 const { homedir } = require('os');
 const { join } = require('path');
-const { outputFile, readFile, pathExists, ensureDir } = require('fs-extra')
+const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra')
 
 interface StateStorage {
     [key: string]: any;
@@ -19,7 +19,10 @@ interface StateStorage {
 
 class State {
     private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' );
-    private storage : StateStorage = {} as StateStorage;
+    private storage : StateStorage = {
+        start : 0.72,
+        end : 1.0
+    } as StateStorage;
     
     constructor () {
         
@@ -57,7 +60,7 @@ class State {
      */
     public async save () {
         try {
-            await outputFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
+            await writeFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
         } catch (err) {
             console.error(err);
         }
@@ -105,8 +108,10 @@ class State {
     public get (key? : string) : any {
         if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
             return this.storage[key];
+        } else if (typeof key === 'undefined') {
+            return this.storage;
         }
-        return null
+        return null;
     }
 
     /**

@@ -1,30 +1,43 @@
 'use strict';
 const { homedir } = require('os');
 const { join } = require('path');
-const { outputFile, readFile, pathExists, ensureDir } = require('fs-extra');
+const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra');
 class State {
     constructor() {
         this.localFile = join(homedir(), '.spiritsInObjects/state.sio');
-        this.storage = {};
-        this.startup();
-        this.restore();
+        this.storage = {
+            start: 0.72,
+            end: 1.0
+        };
     }
-    async startup() {
+    async start() {
         const stateDir = join(homedir(), '.spiritsInObjects');
         let dirExists;
         try {
             dirExists = await pathExists(stateDir);
         }
         catch (err) {
-            console.error(err);
+            throw err;
         }
         if (!dirExists) {
             try {
                 await ensureDir(stateDir);
             }
             catch (err) {
-                console.error(err);
+                throw err;
             }
+            try {
+                this.save();
+            }
+            catch (err) {
+                throw err;
+            }
+        }
+        try {
+            await this.restore();
+        }
+        catch (err) {
+            throw err;
         }
     }
     /**
@@ -32,7 +45,7 @@ class State {
      */
     async save() {
         try {
-            await outputFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
+            await writeFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
         }
         catch (err) {
             console.error(err);
@@ -79,6 +92,9 @@ class State {
     get(key) {
         if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
             return this.storage[key];
+        }
+        else if (typeof key === 'undefined') {
+            return this.storage;
         }
         return null;
     }

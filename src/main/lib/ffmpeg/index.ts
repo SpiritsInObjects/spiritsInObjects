@@ -8,7 +8,7 @@ import { createHash } from 'crypto';
 
 const bin : string = require('ffmpeg-static').path;
 const ffprobe : string = require('ffprobe-static').path;
-const tmp : string = join(tmpdir(), 'sio');
+let tmp : string;
 
 interface StdErr {
     frame : number;
@@ -65,7 +65,7 @@ export class ffmpeg {
         return JSON.parse(res.stdout);
     }
 
-    static hash (data : string) {
+    static hash (data : string) : string {
         return createHash('sha1').update(data).digest('hex');
     }
 
@@ -77,7 +77,7 @@ export class ffmpeg {
 	 * @returns {string} Padded string
 	 **/
 
-	static padded_frame (i : number) {
+	static padded_frame (i : number) : string {
 		let len = (i + '').length;
 		let str = i + '';
 		for (let x = 0; x < 8 - len; x++) {
@@ -113,6 +113,8 @@ export class ffmpeg {
     }
 
     static async exportPath () : Promise<string> {
+        tmp = join(tmpdir(), 'sio');
+
         try {
             await unlink(tmp);
         } catch (err) {
@@ -184,8 +186,8 @@ export class ffmpeg {
      * @param filePath 
      * @param frame 
      */
-    static async exportFrame (filePath : string, frameNum : number) {
-        const padded = this.padded_frame(frameNum);
+    static async exportFrame (filePath : string, frameNum : number) : Promise<string> {
+        const padded : string = this.padded_frame(frameNum);
         const hash = this.hash(filePath);
         const output : string = join(tmp, `${hash}-export-${padded}.png`);
         const args : string[] = [
