@@ -34,8 +34,9 @@
   },
   "scripts": {
     "start": "./node_modules/.bin/electron dist/main",
-    "dev": "npm run compile && npm run test && ./node_modules/.bin/electron dist/main -d",
+    "dev": "npm run compile && npm run docs && npm run test && ./node_modules/.bin/electron dist/main -d",
     "compile": "sh ./scripts/compile.sh",
+    "docs" : "sh ./scripts/docs.sh",
     "install": "./node_modules/.bin/electron-rebuild",
     "test": "./node_modules/.bin/mocha ./test",
     "pretest": "",
