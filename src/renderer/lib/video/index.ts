@@ -1,5 +1,6 @@
 'use strict';
 
+/** class representing video features */
 class Video {
     public element : HTMLVideoElement = document.getElementById('video') as HTMLVideoElement;
     public canvas : HTMLCanvasElement = document.getElementById('canvas') as HTMLCanvasElement;
@@ -24,6 +25,13 @@ class Video {
     private state : State;
     private ui : any;
 
+    /**
+     * @constructor
+     * Create Video class, initialize UI elements and bind listeners
+     * 
+     * @param {Object} state State class
+     * @param {Object} ui UI class
+     */
     constructor (state : State, ui : any) {
         this.state = state;
         this.ui = ui;
@@ -41,6 +49,9 @@ class Video {
         this.restoreState();
     }
 
+    /**
+     * Restore the apps saved state to the video UI
+     */
     private restoreState () {
         this.framerate = this.state.get('framerate');
         this.frames = this.state.get('frames');
@@ -51,11 +62,21 @@ class Video {
         this.ui.updateSliders(this.width, this.height);
     }
 
+    /**
+     * Attach stream to video element and Canvas
+     * 
+     * @param {Object} stream MediaStream from camera/live source
+     */
     public stream (stream : MediaStream) {
         this.element.srcObject = stream;
         //this.element.load();
     }
 
+    /**
+     * 
+     * 
+     * @param {string} filePath Path to video file
+     */
     public file (filePath : string) {
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
@@ -114,6 +135,8 @@ class Video {
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
         this.state.save();
+
+        document.getElementById('sonifyFrame').disabled = false;
     }
 
     public draw () {
@@ -162,13 +185,10 @@ class Video {
 
     public nextFrame () {
         let frame : number = this.currentFrame();
-        console.log(frame);
         frame++;
-        console.log(frame);
         if (frame > this.frames) {
             frame = this.frames;
         }
-        console.log(frame);
         this.setFrame(frame);
     }
     public prevFrame () {

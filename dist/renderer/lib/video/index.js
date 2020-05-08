@@ -1,5 +1,13 @@
 'use strict';
+/** class representing video features */
 class Video {
+    /**
+     * @constructor
+     * Create Video class, initialize UI elements and bind listeners
+     *
+     * @param {Object} state State class
+     * @param {Object} ui UI class
+     */
     constructor(state, ui) {
         this.element = document.getElementById('video');
         this.canvas = document.getElementById('canvas');
@@ -26,6 +34,9 @@ class Video {
         this.current.addEventListener('change', this.editFrame.bind(this));
         this.restoreState();
     }
+    /**
+     * Restore the apps saved state to the video UI
+     */
     restoreState() {
         this.framerate = this.state.get('framerate');
         this.frames = this.state.get('frames');
@@ -34,10 +45,20 @@ class Video {
         this.samplerate = this.state.get('samplerate');
         this.ui.updateSliders(this.width, this.height);
     }
+    /**
+     * Attach stream to video element and Canvas
+     *
+     * @param {Object} stream MediaStream from camera/live source
+     */
     stream(stream) {
         this.element.srcObject = stream;
         //this.element.load();
     }
+    /**
+     *
+     *
+     * @param {string} filePath Path to video file
+     */
     file(filePath) {
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
@@ -89,6 +110,7 @@ class Video {
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
         this.state.save();
+        document.getElementById('sonifyFrame').disabled = false;
     }
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
@@ -129,13 +151,10 @@ class Video {
     }
     nextFrame() {
         let frame = this.currentFrame();
-        console.log(frame);
         frame++;
-        console.log(frame);
         if (frame > this.frames) {
             frame = this.frames;
         }
-        console.log(frame);
         this.setFrame(frame);
     }
     prevFrame() {
