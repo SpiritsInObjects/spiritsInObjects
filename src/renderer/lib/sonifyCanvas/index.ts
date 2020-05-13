@@ -114,6 +114,18 @@ class Sonify {
         }
         return this.map_range(luminance, 0, this.max, -0.999999, 0.999999);
     }
+
+    public fade (original : Float32Array) : Float32Array {
+        const len : number = original.length;
+        for (let i = 0; i < len; i++) {
+            if (i < 30) {
+                original[i] = original[i] * (i / 30);
+            } else if (i > len - 30) {
+                original[i] = original[i] * ( (len - i) / 30);
+            }
+        }
+        return original
+    }
 }
 
 if (typeof module !== 'undefined') {

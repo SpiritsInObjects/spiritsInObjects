@@ -44,6 +44,10 @@ body {
 #sonify.show {
   display: block;
 }
+#sonifyControl {
+  width: 420px;
+  margin: 0 auto;
+}
 #theatre {
   background: #000;
   width: 720px;
@@ -119,7 +123,7 @@ body {
   display: block;
 }
 .optionWrapper {
-  height: 100px;
+  margin-top: 30px;
 }
 .options {
   width: 50%;

@@ -18,7 +18,6 @@ const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
-const sox_1 = require("./lib/sox");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -142,7 +141,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         }
         arrBuffer = sonify.sonify(imageData.data);
         ms = (+new Date()) - frameStart;
-        console.log(`progress : ${i / args.state.frames}`);
+        //console.log(`progress : ${i / args.state.frames}`);
         mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms });
         arr.set(arrBuffer, i * arrBuffer.length);
         try {
@@ -166,12 +165,12 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
     }
     try {
-        await sox_1.sox.postProcess(tmpAudio, normalAudio);
-        console.log(`Normalized audio file to ${normalAudio}`);
+        //await sox.postProcess(tmpAudio, normalAudio);
+        //console.log(`Normalized audio file to ${normalAudio}`);
     }
     catch (err) {
         console.error(err);
-        console.log('Normalization failed, using tmp file.');
+        console.log('Normalization failed, using original tmp file.');
         tmpAudio = normalAudio;
     }
     endTime = +new Date();

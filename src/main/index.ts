@@ -167,7 +167,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		arrBuffer = sonify.sonify(imageData.data);
 
 		ms = (+new Date()) - frameStart;
-		console.log(`progress : ${i / args.state.frames}`);
+		//console.log(`progress : ${i / args.state.frames}`);
 		mainWindow.webContents.send('sonify_progress', { i, frames : args.state.frames, ms });
 
 		arr.set(arrBuffer, i * arrBuffer.length);
@@ -198,11 +198,11 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	}
 
 	try {
-		await sox.postProcess(tmpAudio, normalAudio);
-		console.log(`Normalized audio file to ${normalAudio}`);
+		//await sox.postProcess(tmpAudio, normalAudio);
+		//console.log(`Normalized audio file to ${normalAudio}`);
 	} catch (err) {
 		console.error(err);
-		console.log('Normalization failed, using tmp file.');
+		console.log('Normalization failed, using original tmp file.');
 		tmpAudio = normalAudio;
 	}
 

@@ -34,6 +34,8 @@ class UI {
         this.start = start;
         this.state.set('start', start);
         this.state.save();
+        if (this.onSelectionChange)
+            this.onSelectionChange();
     }
     moveStart(evt) {
         let width;
@@ -73,6 +75,8 @@ class UI {
         this.end = end;
         this.state.set('end', end);
         this.state.save();
+        if (this.onSelectionChange)
+            this.onSelectionChange();
     }
     moveEnd(evt) {
         let width;

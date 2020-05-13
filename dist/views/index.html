@@ -32,14 +32,14 @@
             </div>
             <div id="sonifyControl">
                 <div>
-                    <button id="frame" disabled>Sonify Frame</button>
-                    <button id="save" disabled>Sonify Video</button>
+                    <button id="sonifyFrame" disabled>Sonify Frame</button>
+                    <button id="sonifyVideo" disabled>Sonify Video</button>
                 </div>
             </div>
-            <div class="optionWrapper"></div>
+            <div class="optionWrapper">
                 <div class="options">
                     <input type="text" id="fileSourceProxy" placeholder="File(s)" title="Select a video or image sequence" readonly />
-                    <select id="videoSource" required title="Select a camera video source">
+                    <select id="videoSource" required title="Select a camera video source" disabled>
                         <option disabled selected value="">Camera</option>
                     </select>
                     <button id="clear">Clear</button>
@@ -54,7 +54,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
         <div id="visualize">
 

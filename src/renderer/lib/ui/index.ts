@@ -24,6 +24,8 @@ export default class UI {
     private start : number = 0.72;
     private end : number = 1.0;
 
+    public onSelectionChange : Function;
+
     constructor (state : State) {
         this.state = state;
 
@@ -53,6 +55,7 @@ export default class UI {
         this.start = start;
         this.state.set('start', start);
         this.state.save();
+        if (this.onSelectionChange) this.onSelectionChange();
     }
 
     private moveStart (evt : MouseEvent) {
@@ -103,6 +106,7 @@ export default class UI {
         this.end = end;
         this.state.set('end', end);
         this.state.save();
+        if (this.onSelectionChange) this.onSelectionChange();
     }
 
     private moveEnd (evt : MouseEvent) {

@@ -9,6 +9,12 @@ class Video {
     public next : HTMLButtonElement = document.getElementById('nextFrame') as HTMLButtonElement;
     public current : HTMLButtonElement = document.getElementById('currentFrame') as HTMLInputElement;
 
+    private framesDisplay : HTMLSpanElement = document.getElementById('frames') as HTMLSpanElement;
+    private fpsDisplay : HTMLSpanElement = document.getElementById('fps') as HTMLSpanElement;
+    private resolutionDisplay : HTMLSpanElement = document.getElementById('resolution') as HTMLSpanElement;
+    private samplerateDisplay : HTMLSpanElement = document.getElementById('samplerate') as HTMLSpanElement;
+    private selectionDisplay : HTMLSpanElement = document.getElementById('selectedarea') as HTMLSpanElement;
+
     private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
     private source : HTMLSourceElement;
 
@@ -47,6 +53,8 @@ class Video {
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
 
+        this.ui.onSelectionChange = this.displayInfo.bind(this);
+
         this.restoreState();
     }
 
@@ -54,13 +62,18 @@ class Video {
      * Restore the apps saved state to the video UI
      */
     private restoreState () {
-        this.framerate = this.state.get('framerate');
-        this.frames = this.state.get('frames');
-        this.width = this.state.get('width');
-        this.height = this.state.get('height');
-        this.samplerate = this.state.get('samplerate');
+        let files : string[] = this.state.get('files');
+        if (files.length > 0) {
+            this.framerate = this.state.get('framerate');
+            this.frames = this.state.get('frames');
+            this.width = this.state.get('width');
+            this.height = this.state.get('height');
+            this.samplerate = this.state.get('samplerate');
 
-        this.ui.updateSliders(this.width, this.height);
+            this.ui.updateSliders(this.width, this.height);
+            this.displayInfo();
+            this.file(files[0]);
+        }
     }
 
     /**
@@ -85,6 +98,7 @@ class Video {
         this.element.appendChild(this.source);
         this.element.load();
         this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
+        this.current.value = '0';
     }
 
     private onloadstart () {
@@ -139,12 +153,20 @@ class Video {
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
         this.state.save();
+        this.displayInfo();
 
         (document.getElementById('sonifyFrame') as HTMLButtonElement).disabled  = false;
     }
 
     private displayInfo () {
-
+        const start : number = this.state.get('start');
+        const end : number = this.state.get('end');
+        const selection : number = Math.round((end - start) * this.width);
+        this.framesDisplay.innerHTML = String(this.frames);
+        this.fpsDisplay.innerHTML =  String(Math.round(this.framerate * 100) / 100);
+        this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
+        this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
+        this.selectionDisplay.innerHTML = `${selection} px`;
     }
 
     public draw () {

@@ -8,6 +8,10 @@ const { dialog } = require('electron').remote;
 
 const humanizeDuration = require('humanize-duration');
 
+const extensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+let startMoving : boolean = false;
+let endMoving : boolean = false;
+
 let audioContext : AudioContext;
 let state : State;
 let video : Video;
@@ -15,10 +19,12 @@ let camera : Camera;
 let sonify : Sonify;
 let ui : any;
 
+let avgMs : number = -1;
+let timeAvg : number = -1;
+const progressBar : any = document.getElementById('overlayProgressBar');
+const progressMsg : any = document.getElementById('overlayProgressMsg');
+
 (async function main () {
-    const extensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
-    let startMoving : boolean = false;
-    let endMoving : boolean = false;
 
     async function confirm (message : string) {
         const config = {
@@ -141,11 +147,7 @@ let ui : any;
             state.set('files', [ filePath ]);
             state.save();
 
-            proceed = await confirm(`Sonify ${displayName}?`);
-
-            if (proceed) {
-                sonifyStart(displayName);
-            }
+            sonifyStart();
         }
     }
  
@@ -167,16 +169,25 @@ let ui : any;
     }
 
     const audioCtx : AudioContext = new window.AudioContext();
-    function sonifyStart (displayName : string) {
+
+    async function sonifyStart () {
         const sonifyState : any = state.get();
+        const displayName : string = video.displayName;
+        let proceed : boolean = false;
+
+        try {
+            proceed = await confirm(`Sonify ${displayName}? This may take a while.`);
+        } catch (err) {
+            console.log(err);
+        }
+
+        if (!proceed) {
+            return false;
+        }
+
         overlayShow(`Sonifying ${displayName}...`);
         ipcRenderer.send('sonify', { state : sonifyState });
     }
-
-    let avgMs : number = -1;
-    let timeAvg : number = -1;
-    const progressBar : any = document.getElementById('overlayProgressBar');
-    const progressMsg : any = document.getElementById('overlayProgressMsg');
 
     function onSonifyProgress (evt : Event, args : any) {
         let timeLeft : number;
@@ -195,7 +206,7 @@ let ui : any;
         progressMsg.innerText = `~${timeStr}`;
         progressBar.style.width = `${(args.i / args.frames) * 100}%`;
 
-        console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
+        //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
     }
 
     function onSonifyComplete (evt : Event, args : any) {
@@ -203,6 +214,23 @@ let ui : any;
         timeAvg = -1;
         overlayHide();
         fileSave(args.tmpAudio);
+    }
+
+    function playFrame () {
+        const source : any = audioContext.createBufferSource();
+        let buf : any = audioContext.createBuffer(1, video.height, video.samplerate);
+        let mono : any = buf.getChannelData(0);
+        let tmp : Float32Array;
+
+        sonify = new Sonify(state, video.canvas);
+
+        tmp = sonify.sonifyCanvas();
+        tmp = sonify.fade(tmp);
+        mono.set(tmp, 0);
+        //console.dir(tmp)
+        source.buffer = buf;
+        source.connect(audioContext.destination);
+        source.start();
     }
 
     function keyDown (evt : KeyboardEvent) {
@@ -214,6 +242,8 @@ let ui : any;
     function bindListeners () {
         const dropArea : HTMLElement = document.getElementById('dragOverlay');
         const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
+        const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
+        const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
 
         document.addEventListener('dragenter',  dragEnter, false);
         dropArea.addEventListener('dragleave',  dragLeave, false);
@@ -224,7 +254,8 @@ let ui : any;
         dropArea.addEventListener('dragexit',   dragLeave, false);
     
         fileSourceProxy.addEventListener('click', fileSelect, false);
-
+        sonifyFrame.addEventListener('click', playFrame, false);
+        sonifyVideo.addEventListener('click', sonifyStart, false);
         document.addEventListener('keydown', keyDown, false);
 
         ipcRenderer.on('sonify_complete', onSonifyComplete);
@@ -256,23 +287,3 @@ let ui : any;
     bindListeners();
 
 })()
-
-function playFrame () {
-    const source : any = audioContext.createBufferSource();
-    let buf : any = audioContext.createBuffer(1, video.height, video.samplerate);
-    let mono : any = buf.getChannelData(0);
-    let tmp : Float32Array;
-
-    sonify = new Sonify(state, video.canvas);
-
-    tmp = sonify.sonifyCanvas();
-    mono.set(tmp, 0);
-
-    source.buffer = buf;
-    source.connect(audioContext.destination);
-    source.start();
-}
-
-function playLive () {
-    setInterval(playFrame, 1000 / 24);
-}
