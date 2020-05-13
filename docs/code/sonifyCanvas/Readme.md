@@ -34,6 +34,7 @@ class representing image sonification of a canvas element
     * [.brightness(r, g, b)](#Sonify+brightness) ⇒ <code>number</code>
     * [.map_range(value, low1, high1, low2, high2)](#Sonify+map_range)
     * [.getSample(row)](#Sonify+getSample)
+    * [.fade(original, fadeLen)](#Sonify+fade)
 
 <a name="Sonify+sonifyCanvas"></a>
 
@@ -94,4 +95,16 @@ Turn a row of image data into a single audio sample
 | Param | Type | Description |
 | --- | --- | --- |
 | row | <code>array</code> | Single row of image (1px section across width) |
+
+<a name="Sonify+fade"></a>
+
+### sonify.fade(original, fadeLen)
+Fade an array of sample data in and out by n samples
+
+**Kind**: instance method of [<code>Sonify</code>](#Sonify)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| original | <code>array</code> |  | Audio sample data to fade |
+| fadeLen | <code>number</code> | <code>30</code> | Length of fades in sample |
 

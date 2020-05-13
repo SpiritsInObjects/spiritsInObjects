@@ -99,14 +99,20 @@ class Sonify {
         }
         return this.map_range(luminance, 0, this.max, -0.999999, 0.999999);
     }
-    fade(original) {
+    /**
+     * Fade an array of sample data in and out by n samples
+     *
+     * @param {array} original Audio sample data to fade
+     * @param {number} fadeLen Length of fades in sample
+     */
+    fade(original, fadeLen = 30) {
         const len = original.length;
         for (let i = 0; i < len; i++) {
-            if (i < 30) {
-                original[i] = original[i] * (i / 30);
+            if (i < fadeLen) {
+                original[i] = original[i] * (i / fadeLen);
             }
-            else if (i > len - 30) {
-                original[i] = original[i] * ((len - i) / 30);
+            else if (i > len - fadeLen) {
+                original[i] = original[i] * ((len - i) / fadeLen);
             }
         }
         return original;
