@@ -17,6 +17,7 @@ class Video {
     public framerate : number = 24;
     public frames : number = 0;
     public samplerate : number = 48000;
+    public displayName : string;
 
     private interval : any = null;
     private playing : boolean = false;
@@ -80,8 +81,9 @@ class Video {
     public file (filePath : string) {
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
+        this.element.innerHTML = '';
         this.element.appendChild(this.source);
-        //this.element.load();
+        this.element.load();
         this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
     }
 
@@ -95,6 +97,8 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
+        document.getElementById('sonifyFrame').removeAttribute('disabled');
+        document.getElementById('sonifyVideo').removeAttribute('disabled');
     }
 
     private parseFps (line : string) {
@@ -136,7 +140,11 @@ class Video {
         this.state.set('samplerate', this.samplerate);
         this.state.save();
 
-        document.getElementById('sonifyFrame').disabled = false;
+        (document.getElementById('sonifyFrame') as HTMLButtonElement).disabled  = false;
+    }
+
+    private displayInfo () {
+
     }
 
     public draw () {
@@ -149,11 +157,13 @@ class Video {
             this.element.play();
             this.interval = setInterval(this.draw.bind(this), Math.round(1000 / this.framerate));
             this.playing = true;
+            this.playButton.innerHTML = 'Pause';
         } else {
             clearInterval(this.interval);
             this.interval = null;
             this.element.pause();
             this.playing = false;
+            this.playButton.innerHTML = 'Play';
         }
         frame = this.currentFrame();
         this.current.value = String(frame);
@@ -168,6 +178,7 @@ class Video {
         console.log(`Selected file ${displayName}`);
             
         this.file(pathStr);
+        this.displayName = displayName;
 
         return displayName;
     }
@@ -181,6 +192,7 @@ class Video {
         const seconds : number = frame / this.framerate;
         this.element.currentTime = seconds;
         this.current.value = String(frame);
+        setTimeout(this.draw.bind(this), 100);
     }
 
     public nextFrame () {
@@ -204,8 +216,8 @@ class Video {
         if (frame < 0) {
             frame = 0;
         }
-        if (frame > this.frames) {
-            frame = this.frames;
+        if (frame > this.frames - 1) {
+            frame = this.frames - 1;
         }
         this.setFrame(frame);
     }

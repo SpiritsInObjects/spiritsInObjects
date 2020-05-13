@@ -62,8 +62,9 @@ class Video {
     file(filePath) {
         this.source = document.createElement('source');
         this.source.setAttribute('src', filePath);
+        this.element.innerHTML = '';
         this.element.appendChild(this.source);
-        //this.element.load();
+        this.element.load();
         this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
     }
     onloadstart() {
@@ -75,6 +76,8 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
+        document.getElementById('sonifyFrame').removeAttribute('disabled');
+        document.getElementById('sonifyVideo').removeAttribute('disabled');
     }
     parseFps(line) {
         let fps;
@@ -112,6 +115,8 @@ class Video {
         this.state.save();
         document.getElementById('sonifyFrame').disabled = false;
     }
+    displayInfo() {
+    }
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
     }
@@ -121,12 +126,14 @@ class Video {
             this.element.play();
             this.interval = setInterval(this.draw.bind(this), Math.round(1000 / this.framerate));
             this.playing = true;
+            this.playButton.innerHTML = 'Pause';
         }
         else {
             clearInterval(this.interval);
             this.interval = null;
             this.element.pause();
             this.playing = false;
+            this.playButton.innerHTML = 'Play';
         }
         frame = this.currentFrame();
         this.current.value = String(frame);
@@ -138,6 +145,7 @@ class Video {
         const displayName = pathStr.split('/').pop();
         console.log(`Selected file ${displayName}`);
         this.file(pathStr);
+        this.displayName = displayName;
         return displayName;
     }
     currentFrame() {
@@ -148,6 +156,7 @@ class Video {
         const seconds = frame / this.framerate;
         this.element.currentTime = seconds;
         this.current.value = String(frame);
+        setTimeout(this.draw.bind(this), 100);
     }
     nextFrame() {
         let frame = this.currentFrame();
@@ -170,8 +179,8 @@ class Video {
         if (frame < 0) {
             frame = 0;
         }
-        if (frame > this.frames) {
-            frame = this.frames;
+        if (frame > this.frames - 1) {
+            frame = this.frames - 1;
         }
         this.setFrame(frame);
     }
