@@ -198,6 +198,10 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         source.connect(audioContext.destination);
         source.start();
     }
+    function playSync() {
+        video.play();
+        //audio.play();
+    }
     function keyDown(evt) {
         if (evt.which === 32) {
             video.play();

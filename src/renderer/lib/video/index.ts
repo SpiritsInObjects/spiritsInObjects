@@ -179,13 +179,13 @@ class Video {
             this.element.play();
             this.interval = setInterval(this.draw.bind(this), Math.round(1000 / this.framerate));
             this.playing = true;
-            this.playButton.innerHTML = 'Pause';
+            this.playButton.innerHTML = 'Pause Muted';
         } else {
             clearInterval(this.interval);
             this.interval = null;
             this.element.pause();
             this.playing = false;
-            this.playButton.innerHTML = 'Play';
+            this.playButton.innerHTML = 'Play Muted';
         }
         frame = this.currentFrame();
         this.current.value = String(frame);
