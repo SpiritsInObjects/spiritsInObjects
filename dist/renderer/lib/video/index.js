@@ -45,7 +45,7 @@ class Video {
      */
     restoreState() {
         let files = this.state.get('files');
-        if (files.length > 0) {
+        if (files && files.length > 0) {
             this.framerate = this.state.get('framerate');
             this.frames = this.state.get('frames');
             this.width = this.state.get('width');
