@@ -12,7 +12,7 @@
             <button id="sonifyBtn" class="active">Sonify</button>
             
         </div>
-        <div id="sonify" class="show">
+        <div id="sonify" class="page show">
             <div id="theatre">
                 <video id="video"></video>
                 <canvas id="canvas"></canvas>
@@ -58,8 +58,14 @@
                 </div>
             </div>
         </div>
-        <div id="visualize">
-
+        <div id="visualize" class="page">
+            <div id="vTheatre">
+                <canvas id="vCanvas"></canvas>
+            </div>
+            <div class="optionsWrapper">
+                <input type="text" id="vFileSourceProxy" placeholder="File" title="Select a midi or wav file" readonly />
+                <button id="vClear">Clear</button>
+            </div>
         </div>
         <div id="overlay">
             <div id="overlayMsg"></div>

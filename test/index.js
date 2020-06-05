@@ -1,52 +1,30 @@
 'use strict'
 
-const { writeFileSync } = require('fs')
-const getPixels = require('get-pixels')
-const { WaveFile } = require('wavefile')
-const { SonifyNode } = require('../dist/main/lib/sonifyNode')
 
-async function pixels (filePath) {
-	return new Promise((resolve, reject) => {
-		return getPixels(filePath, (err, imageData) => {
-			if (err) {
-				return reject(err);
-			}
-			return resolve(imageData);
-		});
-	});
-}
 
-async function test () {
-    const wav = new WaveFile();
-    const state = {
-        framerate : 24,
-        samplerate : 44100,
-        height : 1837,
-        width : 1837,
-        start : 0.72,
-        end : 1.0
-    }
-    let p
-    let sonify
-    let arr
+//test()
 
-    try {
-        p = await pixels('./test/example.png')
-    } catch (err) {
-        console.error(err)
-    }
+describe('Main', function(){
+//some tests that pertain to all animals
+   describe('a', function() {
+      //some tests in here specific to cats.
+   })
+   describe('b', function() {
+      //some tests in here specific to dogs.
+   })
+   describe('c', function() {
+      //some tests in here specific to snakes.
+   })
+});
 
-    sonify = new SonifyNode(state)
-
-    console.time('frame')
-    arr = sonify.sonify(p.data)
-    console.timeEnd('frame')
-
-    //console.dir(arr)
-
-    wav.fromScratch(1, state.samplerate, '32f', arr)
-    writeFileSync('./test/example.wav', wav.toBuffer())
-    //console.dir(p)
-}
-
-test()
+describe('Renderer', function(){
+   describe('sonifyNode', function() {
+      require('./renderer_sonifyNode');
+   });
+   describe('b', function() {
+      //some tests in here specific to dogs.
+   })
+   describe('c', function() {
+      //some tests in here specific to snakes.
+   })
+})

@@ -1,6 +1,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
+/* Mothball */
 class Visualize {
     constructor(filePath) {
         this.viewElement = document.getElementById('visualize');

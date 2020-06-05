@@ -2,6 +2,8 @@
 
 import { basename, extname } from 'path';
 
+/* Mothball */
+
 class Visualize {
     private viewElement : HTMLCanvasElement = document.getElementById('visualize') as HTMLCanvasElement;
     public type : string = 'midi'; //or audio

@@ -122,6 +122,10 @@ class UI {
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
         this.endSelect.style.left = `${ratio * 100}%`;
     }
+    changePage(name) {
+        document.querySelector('.page').
+        ;
+    }
 }
 exports.default = UI;
 //# sourceMappingURL=index.js.map

@@ -10,6 +10,9 @@ class State {
             end: 1.0
         };
     }
+    /**
+     * Start the state storage file and in-memory object
+     **/
     async start() {
         const stateDir = join(homedir(), '.spiritsInObjects');
         let dirExists;

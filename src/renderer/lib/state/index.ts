@@ -15,6 +15,10 @@ interface StateStorage {
     width? : number;
     height? : number;
     samplerate? : number;
+
+    visualize? : string[];
+    vHeight? : number;
+    vWidth? : number;
 }
 
 class State {
@@ -28,6 +32,9 @@ class State {
         
     }
 
+    /**
+     * Start the state storage file and in-memory object
+     **/
     public async start () {
         const stateDir : string = join(homedir(), '.spiritsInObjects');
         let dirExists : boolean;

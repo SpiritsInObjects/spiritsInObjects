@@ -166,4 +166,8 @@ export default class UI {
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
         this.endSelect.style.left = `${ratio * 100}%`;
     }
+
+    public changePage (name : string) {
+        document.querySelector('.page').
+    }
 }

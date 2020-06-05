@@ -1,6 +1,8 @@
 'use strict';
 
 class VisualizeMidi {
+    private state : State;
+
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
 
@@ -18,7 +20,8 @@ class VisualizeMidi {
     private duration : number; //ms
     private frameCount : number;
 
-    constructor (canvas : HTMLCanvasElement, filePath : string) {
+    constructor (state : State, canvas : HTMLCanvasElement, filePath : string) {
+        this state = state;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
         this.ctx.scale(1, 1);

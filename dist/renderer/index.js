@@ -230,6 +230,54 @@ const progressMsg = document.getElementById('overlayProgressMsg');
             sonify = new Sonify(state, video.canvas);
         });
     }
+    /**
+     * VISUALIZE
+     **/
+    async function vFileSelect() {
+        const elem = document.getElementById('vFileSourceProxy');
+        const options = {
+            title: `Select MIDI file`,
+            properties: [`openFile`],
+            defaultPath: 'c:/',
+            filters: [
+                {
+                    name: 'MIDI files',
+                    extensions: ['mid', 'midi']
+                }
+            ]
+        };
+        let files;
+        let valid = false;
+        let proceed = false;
+        let filePath;
+        let displayName;
+        let ext;
+        try {
+            files = await dialog.showOpenDialog(options);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        if (!files || !files.filePaths || files.filePaths.length === 0) {
+            return false;
+        }
+        filePath = files.filePaths[0];
+        if (filePath && filePath !== '') {
+            ext = path_1.extname(filePath.toLowerCase());
+            valid = extensions.indexOf(ext) === -1 ? false : true;
+            if (!valid) {
+                console.log(`Cannot select file ${filePath} is invald`);
+                return false;
+            }
+            displayName = video.set(filePath);
+            ipcRenderer.send('midi', { filePath });
+            state.set('visualize', [filePath]);
+            state.save();
+            visualizeStart();
+        }
+    }
+    function visualizeStart() {
+    }
     audioContext = new AudioContext();
     //@ts-ignore why are you like this
     state = new State();
@@ -244,6 +292,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
     video = new Video(state, ui);
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas); //need to refresh when settings change
+    visualize = new VisualizeMidi(state);
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map

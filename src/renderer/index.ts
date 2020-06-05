@@ -271,6 +271,65 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
             sonify = new Sonify(state, video.canvas);
         });
     }
+
+    /**
+     * VISUALIZE
+     **/
+
+    async function vFileSelect () {
+        const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
+        const options : any = {
+            title: `Select MIDI file`,
+            properties: [`openFile`],
+            defaultPath: 'c:/',
+            filters: [
+                {
+                    name: 'MIDI files',
+                    extensions: ['mid', 'midi']
+                }
+            ]
+        }
+        let files : any;
+        let valid : boolean = false;
+        let proceed : boolean = false;
+        let filePath : string;
+        let displayName : string;
+        let ext : string;
+
+        try {
+            files = await dialog.showOpenDialog(options);
+        } catch (err ) {
+            console.error(err)
+        }
+
+        if (!files || !files.filePaths || files.filePaths.length === 0) {
+            return false;
+        }
+
+        filePath = files.filePaths[0];
+
+        if (filePath && filePath !== '') {
+            ext = extname(filePath.toLowerCase());
+            valid = extensions.indexOf(ext) === -1 ? false : true;
+
+            if (!valid) {
+                console.log(`Cannot select file ${filePath} is invald`)
+                return false;
+            }
+
+            displayName = video.set(filePath)
+            ipcRenderer.send('midi', { filePath } );
+
+            state.set('visualize', [ filePath ]);
+            state.save();
+
+            visualizeStart();
+        }
+    }
+
+    function visualizeStart () {
+        
+    }
     
     audioContext = new AudioContext();
 
@@ -288,6 +347,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
     video = new Video(state, ui);
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas); //need to refresh when settings change
+    visualize = new VisualizeMidi(state);
 
     bindListeners();
 
