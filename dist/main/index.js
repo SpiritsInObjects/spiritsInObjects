@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const electron_1 = require("electron");
-const electron_updater_1 = require("electron-updater");
 const electron_util_1 = require("electron-util");
 const electron_unhandled_1 = __importDefault(require("electron-unhandled"));
 const electron_debug_1 = __importDefault(require("electron-debug"));
@@ -24,12 +23,6 @@ if (electron_util_1.is.development) {
     electron_debug_1.default();
 }
 electron_1.app.setAppUserModelId('spiritsinobjects');
-if (!electron_util_1.is.development) {
-    const FOUR_HOURS = 1000 * 60 * 60 * 4;
-    setInterval(() => {
-        electron_updater_1.autoUpdater.checkForUpdates();
-    }, FOUR_HOURS);
-}
 async function pixels(filePath) {
     return new Promise((resolve, reject) => {
         return get_pixels_1.default(filePath, (err, imageData) => {
@@ -40,7 +33,6 @@ async function pixels(filePath) {
         });
     });
 }
-//autoUpdater.checkForUpdates();
 let mainWindow;
 const BrowserOptions = {
     title: electron_1.app.name,

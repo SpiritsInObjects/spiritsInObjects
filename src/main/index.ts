@@ -2,7 +2,6 @@
 
 import { join as pathJoin } from 'path';
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
 import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
@@ -28,12 +27,6 @@ if (is.development) {
 
 app.setAppUserModelId('spiritsinobjects');
 
-if (!is.development) {
-	  	const FOUR_HOURS = 1000 * 60 * 60 * 4;
- 	setInterval(() => {
- 		autoUpdater.checkForUpdates();
- 	}, FOUR_HOURS);
-}
 
 async function pixels (filePath : string) {
 	return new Promise((resolve : Function, reject : Function ) => {
@@ -45,8 +38,6 @@ async function pixels (filePath : string) {
 		});
 	});
 }
-
-//autoUpdater.checkForUpdates();
 
 let mainWindow : any;
 
