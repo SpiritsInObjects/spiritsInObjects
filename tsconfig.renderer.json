@@ -6,6 +6,7 @@
         "noImplicitAny": true,
         "sourceMap": true,
         "removeComments" : false,
+        "skipLibCheck": true,
         "baseUrl" : "./dist/",
         "outDir": "./dist/renderer/",
         "rootDir" : "./src/renderer/",
