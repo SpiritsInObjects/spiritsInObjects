@@ -21,7 +21,7 @@ class VisualizeMidi {
     private frameCount : number;
 
     constructor (state : State, canvas : HTMLCanvasElement, filePath : string) {
-        this state = state;
+        this.state = state;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
         this.ctx.scale(1, 1);

@@ -6,8 +6,7 @@ class VisualizeMidi {
         this.frame_h = 7.62;
         this.width = 720;
         this.height = 405;
-        this;
-        state = state;
+        this.state = state;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
         this.ctx.scale(1, 1);

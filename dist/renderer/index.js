@@ -13,6 +13,7 @@ let state;
 let video;
 let camera;
 let sonify;
+let visualize;
 let ui;
 let avgMs = -1;
 let timeAvg = -1;

@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ffmpeg = void 0;
 const child_process_1 = require("child_process");
 const os_1 = require("os");
 const path_1 = require("path");

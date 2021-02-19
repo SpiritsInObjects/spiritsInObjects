@@ -168,6 +168,6 @@ export default class UI {
     }
 
     public changePage (name : string) {
-        document.querySelector('.page').
+        //document.querySelector('.page')
     }
 }

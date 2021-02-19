@@ -123,8 +123,7 @@ class UI {
         this.endSelect.style.left = `${ratio * 100}%`;
     }
     changePage(name) {
-        document.querySelector('.page').
-        ;
+        //document.querySelector('.page')
     }
 }
 exports.default = UI;

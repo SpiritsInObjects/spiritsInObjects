@@ -17,6 +17,7 @@ let state : State;
 let video : Video;
 let camera : Camera;
 let sonify : Sonify;
+let visualize : VisualizeMidi;
 let ui : any;
 
 let avgMs : number = -1;

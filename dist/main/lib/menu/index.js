@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.createMenu = void 0;
 //const path = require('path'); //need for icon
 const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
