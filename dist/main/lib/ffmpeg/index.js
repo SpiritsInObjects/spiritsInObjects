@@ -6,7 +6,7 @@ const os_1 = require("os");
 const path_1 = require("path");
 const fs_extra_1 = require("fs-extra");
 const crypto_1 = require("crypto");
-const bin = require('ffmpeg-static').path;
+const bin = require('ffmpeg-static');
 const ffprobe = require('ffprobe-static').path;
 let tmp;
 async function spawnAsync(bin, args) {

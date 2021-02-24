@@ -293,7 +293,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
     video = new Video(state, ui);
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas); //need to refresh when settings change
-    visualize = new VisualizeMidi(state, null, '');
+    visualize = new VisualizeMidi(state, document.createElement('canvas'), '');
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map

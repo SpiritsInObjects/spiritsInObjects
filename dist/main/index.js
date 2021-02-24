@@ -41,7 +41,8 @@ const BrowserOptions = {
     height: 800,
     backgroundColor: 'rgb(220, 225, 220)',
     webPreferences: {
-        nodeIntegration: true
+        nodeIntegration: true,
+        enableRemoteModule: true
     }
 };
 const createMainWindow = async () => {
@@ -179,6 +180,8 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     mainWindow.webContents.send('info', res);
 });
 electron_1.ipcMain.on('save', async (evt, args) => {
+    console.log(evt);
+    console.log(args);
     if (args.savePath && !args.savePath.canceled) {
         try {
             await fs_extra_1.copyFile(args.filePath, args.savePath.filePath);

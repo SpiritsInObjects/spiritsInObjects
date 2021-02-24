@@ -48,7 +48,8 @@ const BrowserOptions = {
 	height: 800,
 	backgroundColor: 'rgb(220, 225, 220)',
 	webPreferences : {
-		nodeIntegration: true
+		nodeIntegration: true,
+		enableRemoteModule: true
 	}
 };
 
@@ -212,6 +213,8 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 });
 
 ipcMain.on('save', async (evt : Event, args : any) => {
+	console.log(evt)
+	console.log(args)
 	if (args.savePath && !args.savePath.canceled) {
 		try {
 			await copyFile(args.filePath, args.savePath.filePath);

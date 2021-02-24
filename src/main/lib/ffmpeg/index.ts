@@ -6,7 +6,7 @@ import { join } from 'path';
 import { mkdir, unlink } from 'fs-extra';
 import { createHash } from 'crypto';
 
-const bin : string = require('ffmpeg-static').path;
+const bin : string = require('ffmpeg-static');
 const ffprobe : string = require('ffprobe-static').path;
 let tmp : string;
 
