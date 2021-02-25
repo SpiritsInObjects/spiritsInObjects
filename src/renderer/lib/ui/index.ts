@@ -2,6 +2,38 @@
 
 import { StatsBase } from "fs-extra";
 
+class Overlay {
+    private elem : HTMLElement = document.getElementById('overlay');
+    private msg : HTMLElement = document.getElementById('overlayMsg');
+    private progressBar : HTMLElement = document.getElementById('overlayProgressBar');
+    private progressMsg : HTMLElement = document.getElementById('overlayProgressMsg');
+    constructor () {
+
+    }
+    public show (msg : string = '') {
+        console.log('overlay.show')
+        showSpinner('overlaySpinner');
+        this.msg.innerText = msg;
+        this.elem.classList.add('show');
+    }
+    
+    public hide () {
+        console.log('overlay.hide')
+        try {
+            this.elem.classList.remove('show');
+        } catch (err) {
+            console.error(err);
+        }
+        this.msg.innerText = '';
+        hideSpinner('overlaySpinner');
+    }
+
+    public progress (percent : number, msg : string) {
+        this.progressMsg.innerText = msg;
+        this.progressBar.style.width = `${percent * 100}%`;
+    }
+}
+
 export default class UI {
     private state : State;
 
@@ -25,9 +57,12 @@ export default class UI {
     private end : number = 1.0;
 
     public onSelectionChange : Function;
+    public overlay : Overlay;
 
     constructor (state : State) {
         this.state = state;
+
+        this.overlay = new Overlay();
 
         this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
         this.endSelect.addEventListener('mousedown', this.beginMoveEnd.bind(this), false);
@@ -165,7 +200,25 @@ export default class UI {
         this.endSelect.style.left = `${ratio * 100}%`;
     }
 
-    public changePage (name : string) {
-        //document.querySelector('.page')
+    public removeClass (selector : string, className : string) {
+        document.querySelectorAll(selector).forEach((page : HTMLElement) => {
+            if (page.classList.contains(className)) {
+                page.classList.remove(className);
+            }
+        });
+    }
+
+    public page (name : string) {
+        const btnElement : HTMLElement = document.querySelector(`#${name}Btn`);
+        const targetElement : HTMLElement = document.querySelector(`#${name}`);
+        if ( !btnElement.classList.contains('active') ) {
+            this.removeClass('.pageBtn', 'active');
+            btnElement.classList.add('active');
+        }
+        if ( !targetElement.classList.contains('show') ) {
+            this.removeClass('.page', 'show');
+            targetElement.classList.add('show');
+            this.state.set('page', name);
+        }
     }
 }

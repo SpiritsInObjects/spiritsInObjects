@@ -38,10 +38,12 @@ body {
 #menu button:nth-child(2) {
   float: left;
 }
-#sonify {
+#sonify,
+#visualize {
   display: none;
 }
-#sonify.show {
+#sonify.show,
+#visualize.show {
   display: block;
 }
 #sonifyControl {

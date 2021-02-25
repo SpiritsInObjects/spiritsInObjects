@@ -19,6 +19,8 @@ interface StateStorage {
     visualize? : string[];
     vHeight? : number;
     vWidth? : number;
+
+    page? : string;
 }
 
 class State {

@@ -19,8 +19,6 @@ let visualize;
 let ui;
 let avgMs = -1;
 let timeAvg = -1;
-const progressBar = document.getElementById('overlayProgressBar');
-const progressMsg = document.getElementById('overlayProgressMsg');
 (async function main() {
     async function confirm(message) {
         const config = {
@@ -31,21 +29,6 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         return res.response === 0;
     }
     ;
-    function overlayShow(msg = '') {
-        showSpinner('overlaySpinner');
-        document.getElementById('overlayMsg').innerText = msg;
-        document.getElementById('overlay').classList.add('show');
-    }
-    function overlayHide() {
-        try {
-            document.getElementById('overlay').classList.remove('show');
-        }
-        catch (err) {
-            console.error(err);
-        }
-        document.getElementById('overlayMsg').innerText = '';
-        hideSpinner('overlaySpinner');
-    }
     function containsFiles(evt) {
         if (evt.dataTransfer.types) {
             for (var i = 0; i < evt.dataTransfer.types.length; i++) {
@@ -165,7 +148,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         if (!proceed) {
             return false;
         }
-        overlayShow(`Sonifying ${displayName}...`);
+        ui.overlay.show(`Sonifying ${displayName}...`);
         ipcRenderer.send('sonify', { state: sonifyState });
     }
     function onSonifyProgress(evt, args) {
@@ -181,14 +164,13 @@ const progressMsg = document.getElementById('overlayProgressMsg');
             timeAvg = (timeAvg + timeLeft) / 2;
         }
         timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
-        progressMsg.innerText = `~${timeStr}`;
-        progressBar.style.width = `${(args.i / args.frames) * 100}%`;
+        ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
         //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
     }
     function onSonifyComplete(evt, args) {
         avgMs = -1;
         timeAvg = -1;
-        overlayHide();
+        ui.overlay.hide();
         fileSave(args.tmpAudio);
     }
     function playFrame() {
@@ -219,6 +201,10 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         const fileSourceProxy = document.getElementById('fileSourceProxy');
         const sonifyFrame = document.getElementById('sonifyFrame');
         const sonifyVideo = document.getElementById('sonifyVideo');
+        const sonifyBtn = document.getElementById('sonifyBtn');
+        const visualizeBtn = document.getElementById('visualizeBtn');
+        sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
+        visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
         document.addEventListener('dragenter', dragEnter, false);
         dropArea.addEventListener('dragleave', dragLeave, false);
         dropArea.addEventListener('dragover', dragEnter, false);

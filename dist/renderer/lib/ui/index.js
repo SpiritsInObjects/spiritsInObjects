@@ -1,5 +1,34 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+class Overlay {
+    constructor() {
+        this.elem = document.getElementById('overlay');
+        this.msg = document.getElementById('overlayMsg');
+        this.progressBar = document.getElementById('overlayProgressBar');
+        this.progressMsg = document.getElementById('overlayProgressMsg');
+    }
+    show(msg = '') {
+        console.log('overlay.show');
+        showSpinner('overlaySpinner');
+        this.msg.innerText = msg;
+        this.elem.classList.add('show');
+    }
+    hide() {
+        console.log('overlay.hide');
+        try {
+            this.elem.classList.remove('show');
+        }
+        catch (err) {
+            console.error(err);
+        }
+        this.msg.innerText = '';
+        hideSpinner('overlaySpinner');
+    }
+    progress(percent, msg) {
+        this.progressMsg.innerText = msg;
+        this.progressBar.style.width = `${percent * 100}%`;
+    }
+}
 class UI {
     constructor(state) {
         this.startSelect = document.getElementById('startSelect');
@@ -14,6 +43,7 @@ class UI {
         this.start = 0.72;
         this.end = 1.0;
         this.state = state;
+        this.overlay = new Overlay();
         this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
         this.endSelect.addEventListener('mousedown', this.beginMoveEnd.bind(this), false);
         document.addEventListener('mousemove', this.moveStart.bind(this), false);
@@ -120,8 +150,25 @@ class UI {
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
         this.endSelect.style.left = `${ratio * 100}%`;
     }
-    changePage(name) {
-        //document.querySelector('.page')
+    removeClass(selector, className) {
+        document.querySelectorAll(selector).forEach((page) => {
+            if (page.classList.contains(className)) {
+                page.classList.remove(className);
+            }
+        });
+    }
+    page(name) {
+        const btnElement = document.querySelector(`#${name}Btn`);
+        const targetElement = document.querySelector(`#${name}`);
+        if (!btnElement.classList.contains('active')) {
+            this.removeClass('.pageBtn', 'active');
+            btnElement.classList.add('active');
+        }
+        if (!targetElement.classList.contains('show')) {
+            this.removeClass('.page', 'show');
+            targetElement.classList.add('show');
+            this.state.set('page', name);
+        }
     }
 }
 exports.default = UI;

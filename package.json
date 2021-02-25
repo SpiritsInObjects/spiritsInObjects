@@ -12,12 +12,10 @@
       "category": "public.app-category.video"
     },
     "files": [
-      "dist/contrib/jquery-3.4.1.min.js",
       "dist/contrib/spin.js",
       "dist/contrib/spin.css",
       "dist/contrib/midi.js",
       "dist/contrib/Tone.js",
-      "dist/contrib/bootstrap.bundle.min.js",
       "dist/contrib/bootstrap.min.css",
       "dist/css/style.css",
       "dist/main/index.js",

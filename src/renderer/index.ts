@@ -24,8 +24,6 @@ let ui : any;
 
 let avgMs : number = -1;
 let timeAvg : number = -1;
-const progressBar : any = document.getElementById('overlayProgressBar');
-const progressMsg : any = document.getElementById('overlayProgressMsg');
 
 (async function main () {
 
@@ -37,22 +35,6 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
         const res = await dialog.showMessageBox(config);
         return res.response === 0;
     };
-
-    function overlayShow (msg : string = '') {
-        showSpinner('overlaySpinner');
-        document.getElementById('overlayMsg').innerText = msg;
-        document.getElementById('overlay').classList.add('show');
-    }
-    
-    function overlayHide () {
-        try {
-            document.getElementById('overlay').classList.remove('show');
-        } catch (err) {
-            console.error(err);
-        }
-        document.getElementById('overlayMsg').innerText = '';
-        hideSpinner('overlaySpinner');
-    }
 
     function containsFiles(evt : DragEvent) {
         if (evt.dataTransfer.types) {
@@ -193,7 +175,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
             return false;
         }
 
-        overlayShow(`Sonifying ${displayName}...`);
+        ui.overlay.show(`Sonifying ${displayName}...`);
         ipcRenderer.send('sonify', { state : sonifyState });
     }
 
@@ -211,8 +193,8 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
         }
 
         timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
-        progressMsg.innerText = `~${timeStr}`;
-        progressBar.style.width = `${(args.i / args.frames) * 100}%`;
+        ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
+
 
         //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
     }
@@ -220,7 +202,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
     function onSonifyComplete (evt : Event, args : any) {
         avgMs = -1;
         timeAvg = -1;
-        overlayHide();
+        ui.overlay.hide();
         fileSave(args.tmpAudio);
     }
 
@@ -257,6 +239,11 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
         const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
         const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
         const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
+        const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
+        const visualizeBtn : HTMLElement = document.getElementById('visualizeBtn');
+
+        sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
+        visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
 
         document.addEventListener('dragenter',  dragEnter, false);
         dropArea.addEventListener('dragleave',  dragLeave, false);
