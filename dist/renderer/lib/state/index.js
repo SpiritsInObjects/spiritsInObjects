@@ -106,8 +106,9 @@ class State {
      * @param key Name of key in storage object
      * @param value Value of key
      */
-    set(key, value) {
+    async set(key, value) {
         this.storage[key] = value;
+        await this.save();
     }
 }
 //# sourceMappingURL=index.js.map

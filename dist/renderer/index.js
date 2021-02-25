@@ -56,6 +56,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         return false;
     }
     function dragEnter(evt) {
+        console.log('dragEnter');
         if (containsFiles(evt)) {
             document.getElementById('dragOverlay').classList.add('show');
             //console.log('dragEnter');
@@ -63,6 +64,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         }
     }
     function dragLeave(evt) {
+        console.log('dragLeave');
         try {
             document.getElementById('dragOverlay').classList.remove('show');
         }
@@ -72,7 +74,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         //console.log('dragLeave');
     }
     function dropFunc(evt) {
-        console.log('drop');
+        console.log('dropFunc');
         evt.preventDefault();
         const files = evt.dataTransfer.files; //squashes ts error
         console.dir(evt.dataTransfer);
@@ -126,7 +128,6 @@ const progressMsg = document.getElementById('overlayProgressMsg');
             displayName = video.set(filePath);
             ipcRenderer.send('info', { filePath });
             state.set('files', [filePath]);
-            state.save();
             sonifyStart();
         }
     }
@@ -273,7 +274,6 @@ const progressMsg = document.getElementById('overlayProgressMsg');
             displayName = video.set(filePath);
             ipcRenderer.send('midi', { filePath });
             state.set('visualize', [filePath]);
-            state.save();
             visualizeStart();
         }
     }

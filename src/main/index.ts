@@ -190,12 +190,11 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	}
 
 	try {
-		//await sox.postProcess(tmpAudio, normalAudio);
-		//console.log(`Normalized audio file to ${normalAudio}`);
+		await sox.postProcess(tmpAudio, normalAudio);
+		console.log(`Normalized audio file to ${normalAudio}`);
 	} catch (err) {
 		console.error(err);
 		console.log('Normalization failed, using original tmp file.');
-		tmpAudio = normalAudio;
 	}
 
 	endTime = +new Date();

@@ -65,6 +65,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
     }
     
     function dragEnter (evt: DragEvent) {
+        console.log('dragEnter');
         if (containsFiles(evt)) {
             document.getElementById('dragOverlay').classList.add('show');
             //console.log('dragEnter');
@@ -73,6 +74,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
     }
     
     function dragLeave (evt: Event) {
+        console.log('dragLeave');
         try {
             document.getElementById('dragOverlay').classList.remove('show');
         } catch (err) {
@@ -82,7 +84,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
     }
     
     function dropFunc ( evt : DragEvent ) {
-        console.log('drop');
+        console.log('dropFunc');
         evt.preventDefault();
         const files : any[] = evt.dataTransfer.files as any; //squashes ts error
         
@@ -146,7 +148,6 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
             ipcRenderer.send('info', { filePath } );
 
             state.set('files', [ filePath ]);
-            state.save();
 
             sonifyStart();
         }
@@ -322,7 +323,6 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
             ipcRenderer.send('midi', { filePath } );
 
             state.set('visualize', [ filePath ]);
-            state.save();
 
             visualizeStart();
         }

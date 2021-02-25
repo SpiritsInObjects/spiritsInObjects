@@ -52,8 +52,8 @@ class Video {
             this.height = this.state.get('height');
             this.samplerate = this.state.get('samplerate');
             this.ui.updateSliders(this.width, this.height);
-            this.displayInfo();
             this.file(files[0]);
+            this.displayInfo();
         }
     }
     /**
@@ -124,7 +124,6 @@ class Video {
         this.state.set('width', this.width);
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
-        this.state.save();
         this.displayInfo();
         document.getElementById('sonifyFrame').disabled = false;
     }

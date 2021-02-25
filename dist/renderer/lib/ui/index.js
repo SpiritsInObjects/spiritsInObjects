@@ -33,7 +33,6 @@ class UI {
         this.startMoving = false;
         this.start = start;
         this.state.set('start', start);
-        this.state.save();
         if (this.onSelectionChange)
             this.onSelectionChange();
     }
@@ -74,7 +73,6 @@ class UI {
         this.endMoving = false;
         this.end = end;
         this.state.set('end', end);
-        this.state.save();
         if (this.onSelectionChange)
             this.onSelectionChange();
     }

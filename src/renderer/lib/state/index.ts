@@ -126,7 +126,8 @@ class State {
      * @param key Name of key in storage object
      * @param value Value of key
      */
-    public set (key: string, value : any) {
+    public async set (key: string, value : any) {
         this.storage[key] = value;
+        await this.save();
     }
 }
