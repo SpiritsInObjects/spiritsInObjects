@@ -8,7 +8,9 @@ const { dialog } = require('electron').remote;
 
 const humanizeDuration = require('humanize-duration');
 
-const extensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+const videoExtensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.tif', '.tiff'];
+const audioExtensions : string[] = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving : boolean = false;
 let endMoving : boolean = false;
 
@@ -137,14 +139,18 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
 
         if (filePath && filePath !== '') {
             ext = extname(filePath.toLowerCase());
-            valid = extensions.indexOf(ext) === -1 ? false : true;
+            valid = videoExtensions.indexOf(ext) === -1 ? false : true;
+
+            if (!valid) {
+                //stillExtensions.indexOf(ext) === -1 ? false : true;
+            }
 
             if (!valid) {
                 console.log(`Cannot select file ${filePath} is invald`)
                 return false;
             }
 
-            displayName = video.set(filePath)
+            displayName = video.set(filePath);
             ipcRenderer.send('info', { filePath } );
 
             state.set('files', [ filePath ]);
@@ -287,7 +293,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
             filters: [
                 {
                     name: 'MIDI files',
-                    extensions: ['mid', 'midi']
+                    extensions: audioExtensions
                 }
             ]
         }
@@ -312,7 +318,7 @@ const progressMsg : any = document.getElementById('overlayProgressMsg');
 
         if (filePath && filePath !== '') {
             ext = extname(filePath.toLowerCase());
-            valid = extensions.indexOf(ext) === -1 ? false : true;
+            valid = audioExtensions.indexOf(ext) === -1 ? false : true;
 
             if (!valid) {
                 console.log(`Cannot select file ${filePath} is invald`)

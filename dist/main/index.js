@@ -17,7 +17,6 @@ const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
-const sox_1 = require("./lib/sox");
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -159,15 +158,15 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
     }
     try {
-        await sox_1.sox.postProcess(tmpAudio, normalAudio);
-        console.log(`Normalized audio file to ${normalAudio}`);
+        //await sox.postProcess(tmpAudio, normalAudio);
+        //console.log(`Normalized audio file to ${normalAudio}`);
     }
     catch (err) {
         console.error(err);
         console.log('Normalization failed, using original tmp file.');
     }
     endTime = +new Date();
-    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: normalAudio });
+    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
     let res;
@@ -180,8 +179,6 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     mainWindow.webContents.send('info', res);
 });
 electron_1.ipcMain.on('save', async (evt, args) => {
-    console.log(evt);
-    console.log(args);
     if (args.savePath && !args.savePath.canceled) {
         try {
             await fs_extra_1.copyFile(args.filePath, args.savePath.filePath);

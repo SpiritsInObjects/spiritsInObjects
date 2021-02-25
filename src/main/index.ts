@@ -190,15 +190,15 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	}
 
 	try {
-		await sox.postProcess(tmpAudio, normalAudio);
-		console.log(`Normalized audio file to ${normalAudio}`);
+		//await sox.postProcess(tmpAudio, normalAudio);
+		//console.log(`Normalized audio file to ${normalAudio}`);
 	} catch (err) {
 		console.error(err);
 		console.log('Normalization failed, using original tmp file.');
 	}
 
 	endTime = +new Date();
-	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio : normalAudio });
+	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
 });
 
 ipcMain.on('info', async (evt : Event, args : any) => {
@@ -212,8 +212,6 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 });
 
 ipcMain.on('save', async (evt : Event, args : any) => {
-	console.log(evt)
-	console.log(args)
 	if (args.savePath && !args.savePath.canceled) {
 		try {
 			await copyFile(args.filePath, args.savePath.filePath);

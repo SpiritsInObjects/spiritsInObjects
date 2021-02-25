@@ -72,6 +72,7 @@ class Video {
 
             this.ui.updateSliders(this.width, this.height);
             this.file(files[0]);
+            this.displayName = files[0].split('/').pop();
             this.displayInfo();
         }
     }

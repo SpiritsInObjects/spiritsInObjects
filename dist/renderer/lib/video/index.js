@@ -53,6 +53,7 @@ class Video {
             this.samplerate = this.state.get('samplerate');
             this.ui.updateSliders(this.width, this.height);
             this.file(files[0]);
+            this.displayName = files[0].split('/').pop();
             this.displayInfo();
         }
     }

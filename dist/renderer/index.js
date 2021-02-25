@@ -5,7 +5,9 @@ const os_1 = require("os");
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
-const extensions = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+const videoExtensions = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+const stillExtensions = ['.png', '.jpg', '.jpeg', '.tif', '.tiff'];
+const audioExtensions = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving = false;
 let endMoving = false;
 let audioContext;
@@ -120,7 +122,10 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         filePath = files.filePaths[0];
         if (filePath && filePath !== '') {
             ext = path_1.extname(filePath.toLowerCase());
-            valid = extensions.indexOf(ext) === -1 ? false : true;
+            valid = videoExtensions.indexOf(ext) === -1 ? false : true;
+            if (!valid) {
+                //stillExtensions.indexOf(ext) === -1 ? false : true;
+            }
             if (!valid) {
                 console.log(`Cannot select file ${filePath} is invald`);
                 return false;
@@ -244,7 +249,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
             filters: [
                 {
                     name: 'MIDI files',
-                    extensions: ['mid', 'midi']
+                    extensions: audioExtensions
                 }
             ]
         };
@@ -266,7 +271,7 @@ const progressMsg = document.getElementById('overlayProgressMsg');
         filePath = files.filePaths[0];
         if (filePath && filePath !== '') {
             ext = path_1.extname(filePath.toLowerCase());
-            valid = extensions.indexOf(ext) === -1 ? false : true;
+            valid = audioExtensions.indexOf(ext) === -1 ? false : true;
             if (!valid) {
                 console.log(`Cannot select file ${filePath} is invald`);
                 return false;

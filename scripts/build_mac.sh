@@ -1,5 +1,7 @@
 #!/bin/bash
 
+version=$(jq -r  '.version' ./package.json)
+
 mkdir -p ./releases
 mkdir -p ./releases/mac
 #--icon=assets/icons/icon.icns
@@ -12,3 +14,5 @@ sleep 5s
 #  --icon-size=<px>     How big to make the icon for the app in the DMG. [Default: `80`].
 #  --background=<path>  Path to a PNG image to use as the background of the DMG.
 #--overwrite          Overwrite any existing DMG.
+
+echo $version
