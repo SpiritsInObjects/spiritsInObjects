@@ -104,6 +104,8 @@ class State {
             } catch (err) {
                 console.error(err);
                 console.error(raw);
+                //overwrite bad state file
+                await this.save();
                 return false;
             }
         }

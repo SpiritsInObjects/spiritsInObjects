@@ -11,14 +11,12 @@ class Overlay {
 
     }
     public show (msg : string = '') {
-        console.log('overlay.show')
         showSpinner('overlaySpinner');
         this.msg.innerText = msg;
         this.elem.classList.add('show');
     }
     
     public hide () {
-        console.log('overlay.hide')
         try {
             this.elem.classList.remove('show');
         } catch (err) {

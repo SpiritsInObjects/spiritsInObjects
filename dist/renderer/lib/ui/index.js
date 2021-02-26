@@ -8,13 +8,11 @@ class Overlay {
         this.progressMsg = document.getElementById('overlayProgressMsg');
     }
     show(msg = '') {
-        console.log('overlay.show');
         showSpinner('overlaySpinner');
         this.msg.innerText = msg;
         this.elem.classList.add('show');
     }
     hide() {
-        console.log('overlay.hide');
         try {
             this.elem.classList.remove('show');
         }
