@@ -15,4 +15,6 @@ sleep 5s
 #  --background=<path>  Path to a PNG image to use as the background of the DMG.
 #--overwrite          Overwrite any existing DMG.
 
-echo $version
+mv ./releases/mac/spiritsinobjects.dmg "./releases/mac/spiritsinobjects_${version}.dmg"
+
+echo "Built installer of version ${version}"
