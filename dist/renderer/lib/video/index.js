@@ -163,12 +163,10 @@ class Video {
         this.play();
     }
     set(pathStr) {
-        console.log(pathStr);
         const displayName = pathStr.split('/').pop();
         console.log(`Selected file ${displayName}`);
         this.file(pathStr);
         this.displayName = displayName;
-        console.log(displayName);
         return displayName;
     }
     currentFrame() {

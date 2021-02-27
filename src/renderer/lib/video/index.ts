@@ -196,13 +196,11 @@ class Video {
     }
 
     public set (pathStr : string) {
-        console.log(pathStr);
         const displayName : string = pathStr.split('/').pop();
         console.log(`Selected file ${displayName}`);
             
         this.file(pathStr);
         this.displayName = displayName;
-        console.log(displayName);
         return displayName;
     }
 

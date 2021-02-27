@@ -131,8 +131,33 @@ let timeAvg = -1;
             console.error(err);
         }
         if (savePath) {
+            savePath.filePath = await validatePath(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
+    }
+    async function validatePath(savePath) {
+        const saveExt = '.wav';
+        const ext = path_1.extname(savePath);
+        let proceed = false;
+        let i;
+        if (ext === '') {
+            savePath += saveExt;
+        }
+        else if (ext.toLowerCase() !== saveExt) {
+            try {
+                proceed = await confirm(`Sonification file is a WAVE but has the extension "${ext}". Keep extension and continue?`);
+            }
+            catch (err) {
+                console.error(err);
+            }
+            if (!proceed) {
+                i = savePath.lastIndexOf(ext);
+                if (i >= 0 && i + ext.length >= savePath.length) {
+                    savePath = savePath.substring(0, i) + saveExt;
+                }
+            }
+        }
+        return savePath;
     }
     const audioCtx = new window.AudioContext();
     async function sonifyStart() {

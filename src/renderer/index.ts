@@ -1,6 +1,6 @@
 'use strict';
 
-import { extname } from 'path';
+import { basename, extname } from 'path';
 import { homedir } from 'os';
 
 const { ipcRenderer } = require('electron');
@@ -144,8 +144,8 @@ let timeAvg : number = -1;
     async function fileSave (filePath : string) {
         const options : any = {
             defaultPath: homedir()
-        }
-        let savePath : string;
+        };
+        let savePath : any;
 
         try {
             savePath = await dialog.showSaveDialog(null, options)
@@ -154,8 +154,32 @@ let timeAvg : number = -1;
         }
 
         if (savePath) {
+            savePath.filePath = await validatePath(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
+    }
+
+    async function validatePath (savePath : string) {
+        const saveExt : string = '.wav';
+        const ext : string = extname(savePath);
+        let proceed : boolean = false;
+        let i : number;
+        if (ext === '') {
+            savePath += saveExt;
+        } else if (ext.toLowerCase() !== saveExt) {
+            try {
+                proceed = await confirm(`Sonification file is a WAVE but has the extension "${ext}". Keep extension and continue?`);
+            } catch (err) {
+                console.error(err);
+            }
+            if (!proceed) {
+                i = savePath.lastIndexOf(ext);
+                if (i >= 0 && i + ext.length >= savePath.length) {
+                    savePath = savePath.substring(0, i) + saveExt;
+                }
+            }
+        }
+        return savePath;
     }
 
     const audioCtx : AudioContext = new window.AudioContext();
