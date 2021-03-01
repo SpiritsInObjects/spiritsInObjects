@@ -8,7 +8,7 @@ const { dialog } = require('electron').remote;
 
 const humanizeDuration = require('humanize-duration');
 
-const videoExtensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg'];
+const videoExtensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v'];
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.tif', '.tiff'];
 const audioExtensions : string[] = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving : boolean = false;

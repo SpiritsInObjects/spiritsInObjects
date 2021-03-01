@@ -41,26 +41,26 @@ class State {
         const stateDir : string = join(homedir(), '.spiritsInObjects');
         let dirExists : boolean;
         try {
-            dirExists = await pathExists(stateDir)
+            dirExists = await pathExists(stateDir);
         } catch (err) {
-            throw err
+            throw err;
         }
         if (!dirExists) {
             try {
-                await ensureDir(stateDir)
+                await ensureDir(stateDir);
             } catch (err) {
-                throw err
+                throw err;
             }
             try {
-                this.save()
+                this.save();
             } catch (err) {
-                throw err
+                throw err;
             }
         }
         try {
-            await this.restore()
+            await this.restore();
         } catch (err) {
-            throw err
+            throw err;
         }
     }
 
