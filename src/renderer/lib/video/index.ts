@@ -14,6 +14,7 @@ class Video {
     private resolutionDisplay : HTMLSpanElement = document.getElementById('resolution') as HTMLSpanElement;
     private samplerateDisplay : HTMLSpanElement = document.getElementById('samplerate') as HTMLSpanElement;
     private selectionDisplay : HTMLSpanElement = document.getElementById('selectedarea') as HTMLSpanElement;
+    private errorDisplay : HTMLElement = document.getElementById('displayError');
 
     private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
     private source : HTMLSourceElement;

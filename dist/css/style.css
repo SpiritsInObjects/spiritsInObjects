@@ -260,3 +260,16 @@ select {
   text-transform: uppercase;
   pointer-events: none;
 }
+#displayError {
+  color: red;
+  text-align: center;
+  position: absolute;
+  z-index: 1000;
+  width: 720px;
+  height: 405px;
+  line-height: 405px;
+  top: 0;
+}
+.hide {
+  display: none;
+}

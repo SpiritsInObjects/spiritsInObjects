@@ -20,6 +20,7 @@ class Video {
         this.resolutionDisplay = document.getElementById('resolution');
         this.samplerateDisplay = document.getElementById('samplerate');
         this.selectionDisplay = document.getElementById('selectedarea');
+        this.errorDisplay = document.getElementById('displayError');
         this.ctx = this.canvas.getContext('2d');
         this.framerate = 24;
         this.frames = 0;
