@@ -243,4 +243,15 @@ class Video {
         }
         this.setFrame(frame);
     }
+
+    public errorShow () {
+        try {
+            this.errorDisplay.classList.remove('hide');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    public errorHide () {
+        this.errorDisplay.classList.add('hide');
+    }
 }

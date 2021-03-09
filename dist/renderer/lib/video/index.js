@@ -206,5 +206,16 @@ class Video {
         }
         this.setFrame(frame);
     }
+    errorShow() {
+        try {
+            this.errorDisplay.classList.remove('hide');
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+    errorHide() {
+        this.errorDisplay.classList.add('hide');
+    }
 }
 //# sourceMappingURL=index.js.map
