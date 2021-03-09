@@ -124,7 +124,7 @@ class State {
                 this.storage[key] = 0.72;
             }
         }
-        else if (key === 'stop') {
+        else if (key === 'end') {
             if (isNaN(value)) {
                 this.storage[key] = 1.0;
             }
