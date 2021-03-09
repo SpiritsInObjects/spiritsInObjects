@@ -7,6 +7,7 @@ const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra')
 interface StateStorage {
     [key: string]: any;
     files? : string[];
+    type? : string;
     camera? : string;
     start? : number;
     end? : number;
@@ -132,6 +133,24 @@ class State {
      */
     public async set (key: string, value : any) {
         this.storage[key] = value;
+        this.validate(key, value);
         await this.save();
     }
+
+    /**
+     * Validate input and set to defaults or erase if invalid.
+     * @param key Name of key in storage object
+     * @param value Value of key
+     **/
+     private validate (key: string, value: any) {
+        if (key === 'start') {
+            if (isNaN(value)) {
+                this.storage[key] = 0.72;
+            }
+        } else if (key === 'stop') {
+            if (isNaN(value)) {
+                this.storage[key] = 1.0;
+            }
+        }
+     }
 }

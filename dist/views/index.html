@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="../contrib/spin.css" />
 		<link rel="stylesheet" type="text/css" href="../css/style.css" />
     </head>
-    <body>
+    <body draggable="true" ondragenter="dnd.enter(event);" ondragover="dnd.over(event);" ondrop="dnd.drop(event);">
         <div id="menu">
             <button id="visualizeBtn" class="pageBtn">Visualize</button>
             <button id="sonifyBtn" class="pageBtn active">Sonify</button>
@@ -75,9 +75,9 @@
             </div>
             <div id="overlayProgressMsg"></div>
         </div>
-        <div id="dragOverlay">
-            <div class="outline">
-                <div id="dndfilename">Drop here</div>
+        <div draggable="true" id="dragOverlay" ondrop="dnd.drop(event);" ondragover="dnd.over(event);">
+            <div draggable="true" class="outline" ondrop="dnd.drop(event);">
+                <div draggable="true" id="dndfilename" ondrop="dnd.drop(event);">Drop here</div>
             </div>
         </div>
         <script>var exports = {"__esModule": true};</script>

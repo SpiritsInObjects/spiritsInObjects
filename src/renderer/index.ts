@@ -9,7 +9,7 @@ const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
 
 const videoExtensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v'];
-const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.tif', '.tiff'];
+const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
 const audioExtensions : string[] = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving : boolean = false;
 let endMoving : boolean = false;
@@ -24,19 +24,82 @@ let ui : any;
 
 let avgMs : number = -1;
 let timeAvg : number = -1;
+let dnd : DragDrop;
+let f : Files;
 
-(async function main () {
+ async function confirm (message : string) {
+    const config = {
+        buttons : ['Yes', 'Cancel'],
+        message
+    }
+    const res = await dialog.showMessageBox(config);
+    return res.response === 0;
+}
 
-    async function confirm (message : string) {
-        const config = {
-            buttons : ['Yes', 'Cancel'],
-            message
+
+/**
+ * class representing the Drag and Drop functionality
+ **/
+
+class DragDrop {
+    private active : boolean = false;
+    private overlay : HTMLElement;
+    constructor () {
+        this.overlay = document.getElementById('dragOverlay');
+    }
+    public enter (evt: DragEvent) {
+        let files : any[];
+        console.log('dnd.enter');
+        evt.preventDefault();
+        if (this.containsFiles(evt)) {
+            this.active = true;
+            this.overlay.classList.add('show');
         }
-        const res = await dialog.showMessageBox(config);
-        return res.response === 0;
-    };
+    }
 
-    function containsFiles(evt : DragEvent) {
+    public over (evt: DragEvent) {
+        evt.preventDefault();
+    }
+
+    public leave (evt: Event) {
+        console.log('dnd.leave');
+        if (this.active) this.active = false;
+        try {
+            this.overlay.classList.remove('show');
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    public async drop (evt: DragEvent) {
+        let files : any[];
+        let loadFiles : any[] = [];
+        let paths : string[] = [];
+        if (this.active) {
+            evt.preventDefault();
+            files = evt.dataTransfer.files as any; //squashes ts error
+            for (let file of files) {
+                loadFiles.push(new Promise((resolve : any, reject : any) => {
+                    let fileReader : FileReader = new FileReader();
+                    fileReader.onload = (function(file : any) {
+                        paths.push(file.path);
+                        return resolve(file);
+                    })(file) as any; //dirty ts hack
+                    fileReader.readAsDataURL(file);
+                }));
+            }
+            try {
+                await Promise.all(loadFiles)
+            } catch (err) {
+                console.error(err);
+            }
+            f.set(paths);
+
+        }
+        this.leave(evt);
+    }
+
+    private containsFiles (evt : DragEvent) {
         if (evt.dataTransfer.types) {
             for (var i = 0; i < evt.dataTransfer.types.length; i++) {
                 if (evt.dataTransfer.types[i] == "Files") {
@@ -47,47 +110,14 @@ let timeAvg : number = -1;
         }
         return false;
     }
-    
-    function dragEnter (evt: DragEvent) {
-        console.log('dragEnter');
-        if (containsFiles(evt)) {
-            document.getElementById('dragOverlay').classList.add('show');
-            //console.log('dragEnter');
-            //console.dir(evt);
-        }
-    }
-    
-    function dragLeave (evt: Event) {
-        console.log('dragLeave');
-        try {
-            document.getElementById('dragOverlay').classList.remove('show');
-        } catch (err) {
-            console.error(err);
-        }
-        //console.log('dragLeave');
-    }
-    
-    function dropFunc ( evt : DragEvent ) {
-        console.log('dropFunc');
-        evt.preventDefault();
-        const files : any[] = evt.dataTransfer.files as any; //squashes ts error
-        
-        console.dir(evt.dataTransfer);
-        
-        //evt.stopPropagation();
-        //
-            
-        for (let file of files ) {
-            let fileReader : FileReader = new FileReader();
-            fileReader.onload = (function(file) {
-                 console.dir(file);
-            })(file) as any; //dirty ts hack
-            fileReader.readAsDataURL(file);
-        }
-        dragLeave(evt);
-    }
+}
 
-    async function fileSelect () {
+/** 
+ * class representing File i/o functionality
+ **/
+
+class Files {
+    public async select () {
         const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
         const options : any = {
             title: `Select video or image sequence`,
@@ -101,12 +131,9 @@ let timeAvg : number = -1;
             ]
         }
         let files : any;
-        let valid : boolean = false;
         let proceed : boolean = false;
-        let filePath : string;
-        let displayName : string;
-        let ext : string;
-
+        let filePaths : string[] = [];
+        
         try {
             files = await dialog.showOpenDialog(options);
         } catch (err ) {
@@ -117,31 +144,55 @@ let timeAvg : number = -1;
             return false;
         }
 
-        filePath = files.filePaths[0];
-
-        if (filePath && filePath !== '') {
-            ext = extname(filePath.toLowerCase());
-            valid = videoExtensions.indexOf(ext) === -1 ? false : true;
-
-            if (!valid) {
-                //stillExtensions.indexOf(ext) === -1 ? false : true;
-            }
-
-            if (!valid) {
-                console.log(`Cannot select file ${filePath} is invald`)
-                return false;
-            }
-
-            displayName = video.set(filePath);
-            ipcRenderer.send('info', { filePath } );
-
-            state.set('files', [ filePath ]);
-
-            sonifyStart();
+        for (let file of files.filePaths) {
+            filePaths.push(file);
         }
+
+        this.set(filePaths);
     }
- 
-    async function fileSave (filePath : string) {
+
+    public async set (files : any) {
+        let ext : string;
+        let valid : boolean = true;
+        let displayName : string;
+        let type : string = 'video';
+
+        files = files.filter((file : string) => {
+            ext = extname(file.toLowerCase());
+            if (videoExtensions.indexOf(ext) > -1 && stillExtensions.indexOf(ext) > -1) {
+                return true;
+            }
+            return false;
+        });
+
+        if (files.length === 0) {
+            valid = false;
+        }
+
+        if (!valid) {
+            console.log(`File selection is not valid`)
+            return false;
+        }
+
+        if (files.length === 1) {
+            ext = extname(files[0].toLowerCase());
+            if (stillExtensions.indexOf(ext) > -1) {
+                type = 'still';
+            }
+        } else if (files.length > 1) {
+            
+        }
+
+        displayName = video.set(files[0]);
+        ipcRenderer.send('info', { files, type } );
+
+        state.set('files', files );
+        state.set('type', type );
+
+        sonifyStart();
+    }
+
+    public async save (filePath : string) {
         const options : any = {
             defaultPath: homedir()
         };
@@ -154,12 +205,12 @@ let timeAvg : number = -1;
         }
 
         if (savePath) {
-            savePath.filePath = await validatePath(savePath.filePath);
+            savePath.filePath = await this.validatePath(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
 
-    async function validatePath (savePath : string) {
+    public async validatePath (savePath : string) {
         const saveExt : string = '.wav';
         const ext : string = extname(savePath);
         let proceed : boolean = false;
@@ -181,174 +232,171 @@ let timeAvg : number = -1;
         }
         return savePath;
     }
+}
 
-    const audioCtx : AudioContext = new window.AudioContext();
+const audioCtx : AudioContext = new window.AudioContext();
 
-    async function sonifyStart () {
-        const sonifyState : any = state.get();
-        const displayName : string = video.displayName;
-        let proceed : boolean = false;
+async function sonifyStart () {
+    const sonifyState : any = state.get();
+    const displayName : string = video.displayName;
+    let proceed : boolean = false;
 
-        try {
-            proceed = await confirm(`Sonify ${displayName}? This may take a while.`);
-        } catch (err) {
-            console.log(err);
-        }
-
-        if (!proceed) {
-            return false;
-        }
-
-        ui.overlay.show(`Sonifying ${displayName}...`);
-        ipcRenderer.send('sonify', { state : sonifyState });
+    try {
+        proceed = await confirm(`Sonify ${displayName}? This may take a while.`);
+    } catch (err) {
+        console.log(err);
     }
 
-    function onSonifyProgress (evt : Event, args : any) {
-        let timeLeft : number;
-        let timeStr : string;
-
-        if (avgMs !== -1) {
-            timeLeft = (args.frames - args.i) * args.ms;
-            timeAvg = timeLeft;
-        } else {
-            avgMs = (avgMs + args.ms) / 2;
-            timeLeft = (args.frames - args.i) * avgMs;
-            timeAvg = (timeAvg + timeLeft) / 2;
-        }
-
-        timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
-        ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
-
-
-        //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
+    if (!proceed) {
+        return false;
     }
 
-    function onSonifyComplete (evt : Event, args : any) {
-        avgMs = -1;
-        timeAvg = -1;
-        ui.overlay.hide();
-        fileSave(args.tmpAudio);
+    ui.overlay.show(`Sonifying ${displayName}...`);
+    ipcRenderer.send('sonify', { state : sonifyState });
+}
+
+function onSonifyProgress (evt : Event, args : any) {
+    let timeLeft : number;
+    let timeStr : string;
+
+    if (avgMs !== -1) {
+        timeLeft = (args.frames - args.i) * args.ms;
+        timeAvg = timeLeft;
+    } else {
+        avgMs = (avgMs + args.ms) / 2;
+        timeLeft = (args.frames - args.i) * avgMs;
+        timeAvg = (timeAvg + timeLeft) / 2;
     }
 
-    function playFrame () {
-        const source : any = audioContext.createBufferSource();
-        let buf : any = audioContext.createBuffer(1, video.height, video.samplerate);
-        let mono : any = buf.getChannelData(0);
-        let tmp : Float32Array;
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
 
-        sonify = new Sonify(state, video.canvas);
 
-        tmp = sonify.sonifyCanvas();
-        tmp = sonify.fade(tmp);
-        mono.set(tmp, 0);
-        //console.dir(tmp)
-        source.buffer = buf;
-        source.connect(audioContext.destination);
-        source.start();
-    }
+    //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
+}
 
-    function playSync () {
+function onSonifyComplete (evt : Event, args : any) {
+    avgMs = -1;
+    timeAvg = -1;
+    ui.overlay.hide();
+    f.save(args.tmpAudio);
+}
+
+function playFrame () {
+    const source : any = audioContext.createBufferSource();
+    let buf : any = audioContext.createBuffer(1, video.height, video.samplerate);
+    let mono : any = buf.getChannelData(0);
+    let tmp : Float32Array;
+
+    sonify = new Sonify(state, video.canvas);
+
+    tmp = sonify.sonifyCanvas();
+    tmp = sonify.fade(tmp);
+    mono.set(tmp, 0);
+    //console.dir(tmp)
+    source.buffer = buf;
+    source.connect(audioContext.destination);
+    source.start();
+}
+
+function playSync () {
+    video.play();
+    //audio.play();
+}
+
+function keyDown (evt : KeyboardEvent) {
+    if (evt.which === 32) {
         video.play();
-        //audio.play();
+    }
+}
+
+function bindListeners () {
+    const dropArea : HTMLElement = document.getElementById('dragOverlay');
+    const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
+    const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
+    const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
+    const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
+    const visualizeBtn : HTMLElement = document.getElementById('visualizeBtn');
+
+    sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
+    visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
+
+    fileSourceProxy.addEventListener('click', f.select.bind(f), false);
+    sonifyFrame.addEventListener('click', playFrame, false);
+    sonifyVideo.addEventListener('click', sonifyStart, false);
+    document.addEventListener('keydown', keyDown, false);
+
+    ipcRenderer.on('sonify_complete', onSonifyComplete);
+    ipcRenderer.on('sonify_progress', onSonifyProgress);
+
+    ipcRenderer.on('info', (evt : Event, args : any) => {
+        video.oninfo(evt, args);
+        sonify = new Sonify(state, video.canvas);
+    });
+}
+
+/**
+ * VISUALIZE
+ **/
+
+async function vFileSelect () {
+    const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
+    const options : any = {
+        title: `Select MIDI file`,
+        properties: [`openFile`],
+        defaultPath: 'c:/',
+        filters: [
+            {
+                name: 'MIDI files',
+                extensions: audioExtensions
+            }
+        ]
+    }
+    let files : any;
+    let valid : boolean = false;
+    let proceed : boolean = false;
+    let filePath : string;
+    let displayName : string;
+    let ext : string;
+
+    try {
+        files = await dialog.showOpenDialog(options);
+    } catch (err ) {
+        console.error(err)
     }
 
-    function keyDown (evt : KeyboardEvent) {
-        if (evt.which === 32) {
-            video.play();
-        }
+    if (!files || !files.filePaths || files.filePaths.length === 0) {
+        return false;
     }
 
-    function bindListeners () {
-        const dropArea : HTMLElement = document.getElementById('dragOverlay');
-        const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
-        const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
-        const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
-        const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
-        const visualizeBtn : HTMLElement = document.getElementById('visualizeBtn');
+    filePath = files.filePaths[0];
 
-        sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
-        visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
+    if (filePath && filePath !== '') {
+        ext = extname(filePath.toLowerCase());
+        valid = audioExtensions.indexOf(ext) === -1 ? false : true;
 
-        document.addEventListener('dragenter',  dragEnter, false);
-        dropArea.addEventListener('dragleave',  dragLeave, false);
-        dropArea.addEventListener('dragover',   dragEnter, false);
-        dropArea.addEventListener('drop',       dropFunc, false);
-        document.addEventListener('drop',       dropFunc, false);
-        dropArea.addEventListener('dragend',    dragLeave, false);
-        dropArea.addEventListener('dragexit',   dragLeave, false);
-    
-        fileSourceProxy.addEventListener('click', fileSelect, false);
-        sonifyFrame.addEventListener('click', playFrame, false);
-        sonifyVideo.addEventListener('click', sonifyStart, false);
-        document.addEventListener('keydown', keyDown, false);
-
-        ipcRenderer.on('sonify_complete', onSonifyComplete);
-        ipcRenderer.on('sonify_progress', onSonifyProgress);
-
-        ipcRenderer.on('info', (evt : Event, args : any) => {
-            video.oninfo(evt, args);
-            sonify = new Sonify(state, video.canvas);
-        });
-    }
-
-    /**
-     * VISUALIZE
-     **/
-
-    async function vFileSelect () {
-        const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
-        const options : any = {
-            title: `Select MIDI file`,
-            properties: [`openFile`],
-            defaultPath: 'c:/',
-            filters: [
-                {
-                    name: 'MIDI files',
-                    extensions: audioExtensions
-                }
-            ]
-        }
-        let files : any;
-        let valid : boolean = false;
-        let proceed : boolean = false;
-        let filePath : string;
-        let displayName : string;
-        let ext : string;
-
-        try {
-            files = await dialog.showOpenDialog(options);
-        } catch (err ) {
-            console.error(err)
-        }
-
-        if (!files || !files.filePaths || files.filePaths.length === 0) {
+        if (!valid) {
+            console.log(`Cannot select file ${filePath} is invald`)
             return false;
         }
 
-        filePath = files.filePaths[0];
+        displayName = video.set(filePath)
+        ipcRenderer.send('midi', { filePath } );
 
-        if (filePath && filePath !== '') {
-            ext = extname(filePath.toLowerCase());
-            valid = audioExtensions.indexOf(ext) === -1 ? false : true;
+        state.set('visualize', [ filePath ]);
 
-            if (!valid) {
-                console.log(`Cannot select file ${filePath} is invald`)
-                return false;
-            }
-
-            displayName = video.set(filePath)
-            ipcRenderer.send('midi', { filePath } );
-
-            state.set('visualize', [ filePath ]);
-
-            visualizeStart();
-        }
+        visualizeStart();
     }
+}
 
-    function visualizeStart () {
-        
-    }
+function visualizeStart () {
     
+}
+
+(async function main () {
+
+    dnd = new DragDrop();
+    f = new Files();
     audioContext = new AudioContext();
 
     //@ts-ignore why are you like this

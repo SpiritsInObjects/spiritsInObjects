@@ -204,7 +204,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 ipcMain.on('info', async (evt : Event, args : any) => {
 	let res : any;
 	try {
-		res = await ffmpeg.info(args.filePath)
+		res = await ffmpeg.info(args.files[0]);
 	} catch (err) {
 		console.error(err)
 	}

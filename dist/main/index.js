@@ -171,7 +171,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
 electron_1.ipcMain.on('info', async (evt, args) => {
     let res;
     try {
-        res = await ffmpeg_1.ffmpeg.info(args.filePath);
+        res = await ffmpeg_1.ffmpeg.info(args.files[0]);
     }
     catch (err) {
         console.error(err);

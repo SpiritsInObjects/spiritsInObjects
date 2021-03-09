@@ -110,7 +110,25 @@ class State {
      */
     async set(key, value) {
         this.storage[key] = value;
+        this.validate(key, value);
         await this.save();
+    }
+    /**
+     * Validate input and set to defaults or erase if invalid.
+     * @param key Name of key in storage object
+     * @param value Value of key
+     **/
+    validate(key, value) {
+        if (key === 'start') {
+            if (isNaN(value)) {
+                this.storage[key] = 0.72;
+            }
+        }
+        else if (key === 'stop') {
+            if (isNaN(value)) {
+                this.storage[key] = 1.0;
+            }
+        }
     }
 }
 //# sourceMappingURL=index.js.map
