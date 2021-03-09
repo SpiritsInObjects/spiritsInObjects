@@ -99,6 +99,9 @@ class DragDrop {
         return false;
     }
 }
+/**
+ * class representing File i/o functionality
+ **/
 class Files {
     async select() {
         const elem = document.getElementById('fileSourceProxy');
@@ -137,7 +140,7 @@ class Files {
         let type = 'video';
         files = files.filter((file) => {
             ext = path_1.extname(file.toLowerCase());
-            if (videoExtensions.indexOf(ext) > -1 && stillExtensions.indexOf(ext) > -1) {
+            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
                 return true;
             }
             return false;

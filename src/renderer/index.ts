@@ -159,11 +159,12 @@ class Files {
 
         files = files.filter((file : string) => {
             ext = extname(file.toLowerCase());
-            if (videoExtensions.indexOf(ext) > -1 && stillExtensions.indexOf(ext) > -1) {
+            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
                 return true;
             }
             return false;
         });
+
 
         if (files.length === 0) {
             valid = false;
