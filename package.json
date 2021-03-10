@@ -18,6 +18,7 @@
       "dist/contrib/Tone.js",
       "dist/contrib/bootstrap.min.css",
       "dist/css/style.css",
+      "dist/css/noise.png",
       "dist/main/index.js",
       "dist/main/lib/menu/index.js",
       "dist/main/lib/config/index.js",
