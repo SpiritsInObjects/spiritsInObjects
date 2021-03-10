@@ -1,42 +1,95 @@
 * {
-  font-family: 'Helvetica', Arial, sans-serif;
+  font-family: 'Helvetica Neue', Arial, 'Helvetica', sans-serif;
+  color: #2b2b2b;
 }
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #dcdce1;
+  background: #a7abb4;
+  overflow: hidden;
 }
 #menu {
-  box-shadow: 0 1px 3px rgba(100, 100, 100, 0.3);
+  box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
   margin: 0;
+  height: 20px;
+  background: #555c66;
+  overflow-y: hidden;
+}
+#menu .wrapper {
+  display: inline-block;
+  position: relative;
+  width: 141px;
+  height: 20px;
 }
 #menu button {
+  position: absolute;
+  z-index: 2;
+  top: 0;
   display: inline-block;
+  box-sizing: border-box;
   -webkit-appearance: none;
-  background: none;
-  border: none;
-  border-radius: 0;
-  width: 50%;
-  font-size: 20px;
+  background: #797a7c;
+  border: 1px solid #33373b;
+  border-radius: 3px;
+  padding-left: 10px;
+  padding-right: 10px;
   padding-top: 8px;
   padding-bottom: 12px;
-  text-transform: uppercase;
-  color: #999;
+  color: #2b2b2b;
   outline: none;
   cursor: pointer;
-  margin: 0;
-  height: 40px;
+  margin: 1px 0 0 0;
+  width: 150px;
+  height: 22px;
+  line-height: 20px;
+  transform: perspective(5px) rotateX(1deg);
+  transform-origin: bottom;
+  box-shadow: inset 1px 2px 7px rgba(255, 255, 255, 0.2);
 }
 #menu button.active {
-  background: rgba(0, 0, 0, 0.1);
-  color: #000;
+  background: #c0c2c5;
+  z-index: 10;
+  box-shadow: 0px 0px 3px #000014, inset 0 2px 7px rgba(255, 255, 255, 0.8);
 }
 #menu button:hover {
-  color: #000;
+  background: #c0c2c5;
 }
-#menu button:nth-child(2) {
-  float: left;
+#menu label {
+  display: block;
+  position: absolute;
+  z-index: 100;
+  pointer-events: none;
+  top: 0;
+  font-size: 12px;
+  width: 150px;
+  height: 20px;
+  line-height: 22px;
+  text-align: center;
+  color: #2b2b2b;
+  text-shadow: 0px 1px 0px rgba(0, 0, 20, 0.1);
+}
+#sonifyTimeline {
+  position: relative;
+  height: 20px;
+  border-bottom: 1px solid #83878b;
+  background: #dbdfe3;
+  width: 1000px;
+}
+#sonifyTimeline .timeline {
+  background: #fff;
+  width: 970px;
+  margin: 0 auto;
+  height: 19px;
+  border-right: 1px solid #83878b;
+  border-left: 1px solid #83878b;
+}
+#sonifyTimeline .center-line {
+  position: absolute;
+  width: 968px;
+  height: 9px;
+  top: 0;
+  border-bottom: 1px solid #e6e6ed;
 }
 #sonify,
 #visualize {
@@ -52,13 +105,14 @@ body {
 }
 #theatre {
   background: #000;
-  width: 720px;
-  height: 405px;
-  margin: 20px auto 0;
+  width: 996px;
+  height: 560px;
+  margin: 4px auto 2px;
   position: relative;
+  box-shadow: 0px 0px 4px rgba(0, 0, 20, 0.3);
 }
 #video {
-  height: 405px;
+  height: 560px;
   width: auto;
   margin: 0 auto;
   display: block;
@@ -71,7 +125,7 @@ body {
 #startSelect,
 #endSelect {
   width: 1px;
-  height: 405px;
+  height: 560px;
   position: absolute;
   background: #f00;
   top: 0;
@@ -99,7 +153,7 @@ body {
   border-right: 5px solid transparent;
   border-bottom: 5px solid #f00;
   margin-left: -5px;
-  margin-top: 405px;
+  margin-top: 560px;
 }
 #timeline {
   margin-top: 15px;
@@ -161,23 +215,63 @@ button {
 input[type=text],
 input[type=number],
 input[type=submit] {
-  background: #fff;
+  background: #cbcccf;
+  font-family: monospace;
+  border-top: 1px solid #5d616a;
+  border-left: 1px solid #5d616a;
+  border-bottom: 1px solid #f2f2f3;
+  border-right: 1px solid #f2f2f3;
+  height: 20px;
+  line-height: 15px;
+  font-size: 12px;
+  border-radius: 0;
+  margin: 4px;
+}
+input[type=text]:active,
+input[type=number]:active,
+input[type=submit]:active {
+  background: #f6f6f7;
 }
 select {
   text-align-last: center;
+}
+#timecodes {
+  height: 26px;
+}
+#startTimecode {
+  float: left;
+}
+#endTimecode {
+  float: right;
 }
 #nextFrame,
 #prevFrame {
   width: 98px;
 }
 #videoControl {
-  padding-top: 20px;
+  background: #d6d6d6;
+  position: relative;
+  z-index: 1;
+  height: 50px;
 }
-#videoControl > div {
+#videoControl .bg {
+  position: absolute;
+  z-index: -1;
+  height: 50px;
+  width: 1000px;
+  background-image: url('./noise.png');
+  background-size: 500% 100%;
+  background-position: center;
+  padding-top: 20px;
+  filter: blur(1px);
+  -webkit-filter: blur(1px);
+  opacity: 0.8;
+}
+#videoControl > div:not(.bg) {
   width: 420px;
   margin: 0 auto;
 }
-#videoControl > div *:last-child {
+#videoControl > div:not(.bg) *:last-child {
   float: none;
 }
 #videoControl button,

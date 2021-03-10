@@ -1,45 +1,114 @@
+@bg: #a7abb4;
+@textColor: #2b2b2b;
+@menuBg: #555c66;
+@menuBorder: #33373b;
+@menuTabBg: #797a7c;
+@menuTabActive: #c0c2c5;
+@menuTabWidth: 150px;
+
+@videoWidth: 996px;
+@videoHeight: 560px;
+
+@inputBg: #cbcccf;
+
 *{
-	font-family: 'Helvetica', Arial, sans-serif;
+	font-family: 'Helvetica Neue', Arial, 'Helvetica', sans-serif;
+	color: @textColor;
 }
 
 html,
 body{
 	margin: 0;
 	padding: 0;
-	background: rgb(220, 220, 225);
+	background: @bg;
+	overflow: hidden;
 }
 
 #menu{
-	box-shadow:0 1px 3px rgba(100, 100, 100, 0.3);
+	box-shadow:0 1px 1px rgba(100, 100, 100, 0.1);
 	margin: 0;
+	height: 20px;
+	background: @menuBg;
+	overflow-y: hidden;
+
+	.wrapper{
+		display: inline-block;
+		position: relative;
+		width: @menuTabWidth - 9px;
+		height: 20px;
+	}
 
 	button{
+		position: absolute;
+		z-index: 2;
+		top: 0;
 		display: inline-block;
+		box-sizing: border-box;
 		-webkit-appearance: none;
-		background: none;
-		border: none;
-		border-radius: 0;
-		width: 50%;
-		font-size: 20px;
+		background: @menuTabBg;
+		border: 1px solid @menuBorder;
+		border-radius: 3px;
+		padding-left: 10px;
+		padding-right: 10px;
 		padding-top: 8px;
 		padding-bottom: 12px;
-		text-transform: uppercase;
-		color: #999;
+		color: @textColor;
 		outline: none;
 		cursor: pointer;
-		margin: 0;
-		height: 40px;
+		margin: 1px 0 0 0;
+		width: @menuTabWidth;
+		height: 22px;
+		line-height: 20px;
+		transform: perspective(5px) rotateX(1deg);
+    	transform-origin: bottom;
+		box-shadow:         inset 1px 2px 7px rgba(255, 255, 255, 0.2);
 		
 		&.active{
-			background: rgba(0, 0, 0, 0.1);
-			color: #000;
+			background: @menuTabActive;
+			z-index: 10;
+			box-shadow: 0px 0px 3px rgb(0, 0, 20, 0.2), inset 0 2px 7px rgba(255, 255, 255, 0.8);
 		}
 		&:hover{
-			color: #000;
+			background: @menuTabActive;
 		}
-		&:nth-child(2) {
-			float: left;
-		}
+	}
+
+	label {
+		display: block;
+		position: absolute;
+		z-index: 100;
+		pointer-events: none;
+		top: 0;
+		font-size: 12px;
+		width: @menuTabWidth;
+		height: 20px;
+		line-height: 22px;
+		text-align: center;
+		color: @textColor;
+		text-shadow: 0px 1px 0px rgba(0, 0, 20, 0.1);
+    }
+}
+
+#sonifyTimeline{
+	position: relative;
+	height: 20px;
+	border-bottom: 1px solid #83878b;
+	background: #dbdfe3;
+	width: 1000px;
+	.timeline{
+		background: #fff;
+		width: 970px;
+		margin: 0 auto;
+		height: 19px;
+		border-right: 1px solid #83878b;
+		border-left: 1px solid #83878b;
+	}
+	.center-line{
+		position: absolute;
+		width: 968px;
+		height: 10px;
+		top: 0;
+		border-bottom: 1px solid #e6e6ed;
 	}
 }
 
@@ -58,14 +127,15 @@ body{
 
 #theatre{
 	background : #000;
-	width: 720px;
-	height: 405px;
-	margin: 20px auto 0;
+	width: @videoWidth;
+	height: @videoHeight;
+	margin: 4px auto 2px;
 	position: relative;
+	box-shadow: 0px 0px 4px rgba(0, 0, 20, 0.3);
 }
 
 #video {
-    height: 405px;
+    height: @videoHeight;
 	width: auto;
 	margin: 0 auto;
     display: block;
@@ -80,7 +150,7 @@ body{
 #startSelect,
 #endSelect{
 	width: 1px;
-	height: 405px;
+	height: @videoHeight;
 	position: absolute;
 	background: #f00;
 	top: 0;
@@ -105,7 +175,7 @@ body{
 		border-right: 5px solid transparent;
 		border-bottom: 5px solid #f00;
 		margin-left: -5px;
-    	margin-top: 405px;
+    	margin-top: @videoHeight;
 	}
 }
 
@@ -171,10 +241,35 @@ button{
 input[type=text],
 input[type=number],
 input[type=submit]{
-	background: #fff;
+	background: @inputBg;
+	font-family: monospace;
+
+	border-top: 1px solid #5d616a;
+	border-left: 1px solid #5d616a;
+	border-bottom: 1px solid #f2f2f3;
+	border-right: 1px solid #f2f2f3;
+	height: 20px;
+	line-height: 15px;
+	font-size: 12px;
+	border-radius: 0;
+	margin: 4px;
+	&:active{
+		background: lighten(#cecdd3, 15%);
+	}
 }
 select{
 	text-align-last: center;
+}
+
+#timecodes{
+	height: 26px;
+}
+
+#startTimecode{
+	float: left;
+}
+#endTimecode{
+	float: right;
 }
 
 
@@ -184,8 +279,24 @@ select{
 }
 
 #videoControl{
-	padding-top: 20px;
-	> div{
+	background: #d6d6d6;
+	position: relative;
+	z-index: 1;
+	height: 50px;
+	.bg {
+		position: absolute;
+		z-index: -1;
+		height: 50px;
+		width: 1000px;
+		background-image: url('./noise.png');
+		background-size: 500% 100%;
+		background-position: center;
+		padding-top: 20px;
+		filter: blur(1px);
+		-webkit-filter: blur(1px);
+		opacity: 0.8;
+	}
+	> div:not(.bg){
 		width: 420px;
 		margin: 0 auto;
 		*:last-child{

@@ -8,11 +8,21 @@
     </head>
     <body ondragenter="dnd.enter(event);" ondragover="dnd.over(event);" ondrop="dnd.drop(event);">
         <div id="menu">
-            <button id="visualizeBtn" class="pageBtn">Visualize</button>
-            <button id="sonifyBtn" class="pageBtn active">Sonify</button>
-            
+            <div class="wrapper">
+                <button id="sonifyBtn" class="pageBtn active"></button>
+                <label>Sonify</label>
+            </div>
+            <div class="wrapper">
+                <button id="visualizeBtn" class="pageBtn"></button>
+                <label>Visualize</label>
+            </div>
         </div>
         <div id="sonify" class="page show">
+
+            <div id="timecodes">
+                <input type="text" id="startTimecode" value="00:00:00;00" />
+                <input type="text" id="endTimecode" value="00:00:00;00" />
+            </div>
             <div id="theatre">
                 <video id="video"></video>
                 <canvas id="canvas"></canvas>
@@ -20,10 +30,17 @@
                 <div id="endSelect" style="left: 100%;"></div>
                 <div id="displayError" class="hide">Error displaying selected file(s)</div>
             </div>
+            <div id="sonifyTimeline">
+                <div class="timeline">
+                    <div class="center-line"></div>
+                </div>
+                <div class="cursor"></div>
+            </div>
             <!--<div id="timeline">
                 <div class="frame"></div>
             </div>-->
             <div id="videoControl">
+                <div class="bg"></div>
                 <div>
                     <button id="prevFrame" alt="Previous Frame">Prev</button>
                     <input type="number" id="currentFrame" alt="Current Frame" value="0" />
