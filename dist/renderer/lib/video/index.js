@@ -25,6 +25,7 @@ class Video {
         this.framerate = 24;
         this.frames = 0;
         this.samplerate = 48000;
+        this.type = 'video';
         this.interval = null;
         this.playing = false;
         this.streaming = false;
@@ -114,6 +115,8 @@ class Video {
             }
             return false;
         });
+        console.dir(args);
+        console.dir(videoStream);
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
         this.framerate = this.parseFps(fpsRaw);
@@ -121,12 +124,17 @@ class Video {
         this.width = videoStream.width;
         this.height = videoStream.height;
         this.samplerate = this.height * 24;
+        this.type = args.type;
+        console.dir(this);
         this.state.set('framerate', this.framerate);
         this.state.set('frames', this.frames);
         this.state.set('width', this.width);
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
+        this.state.set('type', this.type);
         this.displayInfo();
+        console.log('got here');
+        console.dir(this.state);
         document.getElementById('sonifyFrame').disabled = false;
     }
     displayInfo() {

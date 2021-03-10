@@ -25,6 +25,7 @@ class Video {
     public frames : number = 0;
     public samplerate : number = 48000;
     public displayName : string;
+    public type : string = 'video';
 
     private interval : any = null;
     private playing : boolean = false;
@@ -139,6 +140,9 @@ class Video {
             }
             return false;
         });
+
+        console.dir(args);
+        console.dir(videoStream);
       
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
@@ -148,13 +152,21 @@ class Video {
         this.width = videoStream.width;
         this.height = videoStream.height;
         this.samplerate = this.height * 24;
+        this.type = args.type;
+
+        console.dir(this);
 
         this.state.set('framerate', this.framerate);
         this.state.set('frames', this.frames);
         this.state.set('width', this.width);
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
+        this.state.set('type', this.type);
+
         this.displayInfo();
+
+        console.log('got here');
+        console.dir(this.state);
 
         (document.getElementById('sonifyFrame') as HTMLButtonElement).disabled  = false;
     }
@@ -163,6 +175,7 @@ class Video {
         const start : number = this.state.get('start');
         const end : number = this.state.get('end');
         const selection : number = Math.round((end - start) * this.width);
+
         this.framesDisplay.innerHTML = String(this.frames);
         this.fpsDisplay.innerHTML =  String(Math.round(this.framerate * 100) / 100);
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;

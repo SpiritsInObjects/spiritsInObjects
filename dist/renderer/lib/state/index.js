@@ -9,6 +9,7 @@ class State {
             start: 0.72,
             end: 1.0
         };
+        this.lock = false;
     }
     /**
      * Start the state storage file and in-memory object
@@ -47,11 +48,15 @@ class State {
      * Save the state as JSON to local file in the home directory
      */
     async save() {
-        try {
-            await writeFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
-        }
-        catch (err) {
-            console.error(err);
+        if (!this.lock) {
+            this.lock = true;
+            try {
+                await writeFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
+            }
+            catch (err) {
+                console.error(err);
+            }
+            this.lock = false;
         }
     }
     /**
