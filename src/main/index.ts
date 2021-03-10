@@ -45,8 +45,9 @@ const BrowserOptions = {
 	title: app.name,
 	show: false,
 	width: 1000,
-	height: 800,
-	backgroundColor: 'rgb(220, 225, 220)',
+	height: 1000,
+	resizable: false,
+	backgroundColor: '#a7abb4',
 	webPreferences : {
 		nodeIntegration: true,
 		enableRemoteModule: true
@@ -64,6 +65,9 @@ const createMainWindow = async () => {
 		mainWindow = undefined;
 		app.quit();
 	});
+
+	//for linux
+	win.setResizable(false);
 
 	await win.loadFile(pathJoin(__dirname, '../views/index.html'));
 
@@ -130,11 +134,16 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	for (i = 0; i < args.state.frames; i++) {
 		frameStart = +new Date();
 
-		try {
-			filePath = await ffmpeg.exportFrame(args.state.files[0], i);
-		} catch (err) {
-			console.error(err);
-			continue;
+		if (args.state.type === 'video') {
+			try {
+				filePath = await ffmpeg.exportFrame(args.state.files[0], i);
+			} catch (err) {
+				console.error(err);
+				continue;
+			}
+		} else if (args.state.type === 'still' ) {
+			console.dir('NEED STILL FUNCTIONALITY')
+			console.trace();
 		}
 
 		try {
@@ -202,12 +211,18 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 });
 
 ipcMain.on('info', async (evt : Event, args : any) => {
-	let res : any;
-	try {
-		res = await ffmpeg.info(args.files[0]);
-	} catch (err) {
-		console.error(err)
+	let res : any = {};
+	if (args.type === 'video') {
+		try {
+			res = await ffmpeg.info(args.files[0]);
+		} catch (err) {
+			console.error(err)
+		}
+	} else if (args.type === 'still') {
+		console.dir('NEED STILL FUNCTIONALITY')
+		console.trace();
 	}
+	res.type = args.type;
 	mainWindow.webContents.send('info', res);
 });
 

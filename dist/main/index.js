@@ -38,8 +38,9 @@ const BrowserOptions = {
     title: electron_1.app.name,
     show: false,
     width: 1000,
-    height: 800,
-    backgroundColor: 'rgb(220, 225, 220)',
+    height: 1000,
+    resizable: false,
+    backgroundColor: '#a7abb4',
     webPreferences: {
         nodeIntegration: true,
         enableRemoteModule: true
@@ -54,6 +55,8 @@ const createMainWindow = async () => {
         mainWindow = undefined;
         electron_1.app.quit();
     });
+    //for linux
+    win.setResizable(false);
     await win.loadFile(path_1.join(__dirname, '../views/index.html'));
     return win;
 };
@@ -107,12 +110,18 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     sonify = new sonifyNode_1.SonifyNode(args.state);
     for (i = 0; i < args.state.frames; i++) {
         frameStart = +new Date();
-        try {
-            filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.files[0], i);
+        if (args.state.type === 'video') {
+            try {
+                filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.files[0], i);
+            }
+            catch (err) {
+                console.error(err);
+                continue;
+            }
         }
-        catch (err) {
-            console.error(err);
-            continue;
+        else if (args.state.type === 'still') {
+            console.dir('NEED STILL FUNCTIONALITY');
+            console.trace();
         }
         try {
             tmpExists = await fs_extra_1.pathExists(filePath);
@@ -169,13 +178,20 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
-    let res;
-    try {
-        res = await ffmpeg_1.ffmpeg.info(args.files[0]);
+    let res = {};
+    if (args.type === 'video') {
+        try {
+            res = await ffmpeg_1.ffmpeg.info(args.files[0]);
+        }
+        catch (err) {
+            console.error(err);
+        }
     }
-    catch (err) {
-        console.error(err);
+    else if (args.type === 'still') {
+        console.dir('NEED STILL FUNCTIONALITY');
+        console.trace();
     }
+    res.type = args.type;
     mainWindow.webContents.send('info', res);
 });
 electron_1.ipcMain.on('save', async (evt, args) => {
