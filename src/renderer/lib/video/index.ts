@@ -7,7 +7,10 @@ class Video {
     public playButton : HTMLButtonElement = document.getElementById('play') as HTMLButtonElement;
     public prev : HTMLButtonElement = document.getElementById('prevFrame') as HTMLButtonElement;
     public next : HTMLButtonElement = document.getElementById('nextFrame') as HTMLButtonElement;
-    public current : HTMLButtonElement = document.getElementById('currentFrame') as HTMLInputElement;
+    public current : HTMLButtonElement = document.getElementById('currentFrame') as HTMLButtonElement;
+
+    public sonifyFrameBtn : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
+    public sonifyVideoBtn : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
 
     private framesDisplay : HTMLSpanElement = document.getElementById('frames') as HTMLSpanElement;
     private fpsDisplay : HTMLSpanElement = document.getElementById('fps') as HTMLSpanElement;
@@ -114,8 +117,8 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
-        document.getElementById('sonifyFrame').removeAttribute('disabled');
-        document.getElementById('sonifyVideo').removeAttribute('disabled');
+        this.sonifyFrameBtn.removeAttribute('disabled');
+        this.sonifyVideoBtn.removeAttribute('disabled');
     }
 
     private parseFps (line : string) {
@@ -140,9 +143,6 @@ class Video {
             }
             return false;
         });
-
-        console.dir(args);
-        console.dir(videoStream);
       
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
@@ -154,8 +154,6 @@ class Video {
         this.samplerate = this.height * 24;
         this.type = args.type;
 
-        console.dir(this);
-
         this.state.set('framerate', this.framerate);
         this.state.set('frames', this.frames);
         this.state.set('width', this.width);
@@ -165,10 +163,7 @@ class Video {
 
         this.displayInfo();
 
-        console.log('got here');
-        console.dir(this.state);
-
-        (document.getElementById('sonifyFrame') as HTMLButtonElement).disabled  = false;
+        this.sonifyFrameBtn.disabled  = false;
     }
 
     private displayInfo () {
@@ -181,6 +176,11 @@ class Video {
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
         this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
         this.selectionDisplay.innerHTML = `${selection} px`;
+        try {
+            document.querySelector('#sonify .optionWrapper .info').classList.remove('hide');
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     public draw () {

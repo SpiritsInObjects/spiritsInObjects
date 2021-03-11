@@ -87,7 +87,7 @@ body {
 #sonifyTimeline .center-line {
   position: absolute;
   width: 968px;
-  height: 9px;
+  height: 10px;
   top: 0;
   border-bottom: 1px solid #e6e6ed;
 }

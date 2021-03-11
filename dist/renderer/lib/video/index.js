@@ -15,6 +15,8 @@ class Video {
         this.prev = document.getElementById('prevFrame');
         this.next = document.getElementById('nextFrame');
         this.current = document.getElementById('currentFrame');
+        this.sonifyFrameBtn = document.getElementById('sonifyFrame');
+        this.sonifyVideoBtn = document.getElementById('sonifyVideo');
         this.framesDisplay = document.getElementById('frames');
         this.fpsDisplay = document.getElementById('fps');
         this.resolutionDisplay = document.getElementById('resolution');
@@ -91,8 +93,8 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
-        document.getElementById('sonifyFrame').removeAttribute('disabled');
-        document.getElementById('sonifyVideo').removeAttribute('disabled');
+        this.sonifyFrameBtn.removeAttribute('disabled');
+        this.sonifyVideoBtn.removeAttribute('disabled');
     }
     parseFps(line) {
         let fps;
@@ -115,8 +117,6 @@ class Video {
             }
             return false;
         });
-        console.dir(args);
-        console.dir(videoStream);
         fpsRaw = videoStream.r_frame_rate;
         secondsRaw = videoStream.duration;
         this.framerate = this.parseFps(fpsRaw);
@@ -125,7 +125,6 @@ class Video {
         this.height = videoStream.height;
         this.samplerate = this.height * 24;
         this.type = args.type;
-        console.dir(this);
         this.state.set('framerate', this.framerate);
         this.state.set('frames', this.frames);
         this.state.set('width', this.width);
@@ -133,9 +132,7 @@ class Video {
         this.state.set('samplerate', this.samplerate);
         this.state.set('type', this.type);
         this.displayInfo();
-        console.log('got here');
-        console.dir(this.state);
-        document.getElementById('sonifyFrame').disabled = false;
+        this.sonifyFrameBtn.disabled = false;
     }
     displayInfo() {
         const start = this.state.get('start');
@@ -146,6 +143,12 @@ class Video {
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
         this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
         this.selectionDisplay.innerHTML = `${selection} px`;
+        try {
+            document.querySelector('#sonify .optionWrapper .info').classList.remove('hide');
+        }
+        catch (err) {
+            console.error(err);
+        }
     }
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
