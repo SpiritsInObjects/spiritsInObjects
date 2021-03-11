@@ -96,6 +96,7 @@ body{
 	background: #dbdfe3;
 	width: 1000px;
 	.timeline{
+		position: relative;
 		background: #fff;
 		width: 970px;
 		margin: 0 auto;
@@ -109,6 +110,40 @@ body{
 		height: 10px;
 		top: 0;
 		border-bottom: 1px solid #e6e6ed;
+	}
+	.cursor{
+		cursor: e-resize;
+		position: absolute;
+		z-index: 100;
+		width: 1px;
+		height: 20px;
+		background: #000;
+		top: 0;
+		left: 0%;
+		&:after{
+			content: "";
+			display: block;
+			position: absolute;
+			border-left: 5px solid transparent;
+			border-right: 5px solid transparent;
+
+			border-top: 6px solid #fff900;
+			margin-left: -5px;
+			width: 0; 
+			height: 0; 
+		}
+		&:before{
+			content: "";
+			display: block;
+			position: absolute;
+			border-left: 7px solid transparent;
+			border-right: 7px solid transparent;
+
+			border-top: 8px solid #000;
+			margin-left: -7px;
+			width: 0; 
+			height: 0; 
+		}
 	}
 }
 
