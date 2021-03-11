@@ -39,7 +39,6 @@ class DragDrop {
     }
     enter(evt) {
         let files;
-        console.log('dnd.enter');
         evt.preventDefault();
         if (this.containsFiles(evt)) {
             this.active = true;
@@ -50,7 +49,6 @@ class DragDrop {
         evt.preventDefault();
     }
     leave(evt) {
-        console.log('dnd.leave');
         if (this.active)
             this.active = false;
         try {
@@ -104,7 +102,6 @@ class DragDrop {
  **/
 class Files {
     async select() {
-        const elem = document.getElementById('fileSourceProxy');
         const options = {
             title: `Select video or image sequence`,
             properties: [`openFile`],
@@ -134,6 +131,7 @@ class Files {
         this.set(filePaths);
     }
     async set(files) {
+        const elem = document.getElementById('fileSourceProxy');
         let ext;
         let valid = true;
         let displayName;
@@ -160,10 +158,11 @@ class Files {
         }
         else if (files.length > 1) {
         }
-        displayName = video.set(files[0]);
+        displayName = video.set(files[0], type);
         ipcRenderer.send('info', { files, type });
         state.set('files', files);
         state.set('type', type);
+        elem.value = displayName;
         sonifyStart();
     }
     async save(filePath) {
@@ -293,6 +292,7 @@ function bindListeners() {
  * VISUALIZE
  **/
 async function vFileSelect() {
+    return;
     const elem = document.getElementById('vFileSourceProxy');
     const options = {
         title: `Select MIDI file`,
@@ -328,7 +328,7 @@ async function vFileSelect() {
             console.log(`Cannot select file ${filePath} is invald`);
             return false;
         }
-        displayName = video.set(filePath);
+        displayName = video.set(filePath, null);
         ipcRenderer.send('midi', { filePath });
         state.set('visualize', [filePath]);
         visualizeStart();

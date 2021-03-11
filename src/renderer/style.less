@@ -143,6 +143,7 @@ body{
 			margin-left: -7px;
 			width: 0; 
 			height: 0; 
+			margin-top: -1px;
 		}
 	}
 }
@@ -174,6 +175,14 @@ body{
 	width: auto;
 	margin: 0 auto;
     display: block;
+    user-select: none;
+}
+#still {
+	height: @videoHeight;
+	width: auto;
+	margin: 0 auto;
+    display: block;
+    user-select: none;
 }
 
 #canvas{
@@ -252,6 +261,7 @@ body{
 	input[type=submit],
 	button{
 		display: block;
+		margin: 0 auto;
 	}
 }
 select,
@@ -317,14 +327,14 @@ select{
 	background: #d6d6d6;
 	position: relative;
 	z-index: 1;
-	height: 50px;
+	height: 72px;
 	.bg {
 		position: absolute;
 		z-index: -1;
 		height: 50px;
 		width: 1000px;
 		background-image: url('./noise.png');
-		background-size: 500% 100%;
+		background-size: 500% 130%;
 		background-position: center;
 		padding-top: 20px;
 		filter: blur(1px);
@@ -441,5 +451,5 @@ select{
 }
 
 .hide{
-	display: none;
+	display: none !important;
 }

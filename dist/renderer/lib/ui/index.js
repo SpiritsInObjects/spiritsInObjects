@@ -37,7 +37,7 @@ class UI {
         this.width = 1280;
         this.height = 720;
         this.min = 0;
-        this.max = 720;
+        this.max = 996;
         this.start = 0.72;
         this.end = 1.0;
         this.state = state;
@@ -144,8 +144,14 @@ class UI {
         this.min = Math.round((this.theatreWidth - scaledWidth) / 2);
         this.max = this.min + Math.round(scaledWidth);
         ratio = (this.min + (scaledWidth * this.start)) / this.theatreWidth;
+        if (ratio < 0) {
+            ratio = 0;
+        }
         this.startSelect.style.left = `${ratio * 100}%`;
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
+        if (ratio > 1) {
+            ratio = 1;
+        }
         this.endSelect.style.left = `${ratio * 100}%`;
     }
     removeClass(selector, className) {

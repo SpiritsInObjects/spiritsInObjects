@@ -123,6 +123,7 @@ body {
   margin-left: -7px;
   width: 0;
   height: 0;
+  margin-top: -1px;
 }
 #sonify,
 #visualize {
@@ -149,6 +150,14 @@ body {
   width: auto;
   margin: 0 auto;
   display: block;
+  user-select: none;
+}
+#still {
+  height: 560px;
+  width: auto;
+  margin: 0 auto;
+  display: block;
+  user-select: none;
 }
 #canvas {
   background: #000;
@@ -225,6 +234,7 @@ body {
 .options input[type=submit],
 .options button {
   display: block;
+  margin: 0 auto;
 }
 select,
 input[type=text],
@@ -285,7 +295,7 @@ select {
   background: #d6d6d6;
   position: relative;
   z-index: 1;
-  height: 50px;
+  height: 72px;
 }
 #videoControl .bg {
   position: absolute;
@@ -293,7 +303,7 @@ select {
   height: 50px;
   width: 1000px;
   background-image: url('./noise.png');
-  background-size: 500% 100%;
+  background-size: 500% 130%;
   background-position: center;
   padding-top: 20px;
   filter: blur(1px);
@@ -398,5 +408,5 @@ select {
   top: 0;
 }
 .hide {
-  display: none;
+  display: none !important;
 }

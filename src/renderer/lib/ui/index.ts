@@ -46,7 +46,7 @@ export default class UI {
     private height : number = 720;
 
     private min : number = 0;
-    private max : number = 720;
+    private max : number = 996;
 
     private theatreHeight : number;
     private theatreWidth : number;
@@ -191,10 +191,17 @@ export default class UI {
         this.min = Math.round((this.theatreWidth - scaledWidth) / 2);
         this.max = this.min + Math.round(scaledWidth);
 
+
         ratio = (this.min + (scaledWidth * this.start)) / this.theatreWidth;
+        if (ratio < 0) {
+            ratio = 0;
+        }
         this.startSelect.style.left = `${ratio * 100}%`;
 
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
+        if (ratio > 1) {
+            ratio = 1;
+        }
         this.endSelect.style.left = `${ratio * 100}%`;
     }
 

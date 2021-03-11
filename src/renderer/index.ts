@@ -44,12 +44,13 @@ let f : Files;
 class DragDrop {
     private active : boolean = false;
     private overlay : HTMLElement;
+
     constructor () {
         this.overlay = document.getElementById('dragOverlay');
     }
+
     public enter (evt: DragEvent) {
         let files : any[];
-        console.log('dnd.enter');
         evt.preventDefault();
         if (this.containsFiles(evt)) {
             this.active = true;
@@ -62,7 +63,6 @@ class DragDrop {
     }
 
     public leave (evt: Event) {
-        console.log('dnd.leave');
         if (this.active) this.active = false;
         try {
             this.overlay.classList.remove('show');
@@ -118,7 +118,6 @@ class DragDrop {
 
 class Files {
     public async select () {
-        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
         const options : any = {
             title: `Select video or image sequence`,
             properties: [`openFile`],
@@ -152,6 +151,7 @@ class Files {
     }
 
     public async set (files : any) {
+        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
         let ext : string;
         let valid : boolean = true;
         let displayName : string;
@@ -184,11 +184,13 @@ class Files {
             
         }
 
-        displayName = video.set(files[0]);
+        displayName = video.set(files[0], type);
         ipcRenderer.send('info', { files, type } );
 
         state.set('files', files );
         state.set('type', type );
+
+        elem.value = displayName;
 
         sonifyStart();
     }
@@ -341,6 +343,7 @@ function bindListeners () {
  **/
 
 async function vFileSelect () {
+    return;
     const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
     const options : any = {
         title: `Select MIDI file`,
@@ -381,7 +384,7 @@ async function vFileSelect () {
             return false;
         }
 
-        displayName = video.set(filePath)
+        displayName = video.set(filePath, null);
         ipcRenderer.send('midi', { filePath } );
 
         state.set('visualize', [ filePath ]);

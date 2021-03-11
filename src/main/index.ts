@@ -142,6 +142,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 				continue;
 			}
 		} else if (args.state.type === 'still' ) {
+			filePath = args.state.files[i];
 			console.dir('NEED STILL FUNCTIONALITY')
 			console.trace();
 		}
@@ -219,8 +220,12 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 			console.error(err)
 		}
 	} else if (args.type === 'still') {
-		console.dir('NEED STILL FUNCTIONALITY')
-		console.trace();
+		try {
+			res = await ffmpeg.info(args.files[0]); //for now
+		} catch (err) {
+			console.error(err)
+		}
+		res.frames = args.files.length;
 	}
 	res.type = args.type;
 	mainWindow.webContents.send('info', res);

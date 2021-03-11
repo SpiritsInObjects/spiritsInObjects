@@ -15,6 +15,7 @@ class Video {
         this.prev = document.getElementById('prevFrame');
         this.next = document.getElementById('nextFrame');
         this.current = document.getElementById('currentFrame');
+        this.still = document.getElementById('still');
         this.sonifyFrameBtn = document.getElementById('sonifyFrame');
         this.sonifyVideoBtn = document.getElementById('sonifyVideo');
         this.framesDisplay = document.getElementById('frames');
@@ -23,7 +24,10 @@ class Video {
         this.samplerateDisplay = document.getElementById('samplerate');
         this.selectionDisplay = document.getElementById('selectedarea');
         this.errorDisplay = document.getElementById('displayError');
+        this.cursor = document.querySelector('#sonifyTimeline .cursor');
         this.ctx = this.canvas.getContext('2d');
+        this.startTimecode = document.getElementById('startTimecode');
+        this.endTimecode = document.getElementById('endTimecode');
         this.framerate = 24;
         this.frames = 0;
         this.samplerate = 48000;
@@ -55,8 +59,9 @@ class Video {
             this.width = this.state.get('width');
             this.height = this.state.get('height');
             this.samplerate = this.state.get('samplerate');
+            this.type = this.state.get('type');
             this.ui.updateSliders(this.width, this.height);
-            this.file(files[0]);
+            this.file(files[0], this.type);
             this.displayName = files[0].split('/').pop();
             this.displayInfo();
         }
@@ -75,14 +80,34 @@ class Video {
      *
      * @param {string} filePath Path to video file
      */
-    file(filePath) {
-        this.source = document.createElement('source');
-        this.source.setAttribute('src', filePath);
-        this.element.innerHTML = '';
-        this.element.appendChild(this.source);
-        this.element.load();
-        this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
-        this.current.value = '0';
+    file(filePath, type) {
+        if (type === 'video') {
+            this.source = document.createElement('source');
+            this.source.setAttribute('src', filePath);
+            this.element.innerHTML = '';
+            this.element.appendChild(this.source);
+            this.element.load();
+            this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
+            this.current.value = '0';
+            this.still.classList.add('hide');
+            try {
+                this.element.classList.remove('hide');
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
+        else if (type === 'still') {
+            this.still.setAttribute('src', filePath);
+            this.current.value = '0';
+            this.element.classList.add('hide');
+            try {
+                this.still.classList.remove('hide');
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
     }
     onloadstart() {
         this.width = this.element.videoWidth;
@@ -93,6 +118,17 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
+        this.sonifyFrameBtn.removeAttribute('disabled');
+        this.sonifyVideoBtn.removeAttribute('disabled');
+    }
+    onloadstartstill() {
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.ui.updateSliders(this.width, this.height);
+        setTimeout(this.draw.bind(this), 100);
+        this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
+        document.getElementById('play').setAttribute('disabled', 'disabled');
+        //document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
     }
@@ -111,19 +147,26 @@ class Video {
         let fpsRaw;
         let videoStream;
         let secondsRaw;
-        videoStream = args.streams.find((stream) => {
-            if (stream.codec_type === 'video') {
-                return stream;
-            }
-            return false;
-        });
-        fpsRaw = videoStream.r_frame_rate;
-        secondsRaw = videoStream.duration;
-        this.framerate = this.parseFps(fpsRaw);
-        this.frames = Math.floor(this.framerate * parseFloat(secondsRaw));
+        if (args.type === 'video') {
+            videoStream = args.streams.find((stream) => {
+                if (stream.codec_type === 'video') {
+                    return stream;
+                }
+                return false;
+            });
+            fpsRaw = videoStream.r_frame_rate;
+            secondsRaw = videoStream.duration;
+            this.framerate = this.parseFps(fpsRaw);
+            this.frames = Math.floor(this.framerate * parseFloat(secondsRaw));
+        }
+        else if (args.type === 'still') {
+            videoStream = args.streams[0];
+            this.framerate = 24;
+            this.frames = args.frames;
+        }
         this.width = videoStream.width;
         this.height = videoStream.height;
-        this.samplerate = this.height * 24;
+        this.samplerate = this.height * this.framerate;
         this.type = args.type;
         this.state.set('framerate', this.framerate);
         this.state.set('frames', this.frames);
@@ -149,9 +192,18 @@ class Video {
         catch (err) {
             console.error(err);
         }
+        try {
+            document.getElementById('fileSourceProxy').value = this.displayName;
+        }
+        catch (err) {
+            console.error(err);
+        }
     }
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
+    }
+    drawStill() {
+        this.ctx.drawImage(this.still, 0, 0, this.width, this.height);
     }
     play() {
         let frame;
@@ -174,10 +226,10 @@ class Video {
     playButtonOnClick(evt) {
         this.play();
     }
-    set(pathStr) {
+    set(pathStr, type) {
         const displayName = pathStr.split('/').pop();
         console.log(`Selected file ${displayName}`);
-        this.file(pathStr);
+        this.file(pathStr, type);
         this.displayName = displayName;
         return displayName;
     }
@@ -187,8 +239,10 @@ class Video {
     }
     setFrame(frame) {
         const seconds = frame / this.framerate;
+        const cursor = (frame / this.frames) * 100.0;
         this.element.currentTime = seconds;
         this.current.value = String(frame);
+        this.cursor.style.left = `${cursor}%`;
         setTimeout(this.draw.bind(this), 100);
     }
     nextFrame() {
@@ -227,6 +281,8 @@ class Video {
     }
     errorHide() {
         this.errorDisplay.classList.add('hide');
+    }
+    frameToTimecode(frame) {
     }
 }
 //# sourceMappingURL=index.js.map
