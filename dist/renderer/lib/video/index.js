@@ -75,6 +75,9 @@ class Video {
         });
         return closest;
     }
+    /**
+     *    Display the timecode in the two
+     **/
     updateTimecodes(startFrame, endFrame, framerate) {
         framerate = this.closestFramerate(framerate);
         try {
@@ -120,9 +123,11 @@ class Video {
             }
         }
         else if (type === 'still') {
+            this.stillLoader = new Image();
             this.current.value = '0';
-            this.still.onload = this.onloadstartstill.bind(this);
+            this.stillLoader.onload = this.onloadstartstill.bind(this);
             this.still.setAttribute('src', filePath);
+            this.stillLoader.setAttribute('src', filePath);
             this.element.classList.add('hide');
             try {
                 this.still.classList.remove('hide');
@@ -145,15 +150,16 @@ class Video {
         this.sonifyVideoBtn.removeAttribute('disabled');
     }
     onloadstartstill() {
+        console.log('onloadstartstill');
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
-        setTimeout(this.draw.bind(this), 100);
-        this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
-        document.getElementById('play').setAttribute('disabled', 'disabled');
+        //document.getElementById('play').setAttribute('disabled', 'disabled');
         //document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
+        //no delay needed?
+        this.drawStill();
     }
     parseFps(line) {
         let fps;
@@ -229,7 +235,7 @@ class Video {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
     }
     drawStill() {
-        this.ctx.drawImage(this.still, 0, 0, this.width, this.height);
+        this.ctx.drawImage(this.stillLoader, 0, 0, this.width, this.height);
     }
     play() {
         let frame;

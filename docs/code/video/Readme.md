@@ -7,6 +7,7 @@ class representing video features
 
 * [Video](#Video)
     * [.restoreState()](#Video+restoreState)
+    * [.updateTimecodes()](#Video+updateTimecodes)
     * [.stream(stream)](#Video+stream)
     * [.file(filePath)](#Video+file)
 
@@ -14,6 +15,12 @@ class representing video features
 
 ### video.restoreState()
 Restore the apps saved state to the video UI
+
+**Kind**: instance method of [<code>Video</code>](#Video)  
+<a name="Video+updateTimecodes"></a>
+
+### video.updateTimecodes()
+Display the timecode in the two
 
 **Kind**: instance method of [<code>Video</code>](#Video)  
 <a name="Video+stream"></a>

@@ -12,6 +12,7 @@ class Video {
     public current : HTMLButtonElement = document.getElementById('currentFrame') as HTMLButtonElement;
 
     public still : HTMLImageElement = document.getElementById('still') as HTMLImageElement;
+    public stillLoader : HTMLImageElement;
 
     public sonifyFrameBtn : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
     public sonifyVideoBtn : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
@@ -22,6 +23,7 @@ class Video {
     private samplerateDisplay : HTMLSpanElement = document.getElementById('samplerate') as HTMLSpanElement;
     private selectionDisplay : HTMLSpanElement = document.getElementById('selectedarea') as HTMLSpanElement;
     private errorDisplay : HTMLElement = document.getElementById('displayError');
+
 
     private cursor : HTMLElement = document.querySelector('#sonifyTimeline .cursor');
 
@@ -104,6 +106,9 @@ class Video {
         return closest;
     }
 
+    /**
+     *    Display the timecode in the two
+     **/
     private updateTimecodes (startFrame : number, endFrame : number, framerate : number) {
         framerate = this.closestFramerate(framerate);
         try {
@@ -149,9 +154,13 @@ class Video {
                 console.error(err);
             }
         } else if (type === 'still') {
+            this.stillLoader = new Image();
+
             this.current.value = '0';
-            this.still.onload = this.onloadstartstill.bind(this);
+            this.stillLoader.onload = this.onloadstartstill.bind(this);
+
             this.still.setAttribute('src', filePath);
+            this.stillLoader.setAttribute('src', filePath);
 
             this.element.classList.add('hide');
             try {
@@ -180,12 +189,14 @@ class Video {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
-        setTimeout(this.draw.bind(this), 100);
-        this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
-        document.getElementById('play').setAttribute('disabled', 'disabled');
+        
+        //document.getElementById('play').setAttribute('disabled', 'disabled');
         //document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
+
+        //no delay needed?
+        this.drawStill();
     }
 
     private parseFps (line : string) {
@@ -272,7 +283,7 @@ class Video {
     }
 
     public drawStill () {
-        this.ctx.drawImage(this.still, 0, 0, this.width, this.height);
+        this.ctx.drawImage(this.stillLoader, 0, 0, this.width, this.height);
     }
 
     public play () {
