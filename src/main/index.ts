@@ -11,6 +11,7 @@ import getPixels from 'get-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
 import { createHash } from 'crypto';
+import { v4 as uuid } from 'uuid';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonifyNode';
@@ -206,8 +207,8 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 	console.log('Created wav from raw sample data');
 
-	tmpAudio = pathJoin(tmpdir(), 'tmp_audio.wav');
-	normalAudio = pathJoin(tmpdir(), 'normal_audio.wav');
+	tmpAudio = pathJoin(tmpdir(), `${uuid()}_tmp_audio.wav`);
+	normalAudio = pathJoin(tmpdir(), `${uuid()}_normal_audio.wav`);
 
 	try {
 		await writeFile(tmpAudio, wav.toBuffer());

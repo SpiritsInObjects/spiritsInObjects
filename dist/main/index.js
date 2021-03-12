@@ -14,6 +14,7 @@ const get_pixels_1 = __importDefault(require("get-pixels"));
 const wavefile_1 = require("wavefile");
 const os_1 = require("os");
 const crypto_1 = require("crypto");
+const uuid_1 = require("uuid");
 const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
@@ -172,8 +173,8 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     console.log(`All frames exported and sonified for ${args.state.files[0]}`);
     wav.fromScratch(1, args.state.samplerate, '32f', arr);
     console.log('Created wav from raw sample data');
-    tmpAudio = path_1.join(os_1.tmpdir(), 'tmp_audio.wav');
-    normalAudio = path_1.join(os_1.tmpdir(), 'normal_audio.wav');
+    tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
+    normalAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_normal_audio.wav`);
     try {
         await fs_extra_1.writeFile(tmpAudio, wav.toBuffer());
         console.log(`Saved temporary audio file to ${tmpAudio}`);
