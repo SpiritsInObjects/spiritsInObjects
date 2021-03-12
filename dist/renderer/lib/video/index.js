@@ -1,4 +1,5 @@
 'use strict';
+const Timecode = require('smpte-timecode');
 /** class representing video features */
 class Video {
     /**
@@ -46,6 +47,7 @@ class Video {
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
         this.ui.onSelectionChange = this.displayInfo.bind(this);
+        this.updateTimecodes(0, 0, 24);
         this.restoreState();
     }
     /**
@@ -65,6 +67,12 @@ class Video {
             this.displayName = files[0].split('/').pop();
             this.displayInfo();
         }
+    }
+    updateTimecodes(startFrame, endFrame, framerate) {
+        this.startTC = new Timecode(startFrame, framerate, false);
+        this.endTC = new Timecode(endFrame, framerate, false);
+        this.startTimecode.value = this.startTC.toString();
+        this.endTimecode.value = this.endTC.toString();
     }
     /**
      * Attach stream to video element and Canvas
@@ -111,7 +119,6 @@ class Video {
         }
     }
     onloadstart() {
-        console.log('onloadstart');
         this.width = this.element.videoWidth;
         this.height = this.element.videoHeight;
         this.canvas.width = this.width;
@@ -189,6 +196,7 @@ class Video {
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
         this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
         this.selectionDisplay.innerHTML = `${selection} px`;
+        this.updateTimecodes(0, this.frames, this.framerate);
         try {
             document.querySelector('#sonify .optionWrapper .info').classList.remove('hide');
         }

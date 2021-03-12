@@ -142,7 +142,6 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         }
         arrBuffer = sonify.sonify(imageData.data);
         ms = (+new Date()) - frameStart;
-        //console.log(`progress : ${i / args.state.frames}`);
         mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms });
         arr.set(arrBuffer, i * arrBuffer.length);
         if (args.state.type === 'video') {

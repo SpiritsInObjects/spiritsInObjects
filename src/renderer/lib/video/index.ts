@@ -1,5 +1,7 @@
 'use strict';
 
+const Timecode = require('smpte-timecode');
+
 /** class representing video features */
 class Video {
     public element : HTMLVideoElement = document.getElementById('video') as HTMLVideoElement;
@@ -28,6 +30,9 @@ class Video {
 
     private startTimecode : HTMLInputElement = document.getElementById('startTimecode') as HTMLInputElement;
     private endTimecode : HTMLInputElement = document.getElementById('endTimecode') as HTMLInputElement;
+    private startTC : Timecode;
+    private endTC : Timecode;
+
 
     public width : number;
     public height : number;
@@ -67,6 +72,7 @@ class Video {
 
         this.ui.onSelectionChange = this.displayInfo.bind(this);
 
+        this.updateTimecodes(0, 0, 24);
         this.restoreState();
     }
 
@@ -88,6 +94,13 @@ class Video {
             this.displayName = files[0].split('/').pop();
             this.displayInfo();
         }
+    }
+
+    private updateTimecodes (startFrame : number, endFrame : number, framerate : number) {
+        this.startTC = new Timecode(startFrame, framerate, false);
+        this.endTC   = new Timecode(endFrame,   framerate, false);
+        this.startTimecode.value = this.startTC.toString();
+        this.endTimecode.value   = this.endTC.toString();
     }
 
     /**
@@ -121,7 +134,6 @@ class Video {
                 console.error(err);
             }
         } else if (type === 'still') {
-            
             this.current.value = '0';
             this.still.addEventListener('onload', this.onloadstartstill.bind(this));
             this.still.setAttribute('src', filePath);
@@ -135,7 +147,6 @@ class Video {
     }
 
     private onloadstart () {
-        console.log('onloadstart')
         this.width = this.element.videoWidth;
         this.height = this.element.videoHeight;
         this.canvas.width = this.width;
@@ -224,6 +235,8 @@ class Video {
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
         this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
         this.selectionDisplay.innerHTML = `${selection} px`;
+
+        this.updateTimecodes(0, this.frames, this.framerate);
 
         try {
             document.querySelector('#sonify .optionWrapper .info').classList.remove('hide');

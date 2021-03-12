@@ -27,7 +27,6 @@ if (is.development) {
 
 app.setAppUserModelId('spiritsinobjects');
 
-
 async function pixels (filePath : string) {
 	return new Promise((resolve : Function, reject : Function ) => {
 		return getPixels(filePath, (err : Error, imageData : any) => {
@@ -167,7 +166,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		arrBuffer = sonify.sonify(imageData.data);
 
 		ms = (+new Date()) - frameStart;
-		//console.log(`progress : ${i / args.state.frames}`);
+
 		mainWindow.webContents.send('sonify_progress', { i, frames : args.state.frames, ms });
 
 		arr.set(arrBuffer, i * arrBuffer.length);
