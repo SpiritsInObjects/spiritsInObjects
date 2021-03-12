@@ -127,6 +127,7 @@ class Video {
             this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
             this.element.load();
             this.current.value = '0';
+
             this.still.classList.add('hide');
             try {
                 this.element.classList.remove('hide');
@@ -135,8 +136,9 @@ class Video {
             }
         } else if (type === 'still') {
             this.current.value = '0';
-            this.still.addEventListener('onload', this.onloadstartstill.bind(this));
+            this.still.onload = this.onloadstartstill.bind(this);
             this.still.setAttribute('src', filePath);
+
             this.element.classList.add('hide');
             try {
                 this.still.classList.remove('hide');
@@ -161,7 +163,6 @@ class Video {
     }
 
     private onloadstartstill () {
-        console.log('onloadstartstill')
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
@@ -300,14 +301,15 @@ class Video {
         this.element.currentTime = seconds;
         this.current.value = String(frame);
         this.cursor.style.left = `${cursor}%`;
+
         setTimeout(this.draw.bind(this), 100);
     }
 
     public nextFrame () {
         let frame : number = this.currentFrame();
         frame++;
-        if (frame > this.frames) {
-            frame = this.frames;
+        if (frame >= this.frames) {
+            frame = this.frames - 1;
         }
         this.setFrame(frame);
     }

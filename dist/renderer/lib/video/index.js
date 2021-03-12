@@ -107,7 +107,7 @@ class Video {
         }
         else if (type === 'still') {
             this.current.value = '0';
-            this.still.addEventListener('onload', this.onloadstartstill.bind(this));
+            this.still.onload = this.onloadstartstill.bind(this);
             this.still.setAttribute('src', filePath);
             this.element.classList.add('hide');
             try {
@@ -131,7 +131,6 @@ class Video {
         this.sonifyVideoBtn.removeAttribute('disabled');
     }
     onloadstartstill() {
-        console.log('onloadstartstill');
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
@@ -259,8 +258,8 @@ class Video {
     nextFrame() {
         let frame = this.currentFrame();
         frame++;
-        if (frame > this.frames) {
-            frame = this.frames;
+        if (frame >= this.frames) {
+            frame = this.frames - 1;
         }
         this.setFrame(frame);
     }

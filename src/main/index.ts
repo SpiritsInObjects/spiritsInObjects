@@ -10,6 +10,7 @@ import { pathExists, unlink, writeFile, copyFile } from 'fs-extra';
 import getPixels from 'get-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
+import { createHash } from 'crypto';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonifyNode';
@@ -17,6 +18,8 @@ import { SonifyNode } from './lib/sonifyNode';
 //import config from './lib/config';
 import { createMenu } from './lib/menu';
 import { sox } from './lib/sox';
+
+const CACHE : any = {};
 
 unhandled();
 contextMenu();
@@ -36,6 +39,10 @@ async function pixels (filePath : string) {
 			return resolve(imageData);
 		});
 	});
+}
+
+function hashStr (str : string) : string {
+	return createHash('sha256').update(str).digest('base64');
 }
 
 let mainWindow : any;
@@ -118,6 +125,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	let tmpExists : boolean = false;
 	let tmpAudio : string;
 	let normalAudio : string;
+	let hash : string;
 	
 	console.log(args.state)
 
@@ -129,11 +137,21 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	}
 
 	sonify = new SonifyNode(args.state);
+
+	if (args.state.type === '') {
+		hash = hashStr(args.state.files[0]);
+		if (typeof CACHE[hash] !== 'undefined') {
+			//return cached audio
+			endTime = +new Date();
+			mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio : CACHE[hash] });
+			return;
+		}
+	}
 	
 	for (i = 0; i < args.state.frames; i++) {
 		frameStart = +new Date();
-
 		if (args.state.type === 'video') {
+			
 			try {
 				filePath = await ffmpeg.exportFrame(args.state.files[0], i);
 			} catch (err) {
@@ -205,6 +223,8 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		console.error(err);
 		console.log('Normalization failed, using original tmp file.');
 	}
+
+	CACHE[hash] = tmpAudio;
 
 	endTime = +new Date();
 	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 

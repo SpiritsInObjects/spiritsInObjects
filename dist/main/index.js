@@ -13,10 +13,12 @@ const fs_extra_1 = require("fs-extra");
 const get_pixels_1 = __importDefault(require("get-pixels"));
 const wavefile_1 = require("wavefile");
 const os_1 = require("os");
+const crypto_1 = require("crypto");
 const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
+const CACHE = {};
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -32,6 +34,9 @@ async function pixels(filePath) {
             return resolve(imageData);
         });
     });
+}
+function hashStr(str) {
+    return crypto_1.createHash('sha256').update(str).digest('base64');
 }
 let mainWindow;
 const BrowserOptions = {
@@ -99,6 +104,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     let tmpExists = false;
     let tmpAudio;
     let normalAudio;
+    let hash;
     console.log(args.state);
     try {
         tmp = await ffmpeg_1.ffmpeg.exportPath();
@@ -108,6 +114,15 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
     }
     sonify = new sonifyNode_1.SonifyNode(args.state);
+    if (args.state.type === '') {
+        hash = hashStr(args.state.files[0]);
+        if (typeof CACHE[hash] !== 'undefined') {
+            //return cached audio
+            endTime = +new Date();
+            mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: CACHE[hash] });
+            return;
+        }
+    }
     for (i = 0; i < args.state.frames; i++) {
         frameStart = +new Date();
         if (args.state.type === 'video') {
@@ -174,6 +189,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
         console.log('Normalization failed, using original tmp file.');
     }
+    CACHE[hash] = tmpAudio;
     endTime = +new Date();
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
 });
