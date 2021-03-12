@@ -11,4 +11,4 @@ mkdir -p ./releases/linux
 #build a .deb installer
 ./node_modules/.bin/electron-installer-debian --src ./releases/linux/spiritsinobjects-linux-x64/ --arch amd64 --config ./scripts/build_linux.json
 
-echo $version
+echo "Built installer of version ${version}"
