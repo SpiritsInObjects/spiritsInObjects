@@ -139,8 +139,8 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 	sonify = new SonifyNode(args.state);
 
-	if (args.state.type === '') {
-		hash = hashStr(args.state.files[0]);
+	if (args.state.type === 'video') {
+		hash = hashStr(args.state.files[0] + `_${args.state.start}_${args.state.end}`);
 		if (typeof CACHE[hash] !== 'undefined') {
 			//return cached audio
 			endTime = +new Date();

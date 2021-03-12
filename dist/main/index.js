@@ -115,8 +115,8 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         console.error(err);
     }
     sonify = new sonifyNode_1.SonifyNode(args.state);
-    if (args.state.type === '') {
-        hash = hashStr(args.state.files[0]);
+    if (args.state.type === 'video') {
+        hash = hashStr(args.state.files[0] + `_${args.state.start}_${args.state.end}`);
         if (typeof CACHE[hash] !== 'undefined') {
             //return cached audio
             endTime = +new Date();
