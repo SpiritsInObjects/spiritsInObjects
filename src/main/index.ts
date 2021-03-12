@@ -143,8 +143,6 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 			}
 		} else if (args.state.type === 'still' ) {
 			filePath = args.state.files[i];
-			console.dir('NEED STILL FUNCTIONALITY')
-			console.trace();
 		}
 
 		try {
@@ -174,10 +172,12 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 		arr.set(arrBuffer, i * arrBuffer.length);
 
-		try {
-			unlink(filePath);
-		} catch (err) {
-			console.error(err);
+		if (args.state.type === 'video') {
+			try {
+				unlink(filePath);
+			} catch (err) {
+				console.error(err);
+			}
 		}
 
 		arr.set(arrBuffer, i * arrBuffer.length);

@@ -121,8 +121,6 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         }
         else if (args.state.type === 'still') {
             filePath = args.state.files[i];
-            console.dir('NEED STILL FUNCTIONALITY');
-            console.trace();
         }
         try {
             tmpExists = await fs_extra_1.pathExists(filePath);
@@ -147,11 +145,13 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         //console.log(`progress : ${i / args.state.frames}`);
         mainWindow.webContents.send('sonify_progress', { i, frames: args.state.frames, ms });
         arr.set(arrBuffer, i * arrBuffer.length);
-        try {
-            fs_extra_1.unlink(filePath);
-        }
-        catch (err) {
-            console.error(err);
+        if (args.state.type === 'video') {
+            try {
+                fs_extra_1.unlink(filePath);
+            }
+            catch (err) {
+                console.error(err);
+            }
         }
         arr.set(arrBuffer, i * arrBuffer.length);
     }
