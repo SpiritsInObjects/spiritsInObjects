@@ -20,6 +20,7 @@ const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
 const CACHE = {};
+let CANCEL = false;
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -169,6 +170,11 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             }
         }
         arr.set(arrBuffer, i * arrBuffer.length);
+        if (CANCEL) {
+            mainWindow.webContents.send('sonify_cancel', {});
+            CANCEL = false;
+            return false;
+        }
     }
     console.log(`All frames exported and sonified for ${args.state.files[0]}`);
     wav.fromScratch(1, args.state.samplerate, '32f', arr);
@@ -193,6 +199,9 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     CACHE[hash] = tmpAudio;
     endTime = +new Date();
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
+});
+electron_1.ipcMain.on('sonify_cancel', async (evt, args) => {
+    CANCEL = true;
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
     let res = {};

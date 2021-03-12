@@ -21,6 +21,7 @@ import { createMenu } from './lib/menu';
 import { sox } from './lib/sox';
 
 const CACHE : any = {};
+let CANCEL : boolean = false;
 
 unhandled();
 contextMenu();
@@ -199,6 +200,12 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		}
 
 		arr.set(arrBuffer, i * arrBuffer.length);
+
+		if (CANCEL) {
+			mainWindow.webContents.send('sonify_cancel', { });
+			CANCEL = false;
+			return false;
+		}
 	}
 
 	console.log(`All frames exported and sonified for ${args.state.files[0]}`)
@@ -229,6 +236,10 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 	endTime = +new Date();
 	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
+});
+
+ipcMain.on('sonify_cancel', async (evt : Event, args : any) => {
+	CANCEL = true;
 });
 
 ipcMain.on('info', async (evt : Event, args : any) => {

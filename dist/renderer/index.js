@@ -223,6 +223,19 @@ async function sonifyStart() {
     ui.overlay.show(`Sonifying ${displayName}...`);
     ipcRenderer.send('sonify', { state: sonifyState });
 }
+async function sonifyCancel() {
+    let proceed = false;
+    try {
+        proceed = await confirm(`Cancel sonification process?`);
+    }
+    catch (err) {
+        console.log(err);
+    }
+    if (!proceed) {
+        return false;
+    }
+    ipcRenderer.send('sonify_cancel', {});
+}
 function onSonifyProgress(evt, args) {
     let timeLeft;
     let timeStr;
@@ -244,6 +257,11 @@ function onSonifyComplete(evt, args) {
     timeAvg = -1;
     ui.overlay.hide();
     f.save(args.tmpAudio);
+}
+function onSonifyCancel(evt, args) {
+    avgMs = -1;
+    timeAvg = -1;
+    ui.overlay.hide();
 }
 function playFrame() {
     const source = audioContext.createBufferSource();
@@ -274,8 +292,10 @@ function bindListeners() {
     const sonifyFrame = document.getElementById('sonifyFrame');
     const sonifyVideo = document.getElementById('sonifyVideo');
     const sonifyBtn = document.getElementById('sonifyBtn');
+    const sonifyCancelBtn = document.getElementById('sonifyCancel');
     const visualizeBtn = document.getElementById('visualizeBtn');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
+    sonifyCancelBtn.addEventListener('click', function () { ui.page('sonify_cancel'); }, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrame.addEventListener('click', playFrame, false);
@@ -283,6 +303,7 @@ function bindListeners() {
     document.addEventListener('keydown', keyDown, false);
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
+    ipcRenderer.on('sonify_cancel', onSonifyCancel);
     ipcRenderer.on('info', (evt, args) => {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas);

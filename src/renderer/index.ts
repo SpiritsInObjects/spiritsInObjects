@@ -36,7 +36,6 @@ let f : Files;
     return res.response === 0;
 }
 
-
 /**
  * class representing the Drag and Drop functionality
  **/
@@ -258,6 +257,22 @@ async function sonifyStart () {
     ipcRenderer.send('sonify', { state : sonifyState });
 }
 
+async function sonifyCancel () {
+    let proceed : boolean = false;
+    
+    try {
+        proceed = await confirm(`Cancel sonification process?`);
+    } catch (err) {
+        console.log(err);
+    }
+
+    if (!proceed) {
+        return false;
+    }
+
+    ipcRenderer.send('sonify_cancel', { });
+}
+
 function onSonifyProgress (evt : Event, args : any) {
     let timeLeft : number;
     let timeStr : string;
@@ -273,8 +288,6 @@ function onSonifyProgress (evt : Event, args : any) {
 
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
     ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
-
-
     //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
 }
 
@@ -283,6 +296,12 @@ function onSonifyComplete (evt : Event, args : any) {
     timeAvg = -1;
     ui.overlay.hide();
     f.save(args.tmpAudio);
+}
+
+function onSonifyCancel (evt : Event, args : any) {
+    avgMs = -1;
+    timeAvg = -1;
+    ui.overlay.hide();
 }
 
 function playFrame () {
@@ -319,9 +338,11 @@ function bindListeners () {
     const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
     const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
     const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
+    const sonifyCancelBtn : HTMLElement = document.getElementById('sonifyCancel');
     const visualizeBtn : HTMLElement = document.getElementById('visualizeBtn');
 
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
+    sonifyCancelBtn.addEventListener('click', function () { ui.page('sonify_cancel'); }, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
@@ -331,6 +352,7 @@ function bindListeners () {
 
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
+    ipcRenderer.on('sonify_cancel', onSonifyCancel);
 
     ipcRenderer.on('info', (evt : Event, args : any) => {
         video.oninfo(evt, args);
