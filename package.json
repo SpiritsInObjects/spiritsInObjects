@@ -100,6 +100,7 @@
     "fs-extra": "^9.1.0",
     "get-pixels": "^3.3.2",
     "humanize-duration": "^3.25.1",
+    "smpte-timecode": "^1.2.3",
     "sox-static": "^1.0.0",
     "spin.js": "^4.1.0",
     "tone": "^14.7.77",
