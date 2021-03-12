@@ -57,6 +57,7 @@ const BrowserOptions = {
 	resizable: false,
 	backgroundColor: '#a7abb4',
 	webPreferences : {
+		webSecurity : false,
 		nodeIntegration: true,
 		enableRemoteModule: true
 	}
