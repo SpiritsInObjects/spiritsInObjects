@@ -29,6 +29,7 @@ class Video {
         this.ctx = this.canvas.getContext('2d');
         this.startTimecode = document.getElementById('startTimecode');
         this.endTimecode = document.getElementById('endTimecode');
+        this.framerates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
         this.framerate = 24;
         this.frames = 0;
         this.samplerate = 48000;
@@ -68,11 +69,24 @@ class Video {
             this.displayInfo();
         }
     }
+    closestFramerate(framerate) {
+        const closest = this.framerates.reduce((a, b) => {
+            return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
+        });
+        return closest;
+    }
     updateTimecodes(startFrame, endFrame, framerate) {
-        this.startTC = new Timecode(startFrame, framerate, false);
-        this.endTC = new Timecode(endFrame, framerate, false);
-        this.startTimecode.value = this.startTC.toString();
-        this.endTimecode.value = this.endTC.toString();
+        framerate = this.closestFramerate(framerate);
+        try {
+            this.startTC = new Timecode(startFrame, framerate, false);
+            this.endTC = new Timecode(endFrame, framerate, false);
+            this.startTimecode.value = this.startTC.toString();
+            this.endTimecode.value = this.endTC.toString();
+        }
+        catch (err) {
+            console.log(framerate);
+            console.error(err);
+        }
     }
     /**
      * Attach stream to video element and Canvas
@@ -190,10 +204,12 @@ class Video {
         const start = this.state.get('start');
         const end = this.state.get('end');
         const selection = Math.round((end - start) * this.width);
+        const roundedRate = Math.floor(this.samplerate);
+        const rough = this.samplerate - roundedRate > 0.0 ? '~' : '';
         this.framesDisplay.innerHTML = String(this.frames);
         this.fpsDisplay.innerHTML = String(Math.round(this.framerate * 100) / 100);
-        this.resolutionDisplay.innerHTML = `${this.width}x${this.height} px`;
-        this.samplerateDisplay.innerHTML = `${this.samplerate} hz`;
+        this.resolutionDisplay.innerHTML = `${this.width}x${this.height}`;
+        this.samplerateDisplay.innerHTML = `${rough}${roundedRate}Hz`;
         this.selectionDisplay.innerHTML = `${selection} px`;
         this.updateTimecodes(0, this.frames, this.framerate);
         try {
