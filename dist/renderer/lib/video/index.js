@@ -150,7 +150,6 @@ class Video {
         this.sonifyVideoBtn.removeAttribute('disabled');
     }
     onloadstartstill() {
-        console.log('onloadstartstill');
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);

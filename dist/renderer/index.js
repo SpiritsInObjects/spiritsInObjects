@@ -295,7 +295,7 @@ function bindListeners() {
     const sonifyCancelBtn = document.getElementById('sonifyCancel');
     const visualizeBtn = document.getElementById('visualizeBtn');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
-    sonifyCancelBtn.addEventListener('click', function () { ui.page('sonify_cancel'); }, false);
+    sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrame.addEventListener('click', playFrame, false);

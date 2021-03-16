@@ -330,7 +330,7 @@ select {
   left: 0;
   top: 0;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 1;
+  z-index: 10;
 }
 #overlay.show {
   display: block;
@@ -407,6 +407,12 @@ select {
   height: 405px;
   line-height: 405px;
   top: 0;
+}
+#sonifyCancel {
+  margin: 0 auto;
+  display: block;
+  color: white;
+  border-color: white;
 }
 .hide {
   display: none !important;
