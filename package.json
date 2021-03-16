@@ -84,7 +84,6 @@
     "electron-packager": "^15.2.0",
     "electron-rebuild": "^2.3.4",
     "electron-wix-msi": "^3.0.6",
-    "exe-icon-extractor": "^1.0.8",
     "jsdoc-to-markdown": "^6.0.1",
     "less": "^4.1.1",
     "mocha": "^8.2.1",
@@ -110,6 +109,7 @@
     "wavefile": "^11.0.0"
   },
   "optionalDependencies": {
-    "electron-installer-debian": "^3.1.0"
+    "electron-installer-debian": "^3.1.0",
+    "exe-icon-extractor": "^1.0.8"
   }
 }
