@@ -3,7 +3,7 @@
 This is an app that sonifies images and visualizes sound as an aide in creating optical sound films.
 
 
-### Dependenies
+### Dependencies
 
 The application packages `ffmpeg` and `SoX` but requires the installation of `fluidsynth` to visualize MIDI files.
 
