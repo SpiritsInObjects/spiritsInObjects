@@ -45,6 +45,7 @@ class Fluidsynth {
 		} catch (err) {
 			if (err.errno === 'ENOENT') {
 				this.installed = false;
+				console.log(`Fluidsynth is not installed`);
 			} else {
 				console.error(err);
 			}
