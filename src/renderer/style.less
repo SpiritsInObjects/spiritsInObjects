@@ -253,7 +253,7 @@ body{
 }
 .options {
 	width: 50%;
-	height: 100px;
+	height: auto;
 	float: left;
 	select,
 	input[type=text],
@@ -268,7 +268,9 @@ select,
 input[type=text],
 input[type=number],
 input[type=submit],
-button{
+button,
+textarea,
+.info{
 	-webkit-appearance: none;
 	border: 2px solid rgba(100, 100, 100, 0.3);
 	outline: 0;
@@ -277,15 +279,17 @@ button{
 	height: 30px;
 	line-height: 30px;
 	margin: 5px auto 0;
-	padding: 0;
+	padding: 0px 10px;
 	box-sizing: border-box;
 	cursor: pointer;
-	text-align: center;
+	text-align: left;
 	background: transparent;
 }
 input[type=text],
 input[type=number],
-input[type=submit]{
+input[type=submit],
+textarea,
+.info{
 	background: @inputBg;
 	font-family: monospace;
 
@@ -302,8 +306,19 @@ input[type=submit]{
 		background: lighten(#cecdd3, 15%);
 	}
 }
+textarea,
+.info{
+	padding: 10px;
+}
 select{
 	text-align-last: center;
+}
+
+textarea,
+.info{
+	width: 492px;
+	height: 220px;
+	padding: 10px;
 }
 
 #timecodes{
