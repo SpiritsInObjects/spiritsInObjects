@@ -35,11 +35,15 @@ async function spawnAsync (bin : string, args : string[]) : Promise<ProcessOutpu
 class Fluidsynth {
 	public installed : boolean = false;
 	private bin : string = 'fluidsynth';
+	private soundFont : string = './dist/contrib/Scc1t2.sf2';
+	
 	constructor () {
 		this.checkInstallation();
 	}
-	async checkInstallation () {
+
+	private async checkInstallation () {
 		let res : ProcessOutput;
+
 		try {
 			res = await spawnAsync(this.bin, [ '--help' ]);
 		} catch (err) {
@@ -50,10 +54,38 @@ class Fluidsynth {
 				console.error(err);
 			}
 		}
+
 		if (res && res.stdout) {
 			this.installed = true;
 			console.log(`Fluidsynth is installed`);
 		}
+	}
+
+	public async render (midiPath : string, outputPath : string, sampleRate : number = 25920) : Promise<any> {
+		const args : string[] = [
+			'--chorus', 'no',
+			'--reverb', 'no',
+			'--gain', '0.6', //?
+			'-L', '1',
+			'-r', `${sampleRate}`,
+			'-F', outputPath, this.soundFont, midiPath
+		];
+		let res : ProcessOutput;
+
+		if (!this.installed) {
+			console.log(`Fluidsynth is not installed`)
+			return
+		}
+
+		try {
+			console.log(`${this.bin} ${args.join(' ')}`);
+			res = await spawnAsync(this.bin, args);
+		} catch (err) {
+			console.error(`${this.bin} ${args.join(' ')}`);
+			throw err;
+		}
+
+		return outputPath
 	}
 }
 
