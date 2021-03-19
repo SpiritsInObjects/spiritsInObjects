@@ -1,16 +1,17 @@
 'use strict';
 
-import { basename, extname } from 'path';
+import { basename, extname, join } from 'path';
 import { homedir } from 'os';
+import { lstat, readdir } from 'fs-extra';
 
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 
 const humanizeDuration = require('humanize-duration');
 
-const videoExtensions : string[] = ['.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v'];
+const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
-const audioExtensions : string[] = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
+const audioExtensions : string[] = ['.mid', '.midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving : boolean = false;
 let endMoving : boolean = false;
 
@@ -31,7 +32,7 @@ let f : Files;
     const config = {
         buttons : ['Yes', 'Cancel'],
         message
-    }
+    };
     const res = await dialog.showMessageBox(config);
     return res.response === 0;
 }
@@ -119,7 +120,7 @@ class Files {
     public async select () {
         const options : any = {
             title: `Select video or image sequence`,
-            properties: [`openFile`],
+            properties: [`openFile`, `openDirectory`],
             defaultPath: 'c:/',
             filters: [
                 {
@@ -127,15 +128,39 @@ class Files {
                     extensions: ['*']
                 },
             ]
-        }
+        };
         let files : any;
         let proceed : boolean = false;
         let filePaths : string[] = [];
+
+        const linuxMessage : string = `Do you want to use a single file (video or still image) or a folder containing an image sequence?`;
+        const linuxChoices : string[] = ['File', 'Folder', 'Cancel'];
+        const config : any = {
+            buttons : linuxChoices,
+            message : linuxMessage
+        };
+        let linuxChoice : any;
+
+        if (process.platform === 'linux') {
+            try {
+                linuxChoice = await dialog.showMessageBox(config);
+            } catch (err) {
+                console.error(err);
+                return false;
+            }
+            if (linuxChoice.response === 0) {
+                options.properties = ['openFile'];
+            } else if (linuxChoice.response === 1) {
+                options.properties = ['openDirectory'];
+            } else {
+                return false;
+            }
+        }
         
         try {
             files = await dialog.showOpenDialog(options);
         } catch (err ) {
-            console.error(err)
+            console.error(err);
         }
 
         if (!files || !files.filePaths || files.filePaths.length === 0) {
@@ -155,15 +180,28 @@ class Files {
         let valid : boolean = true;
         let displayName : string;
         let type : string = 'video';
+        let stats : any;
 
-        files = files.filter((file : string) => {
-            ext = extname(file.toLowerCase());
-            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
-                return true;
-            }
+        console.dir(files);
+
+        try {
+            stats = await lstat(files[0]);
+        } catch (err) {
             return false;
-        });
+        }
 
+        if (stats.isDirectory()) {
+            type = 'dir';
+            files = this.getDir(files[0]);
+        } else {
+            files = files.filter((file : string) => {
+                ext = extname(file.toLowerCase());
+                if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+                    return true;
+                }
+                return false;
+            });
+        }
 
         if (files.length === 0) {
             valid = false;
@@ -180,7 +218,7 @@ class Files {
                 type = 'still';
             }
         } else if (files.length > 1) {
-            
+            console.dir(files)
         }
 
         displayName = video.set(files[0], type);
@@ -192,6 +230,34 @@ class Files {
         elem.value = displayName;
 
         sonifyStart();
+    }
+
+    public async getDir (dir : string) {
+        let files : any;
+        let ext : string;
+
+        try {
+            files = await readdir(dir);
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+
+        files.sort();
+
+        files = files.map((fileName : string) => {
+            return join(dir, fileName);
+        });
+
+        files = files.filter((file : string) => {
+            ext = extname(file.toLowerCase());
+            if (stillExtensions.indexOf(ext) > -1) {
+                return true;
+            }
+            return false;
+        });
+
+        return files;
     }
 
     public async save (filePath : string) {
@@ -304,7 +370,7 @@ function onSonifyCancel (evt : Event, args : any) {
     ui.overlay.hide();
 }
 
-function playFrame () {
+function sonifyFrame () {
     const source : any = audioContext.createBufferSource();
     let buf : any = audioContext.createBuffer(1, video.height, video.samplerate);
     let mono : any = buf.getChannelData(0);
@@ -327,15 +393,27 @@ function playSync () {
 }
 
 function keyDown (evt : KeyboardEvent) {
-    if (evt.which === 32) {
+    if (evt.code === 'Space') {
         video.play();
+    } else if (evt.code === 'ArrowLeft') {
+        video.prevFrame();
+    } else if (evt.code === 'ArrowRight') {
+        video.nextFrame();
+    } else if (evt.code === 'KeyF') {
+        sonifyFrame();
+    } else if (evt.code === 'KeyI') {
+
+    } else if (evt.code === 'KeyO') {
+
     }
+    console.log(evt.code)
 }
+
 
 function bindListeners () {
     const dropArea : HTMLElement = document.getElementById('dragOverlay');
     const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
-    const sonifyFrame : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
+    const sonifyFrameBtn : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
     const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
     const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
     const sonifyCancelBtn : HTMLElement = document.getElementById('sonifyCancel');
@@ -346,7 +424,7 @@ function bindListeners () {
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
-    sonifyFrame.addEventListener('click', playFrame, false);
+    sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
 

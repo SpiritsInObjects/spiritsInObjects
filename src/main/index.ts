@@ -15,6 +15,7 @@ import { v4 as uuid } from 'uuid';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonifyNode';
+import { fluidsynth } from './lib/fluidsynth';
 
 //import config from './lib/config';
 import { createMenu } from './lib/menu';

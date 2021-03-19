@@ -2,12 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const os_1 = require("os");
+const fs_extra_1 = require("fs-extra");
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
-const videoExtensions = ['.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v'];
+const videoExtensions = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
-const audioExtensions = ['mid', 'midi']; //'.wav', '.mp3', '.ogg', '.flac'
+const audioExtensions = ['.mid', '.midi']; //'.wav', '.mp3', '.ogg', '.flac'
 let startMoving = false;
 let endMoving = false;
 let audioContext;
@@ -104,7 +105,7 @@ class Files {
     async select() {
         const options = {
             title: `Select video or image sequence`,
-            properties: [`openFile`],
+            properties: [`openFile`, `openDirectory`],
             defaultPath: 'c:/',
             filters: [
                 {
@@ -116,6 +117,31 @@ class Files {
         let files;
         let proceed = false;
         let filePaths = [];
+        const linuxMessage = `Do you want to use a single file (video or still image) or a folder containing an image sequence?`;
+        const linuxChoices = ['File', 'Folder', 'Cancel'];
+        const config = {
+            buttons: linuxChoices,
+            message: linuxMessage
+        };
+        let linuxChoice;
+        if (process.platform === 'linux') {
+            try {
+                linuxChoice = await dialog.showMessageBox(config);
+            }
+            catch (err) {
+                console.error(err);
+                return false;
+            }
+            if (linuxChoice.response === 0) {
+                options.properties = ['openFile'];
+            }
+            else if (linuxChoice.response === 1) {
+                options.properties = ['openDirectory'];
+            }
+            else {
+                return false;
+            }
+        }
         try {
             files = await dialog.showOpenDialog(options);
         }
@@ -136,13 +162,27 @@ class Files {
         let valid = true;
         let displayName;
         let type = 'video';
-        files = files.filter((file) => {
-            ext = path_1.extname(file.toLowerCase());
-            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
-                return true;
-            }
+        let stats;
+        console.dir(files);
+        try {
+            stats = await fs_extra_1.lstat(files[0]);
+        }
+        catch (err) {
             return false;
-        });
+        }
+        if (stats.isDirectory()) {
+            type = 'dir';
+            files = this.getDir(files[0]);
+        }
+        else {
+            files = files.filter((file) => {
+                ext = path_1.extname(file.toLowerCase());
+                if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+                    return true;
+                }
+                return false;
+            });
+        }
         if (files.length === 0) {
             valid = false;
         }
@@ -157,6 +197,7 @@ class Files {
             }
         }
         else if (files.length > 1) {
+            console.dir(files);
         }
         displayName = video.set(files[0], type);
         ipcRenderer.send('info', { files, type });
@@ -164,6 +205,29 @@ class Files {
         state.set('type', type);
         elem.value = displayName;
         sonifyStart();
+    }
+    async getDir(dir) {
+        let files;
+        let ext;
+        try {
+            files = await fs_extra_1.readdir(dir);
+        }
+        catch (err) {
+            console.error(err);
+            return [];
+        }
+        files.sort();
+        files = files.map((fileName) => {
+            return path_1.join(dir, fileName);
+        });
+        files = files.filter((file) => {
+            ext = path_1.extname(file.toLowerCase());
+            if (stillExtensions.indexOf(ext) > -1) {
+                return true;
+            }
+            return false;
+        });
+        return files;
     }
     async save(filePath) {
         const options = {
@@ -263,7 +327,7 @@ function onSonifyCancel(evt, args) {
     timeAvg = -1;
     ui.overlay.hide();
 }
-function playFrame() {
+function sonifyFrame() {
     const source = audioContext.createBufferSource();
     let buf = audioContext.createBuffer(1, video.height, video.samplerate);
     let mono = buf.getChannelData(0);
@@ -282,14 +346,28 @@ function playSync() {
     //audio.play();
 }
 function keyDown(evt) {
-    if (evt.which === 32) {
+    if (evt.code === 'Space') {
         video.play();
     }
+    else if (evt.code === 'ArrowLeft') {
+        video.prevFrame();
+    }
+    else if (evt.code === 'ArrowRight') {
+        video.nextFrame();
+    }
+    else if (evt.code === 'KeyF') {
+        sonifyFrame();
+    }
+    else if (evt.code === 'KeyI') {
+    }
+    else if (evt.code === 'KeyO') {
+    }
+    console.log(evt.code);
 }
 function bindListeners() {
     const dropArea = document.getElementById('dragOverlay');
     const fileSourceProxy = document.getElementById('fileSourceProxy');
-    const sonifyFrame = document.getElementById('sonifyFrame');
+    const sonifyFrameBtn = document.getElementById('sonifyFrame');
     const sonifyVideo = document.getElementById('sonifyVideo');
     const sonifyBtn = document.getElementById('sonifyBtn');
     const sonifyCancelBtn = document.getElementById('sonifyCancel');
@@ -298,7 +376,7 @@ function bindListeners() {
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
-    sonifyFrame.addEventListener('click', playFrame, false);
+    sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
     ipcRenderer.on('sonify_complete', onSonifyComplete);
