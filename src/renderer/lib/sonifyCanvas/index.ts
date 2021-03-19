@@ -116,18 +116,18 @@ class Sonify {
     }
 
     /**
-     * Fade an array of sample data in and out by n samples
+     * Envelope an array of sample data in and out by n samples
      * 
      * @param {array} original Audio sample data to fade
-     * @param {number} fadeLen Length of fades in sample
+     * @param {number} envLen Length of fades in sample
      */
-    public fade (original : Float32Array, fadeLen : number = 30) : Float32Array {
+    public envelope (original : Float32Array, envLen : number = 30) : Float32Array {
         const len : number = original.length;
         for (let i = 0; i < len; i++) {
-            if (i < fadeLen) {
-                original[i] = original[i] * (i / fadeLen);
-            } else if (i > len - fadeLen) {
-                original[i] = original[i] * ( (len - i) / fadeLen);
+            if (i < envLen) {
+                original[i] = original[i] * (i / envLen);
+            } else if (i > len - envLen) {
+                original[i] = original[i] * ( (len - i) / envLen);
             }
         }
         return original;

@@ -221,7 +221,7 @@ class Files {
             console.dir(files)
         }
 
-        displayName = video.set(files[0], type);
+        displayName = video.set(files, type);
         ipcRenderer.send('info', { files, type } );
 
         state.set('files', files );
@@ -379,7 +379,7 @@ function sonifyFrame () {
     sonify = new Sonify(state, video.canvas);
 
     tmp = sonify.sonifyCanvas();
-    tmp = sonify.fade(tmp);
+    tmp = sonify.envelope(tmp, 100);
     mono.set(tmp, 0);
     //console.dir(tmp)
     source.buffer = buf;
@@ -406,9 +406,8 @@ function keyDown (evt : KeyboardEvent) {
     } else if (evt.code === 'KeyO') {
 
     }
-    console.log(evt.code)
+    console.log(evt.code);
 }
-
 
 function bindListeners () {
     const dropArea : HTMLElement = document.getElementById('dragOverlay');
@@ -484,7 +483,7 @@ async function vFileSelect () {
             return false;
         }
 
-        displayName = video.set(filePath, null);
+        //displayName = video.set(filePath, null);
         ipcRenderer.send('midi', { filePath } );
 
         state.set('visualize', [ filePath ]);

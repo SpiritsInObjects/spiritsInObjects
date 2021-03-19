@@ -199,7 +199,7 @@ class Files {
         else if (files.length > 1) {
             console.dir(files);
         }
-        displayName = video.set(files[0], type);
+        displayName = video.set(files, type);
         ipcRenderer.send('info', { files, type });
         state.set('files', files);
         state.set('type', type);
@@ -334,7 +334,7 @@ function sonifyFrame() {
     let tmp;
     sonify = new Sonify(state, video.canvas);
     tmp = sonify.sonifyCanvas();
-    tmp = sonify.fade(tmp);
+    tmp = sonify.envelope(tmp, 100);
     mono.set(tmp, 0);
     //console.dir(tmp)
     source.buffer = buf;
@@ -427,7 +427,7 @@ async function vFileSelect() {
             console.log(`Cannot select file ${filePath} is invald`);
             return false;
         }
-        displayName = video.set(filePath, null);
+        //displayName = video.set(filePath, null);
         ipcRenderer.send('midi', { filePath });
         state.set('visualize', [filePath]);
         visualizeStart();
