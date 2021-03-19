@@ -3,3 +3,4 @@ releases/*/*
 *.DS_Store
 buffer*
 src/renderer/style.css
+build/

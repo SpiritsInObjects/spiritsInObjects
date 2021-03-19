@@ -1,5 +1,5 @@
 {
-  "dest": "./releases/linux/",
+  "dest": "../releases/linux/",
   "categories": [
     "Video"
   ],
