@@ -180,7 +180,7 @@ class Video {
             this.stillLoader.onload = this.onloadstartstill.bind(this);
 
             try {
-                this.frameArr = await this.getFrames(filePath);
+                //this.frameArr = await this.getFrames(filePath);
             } catch (err) {
                 console.error(err);
             }

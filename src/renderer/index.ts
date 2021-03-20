@@ -28,7 +28,17 @@ let timeAvg : number = -1;
 let dnd : DragDrop;
 let f : Files;
 
- async function confirm (message : string) {
+/* ELEMENTS */
+
+let dropArea : HTMLElement;
+let fileSourceProxy : HTMLInputElement;
+let sonifyFrameBtn : HTMLButtonElement;
+let sonifyVideo : HTMLButtonElement;
+let sonifyBtn : HTMLElement;
+let sonifyCancelBtn : HTMLElement;
+let visualizeBtn : HTMLElement;
+
+async function confirm (message : string) {
     const config = {
         buttons : ['Yes', 'No'],
         message
@@ -347,6 +357,8 @@ function sonifyFrame () {
     let mono : any = buf.getChannelData(0);
     let tmp : Float32Array;
 
+    sonifyFrameBtn.classList.add('active');
+
     sonify = new Sonify(state, video.canvas);
 
     tmp = sonify.sonifyCanvas();
@@ -356,6 +368,14 @@ function sonifyFrame () {
     source.buffer = buf;
     source.connect(audioContext.destination);
     source.start();
+
+    setTimeout(() => {
+        try {
+            sonifyFrameBtn.classList.remove('active');
+        } catch (err) {
+            //
+        }
+    }, 42);
 }
 
 function playSync () {
@@ -381,13 +401,13 @@ function keyDown (evt : KeyboardEvent) {
 }
 
 function bindListeners () {
-    const dropArea : HTMLElement = document.getElementById('dragOverlay');
-    const fileSourceProxy : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement;
-    const sonifyFrameBtn : HTMLButtonElement = document.getElementById('sonifyFrame') as HTMLButtonElement;
-    const sonifyVideo : HTMLButtonElement = document.getElementById('sonifyVideo') as HTMLButtonElement;
-    const sonifyBtn : HTMLElement = document.getElementById('sonifyBtn');
-    const sonifyCancelBtn : HTMLElement = document.getElementById('sonifyCancel');
-    const visualizeBtn : HTMLElement = document.getElementById('visualizeBtn');
+    dropArea = document.getElementById('dragOverlay');
+    fileSourceProxy = document.getElementById('fileSourceProxy') as HTMLInputElement;
+    sonifyFrameBtn = document.getElementById('sonifyFrame') as HTMLButtonElement;
+    sonifyVideo = document.getElementById('sonifyVideo') as HTMLButtonElement;
+    sonifyBtn = document.getElementById('sonifyBtn');
+    sonifyCancelBtn = document.getElementById('sonifyCancel');
+    visualizeBtn = document.getElementById('visualizeBtn');
 
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);

@@ -1,7 +1,6 @@
 'use strict';
 const Timecode = require('smpte-timecode');
 const { basename } = require('path');
-const { readdir } = require('fs-extra');
 /** class representing video features */
 class Video {
     /**
@@ -146,7 +145,7 @@ class Video {
             this.current.value = '0';
             this.stillLoader.onload = this.onloadstartstill.bind(this);
             try {
-                this.frameArr = await this.getFrames(filePath);
+                //this.frameArr = await this.getFrames(filePath);
             }
             catch (err) {
                 console.error(err);
@@ -161,19 +160,6 @@ class Video {
                 console.error(err);
             }
         }
-    }
-    async getFrames(filePath) {
-        let frames = [];
-        try {
-            frames = await readdir(filePath);
-        }
-        catch (err) {
-            throw err;
-        }
-        frames = frames.map((fileName) => {
-            return join(filePath, fileName);
-        });
-        return frames;
     }
     onloadstart() {
         this.width = this.element.videoWidth;
