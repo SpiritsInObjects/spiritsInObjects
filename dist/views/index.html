@@ -42,21 +42,20 @@
             <div id="videoControl">
                 <div class="bg"></div>
                 <div>
-                    <button id="prevFrame" alt="Previous Frame">Prev</button>
+                    <button id="prevFrame"><img src="../image/navigate_before.svg" alt="Previous Frame"></button>
                     <input type="number" id="currentFrame" alt="Current Frame" value="0" />
-                    <button id="nextFrame" alt="Next Frame">Next</button>
+                    <button id="nextFrame"><img src="../image/navigate_next.svg" alt="Next Frame"></button>
+                </div>
+                <div id="sonifyControl">
+                    <div>
+                        <button id="sonifyFrame" disabled>Sonify Frame</button>
+                        <button id="sonifyVideo" disabled>Sonify Video</button>
+                    </div>
                 </div>
                 <div>
-                    
                     <button id="play" class="hide" alt="Play Video" disabled>Play Muted</button>
                     <button id="sync" class="hide" alt="Play Sync" disabled>Play Sync</button>
                     
-                </div>
-            </div>
-            <div id="sonifyControl">
-                <div>
-                    <button id="sonifyFrame" disabled>Sonify Frame</button>
-                    <button id="sonifyVideo" disabled>Sonify Video</button>
                 </div>
             </div>
             <div class="optionWrapper">
