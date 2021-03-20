@@ -20,3 +20,25 @@ brew install fluid-synth
 ```bash
 apt install fluidsynth
 ```
+
+### Running from source
+
+To download the source and install all NPM packages required to run the application.
+
+```bash
+git clone https://github.com/sixteenmillimeter/spiritsInObjects.git
+cd spiritsInObjects
+npm install
+```
+
+To start it.
+
+```bash
+npm start
+```
+
+Alternately run all build scripts and start with Chrome Dev Tools open.
+
+```bash
+npm run dev
+```
