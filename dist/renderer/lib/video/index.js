@@ -220,6 +220,11 @@ class Video {
                 }
                 return false;
             });
+            if (typeof videoStream.duration === 'undefined') {
+                if (typeof args.format !== 'undefined' && typeof args.format.duration !== 'undefined') {
+                    videoStream.duration = args.format.duration;
+                }
+            }
             fpsRaw = videoStream.r_frame_rate;
             secondsRaw = videoStream.duration;
             this.framerate = this.parseFps(fpsRaw);
