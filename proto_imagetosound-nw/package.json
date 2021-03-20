@@ -9,10 +9,9 @@
   "author": "cdom",
   "license": "MIT",
   "window": {
-	"toolbar": "true",
-	"resizeable": "true",
-	"width": 1200,
-	"height": 800
-	
+  	"toolbar": "true",
+  	"resizeable": "true",
+  	"width": 1200,
+  	"height": 800
 	}
 }

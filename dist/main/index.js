@@ -118,7 +118,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     }
     sonify = new sonifyNode_1.SonifyNode(args.state);
     if (args.state.type === 'video') {
-        hash = hashStr(args.state.files[0] + `_${args.state.start}_${args.state.end}`);
+        hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
         if (typeof CACHE[hash] !== 'undefined') {
             //return cached audio
             endTime = +new Date();
@@ -130,7 +130,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         frameStart = +new Date();
         if (args.state.type === 'video') {
             try {
-                filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.files[0], i);
+                filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.filePath, i);
             }
             catch (err) {
                 console.error(err);
@@ -138,7 +138,9 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             }
         }
         else if (args.state.type === 'still') {
-            filePath = args.state.files[i];
+            filePath = args.state.filePath;
+        }
+        else if (args.state.type === 'dir') {
         }
         try {
             tmpExists = await fs_extra_1.pathExists(filePath);
@@ -177,7 +179,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             return false;
         }
     }
-    console.log(`All frames exported and sonified for ${args.state.files[0]}`);
+    console.log(`All frames exported and sonified for ${args.state.filePath}`);
     wav.fromScratch(1, args.state.samplerate, '32f', arr);
     console.log('Created wav from raw sample data');
     tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
@@ -208,7 +210,7 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     let res = {};
     if (args.type === 'video') {
         try {
-            res = await ffmpeg_1.ffmpeg.info(args.files[0]);
+            res = await ffmpeg_1.ffmpeg.info(args.filePath);
         }
         catch (err) {
             console.error(err);
@@ -216,12 +218,15 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     }
     else if (args.type === 'still') {
         try {
-            res = await ffmpeg_1.ffmpeg.info(args.files[0]); //for now
+            res = await ffmpeg_1.ffmpeg.info(args.filePath); //for now
         }
         catch (err) {
             console.error(err);
         }
-        res.frames = args.files.length;
+        res.frames = 1;
+    }
+    else if (args.type === 'dir') {
+        process.exit();
     }
     res.type = args.type;
     mainWindow.webContents.send('info', res);

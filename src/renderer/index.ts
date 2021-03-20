@@ -30,7 +30,7 @@ let f : Files;
 
  async function confirm (message : string) {
     const config = {
-        buttons : ['Yes', 'Cancel'],
+        buttons : ['Yes', 'No'],
         message
     };
     const res = await dialog.showMessageBox(config);
@@ -179,10 +179,11 @@ class Files {
         let ext : string;
         let valid : boolean = true;
         let displayName : string;
+        let filePath : string;
         let type : string = 'video';
         let stats : any;
 
-        console.dir(files);
+        
 
         try {
             stats = await lstat(files[0]);
@@ -192,7 +193,6 @@ class Files {
 
         if (stats.isDirectory()) {
             type = 'dir';
-            files = this.getDir(files[0]);
         } else {
             files = files.filter((file : string) => {
                 ext = extname(file.toLowerCase());
@@ -213,51 +213,22 @@ class Files {
         }
 
         if (files.length === 1) {
-            ext = extname(files[0].toLowerCase());
+            filePath = files[0];
+            ext = extname(filePath.toLowerCase());
             if (stillExtensions.indexOf(ext) > -1) {
                 type = 'still';
             }
-        } else if (files.length > 1) {
-            console.dir(files)
         }
 
-        displayName = video.set(files, type);
-        ipcRenderer.send('info', { files, type } );
+        displayName = video.set(filePath, type);
+        ipcRenderer.send('info', { filePath, type } );
 
-        state.set('files', files );
+        state.set('filePath', filePath );
         state.set('type', type );
 
         elem.value = displayName;
 
         sonifyStart();
-    }
-
-    public async getDir (dir : string) {
-        let files : any;
-        let ext : string;
-
-        try {
-            files = await readdir(dir);
-        } catch (err) {
-            console.error(err);
-            return [];
-        }
-
-        files.sort();
-
-        files = files.map((fileName : string) => {
-            return join(dir, fileName);
-        });
-
-        files = files.filter((file : string) => {
-            ext = extname(file.toLowerCase());
-            if (stillExtensions.indexOf(ext) > -1) {
-                return true;
-            }
-            return false;
-        });
-
-        return files;
     }
 
     public async save (filePath : string) {

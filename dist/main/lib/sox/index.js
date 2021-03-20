@@ -46,6 +46,29 @@ class sox {
             '48k'
         ];
         try {
+            console.log(`${bin} ${args.join(' ')}`);
+            await spawnAsync(bin, args);
+        }
+        catch (err) {
+            console.error(`${bin} ${args.join(' ')}`);
+            throw err;
+        }
+        return output;
+    }
+    /**
+     * Resample audio to precise samplerate and merge down to mono.
+     **/
+    static async resample(input, output, sampleRate) {
+        const args = [
+            input,
+            '--norm',
+            output,
+            'remix', `1-2`,
+            'rate',
+            `${sampleRate}`
+        ];
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
             await spawnAsync(bin, args);
         }
         catch (err) {

@@ -32,7 +32,7 @@ class representing image sonification of a canvas element
     * [.sonifyCanvas()](#Sonify+sonifyCanvas) ⇒ <code>array</code>
     * [.sonify(imageData)](#Sonify+sonify) ⇒ <code>array</code>
     * [.brightness(r, g, b)](#Sonify+brightness) ⇒ <code>number</code>
-    * [.map_range(value, low1, high1, low2, high2)](#Sonify+map_range)
+    * [.map_range(value, low1, high1, low2, high2)](#Sonify+map_range) ⇒ <code>number</code>
     * [.getSample(row)](#Sonify+getSample)
     * [.envelope(original, envLen)](#Sonify+envelope)
 
@@ -71,7 +71,7 @@ Calculate the brightness of a pixel using channel multipliers
 
 <a name="Sonify+map_range"></a>
 
-### sonify.map\_range(value, low1, high1, low2, high2)
+### sonify.map\_range(value, low1, high1, low2, high2) ⇒ <code>number</code>
 Map a value from one range to a target range, implemented to mimic
 Processing map() function
 
@@ -106,5 +106,5 @@ Envelope an array of sample data in and out by n samples
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | original | <code>array</code> |  | Audio sample data to fade |
-| envLen | <code>number</code> | <code>30</code> | Length of fades in sample |
+| envLen | <code>number</code> | <code>30</code> | Length of envelope on either end |
 

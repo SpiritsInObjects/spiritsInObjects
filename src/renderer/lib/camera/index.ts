@@ -5,7 +5,7 @@ interface DeviceInfo {
 }
 
 class Camera {
-    private video : Video
+    private video : Video;
     private select : HTMLSelectElement;
     private stream : any;
     constructor (video : Video) {

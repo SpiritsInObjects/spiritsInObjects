@@ -34,9 +34,11 @@ class Fluidsynth {
         this.checkInstallation();
     }
     async checkInstallation() {
+        const args = ['--help'];
         let res;
         try {
-            res = await spawnAsync(this.bin, ['--help']);
+            console.log(`${this.bin} ${args.join(' ')}`);
+            res = await spawnAsync(this.bin, args);
         }
         catch (err) {
             if (err.errno === 'ENOENT') {

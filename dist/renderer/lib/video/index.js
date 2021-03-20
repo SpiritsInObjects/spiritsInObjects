@@ -1,5 +1,7 @@
 'use strict';
 const Timecode = require('smpte-timecode');
+const { basename } = require('path');
+const { readdir } = require('fs-extra');
 /** class representing video features */
 class Video {
     /**
@@ -34,6 +36,7 @@ class Video {
         this.frames = 0;
         this.samplerate = 48000;
         this.type = 'video';
+        this.frameArr = [];
         this.interval = null;
         this.playing = false;
         this.streaming = false;
@@ -55,8 +58,8 @@ class Video {
      * Restore the apps saved state to the video UI
      */
     restoreState() {
-        let files = this.state.get('files');
-        if (files && files.length > 0) {
+        let filePath = this.state.get('filePath');
+        if (filePath && filePath.length > 0) {
             this.framerate = this.state.get('framerate');
             this.frames = this.state.get('frames');
             this.width = this.state.get('width');
@@ -64,9 +67,11 @@ class Video {
             this.samplerate = this.state.get('samplerate');
             this.type = this.state.get('type');
             this.ui.updateSliders(this.width, this.height);
-            this.file(files[0], this.type);
-            this.displayName = files[0].split('/').pop();
+            this.file(filePath, this.type);
+            this.displayName = basename(filePath);
             this.displayInfo();
+            this.sonifyFrameBtn.removeAttribute('disabled');
+            this.sonifyVideoBtn.removeAttribute('disabled');
         }
     }
     closestFramerate(framerate) {
@@ -105,7 +110,7 @@ class Video {
      *
      * @param {string} filePath Path to video file
      */
-    file(filePath, type) {
+    async file(filePath, type) {
         if (type === 'video') {
             this.source = document.createElement('source');
             this.source.setAttribute('src', filePath);
@@ -136,6 +141,39 @@ class Video {
                 console.error(err);
             }
         }
+        else if (type === 'dir') {
+            this.stillLoader = new Image();
+            this.current.value = '0';
+            this.stillLoader.onload = this.onloadstartstill.bind(this);
+            try {
+                this.frameArr = await this.getFrames(filePath);
+            }
+            catch (err) {
+                console.error(err);
+            }
+            this.still.setAttribute('src', this.frameArr[0]);
+            this.stillLoader.setAttribute('src', this.frameArr[0]);
+            this.element.classList.add('hide');
+            try {
+                this.still.classList.remove('hide');
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
+    }
+    async getFrames(filePath) {
+        let frames = [];
+        try {
+            frames = await readdir(filePath);
+        }
+        catch (err) {
+            throw err;
+        }
+        frames = frames.map((fileName) => {
+            return join(filePath, fileName);
+        });
+        return frames;
     }
     onloadstart() {
         this.width = this.element.videoWidth;
@@ -204,6 +242,7 @@ class Video {
         this.state.set('type', this.type);
         this.displayInfo();
         this.sonifyFrameBtn.disabled = false;
+        this.sonifyVideoBtn.disabled = false;
     }
     displayInfo() {
         const start = this.state.get('start');
@@ -257,10 +296,10 @@ class Video {
     playButtonOnClick(evt) {
         this.play();
     }
-    set(pathStr, type) {
-        const displayName = pathStr.split('/').pop();
+    set(filePath, type) {
+        const displayName = basename(filePath);
         console.log(`Selected file ${displayName}`);
-        this.file(pathStr, type);
+        this.file(filePath, type);
         this.displayName = displayName;
         return displayName;
     }

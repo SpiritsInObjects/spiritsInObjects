@@ -12,7 +12,7 @@
                 <button id="sonifyBtn" class="pageBtn active"></button>
                 <label>Sonify</label>
             </div>
-            <div class="wrapper">
+            <div class="wrapper hide">
                 <button id="visualizeBtn" class="pageBtn"></button>
                 <label>Visualize</label>
             </div>
@@ -66,7 +66,7 @@
                     <select id="videoSource" class="hide" required title="Select a camera video source" disabled>
                         <option disabled selected value="">Camera</option>
                     </select>
-                    
+
                     <!--
                     <button id="clear">Clear</button>
                     -->
@@ -109,6 +109,7 @@
         <script src="../contrib/Tone.js"></script>
         <script src="../contrib/midi.js"></script>
         <script src="../contrib/spin.js"></script>
+        <script src="../contrib/peaks.js"></script>
         <script src="../renderer/lib/state/index.js"></script>
         <script src="../renderer/lib/spinner/index.js"></script>
         <script src="../renderer/lib/video/index.js"></script>

@@ -96,6 +96,8 @@ class Sonify {
      * @param {number} high1 High of initial scale
      * @param {number} low2 Low of target scale
      * @param {number} high2 High of target scale
+     *
+     * @returns {number}
      */
     private map_range (value : number, low1 : number, high1 : number, low2 : number, high2 : number) : number {
         return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
@@ -119,7 +121,7 @@ class Sonify {
      * Envelope an array of sample data in and out by n samples
      * 
      * @param {array} original Audio sample data to fade
-     * @param {number} envLen Length of fades in sample
+     * @param {number} envLen Length of envelope on either end
      */
     public envelope (original : Float32Array, envLen : number = 30) : Float32Array {
         const len : number = original.length;

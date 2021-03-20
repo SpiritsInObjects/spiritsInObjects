@@ -143,7 +143,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	sonify = new SonifyNode(args.state);
 
 	if (args.state.type === 'video') {
-		hash = hashStr(args.state.files[0] + `_${args.state.start}_${args.state.end}`);
+		hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
 		if (typeof CACHE[hash] !== 'undefined') {
 			//return cached audio
 			endTime = +new Date();
@@ -155,15 +155,16 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	for (i = 0; i < args.state.frames; i++) {
 		frameStart = +new Date();
 		if (args.state.type === 'video') {
-			
 			try {
-				filePath = await ffmpeg.exportFrame(args.state.files[0], i);
+				filePath = await ffmpeg.exportFrame(args.state.filePath, i);
 			} catch (err) {
 				console.error(err);
 				continue;
 			}
 		} else if (args.state.type === 'still' ) {
-			filePath = args.state.files[i];
+			filePath = args.state.filePath;
+		} else if (args.state.type === 'dir') {
+
 		}
 
 		try {
@@ -210,7 +211,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		}
 	}
 
-	console.log(`All frames exported and sonified for ${args.state.files[0]}`)
+	console.log(`All frames exported and sonified for ${args.state.filePath}`);
 
 	wav.fromScratch(1, args.state.samplerate, '32f', arr);
 
@@ -248,17 +249,19 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 	let res : any = {};
 	if (args.type === 'video') {
 		try {
-			res = await ffmpeg.info(args.files[0]);
+			res = await ffmpeg.info(args.filePath);
 		} catch (err) {
 			console.error(err)
 		}
 	} else if (args.type === 'still') {
 		try {
-			res = await ffmpeg.info(args.files[0]); //for now
+			res = await ffmpeg.info(args.filePath); //for now
 		} catch (err) {
 			console.error(err)
 		}
-		res.frames = args.files.length;
+		res.frames = 1;
+	} else if (args.type === 'dir') {
+		process.exit()
 	}
 	res.type = args.type;
 	mainWindow.webContents.send('info', res);

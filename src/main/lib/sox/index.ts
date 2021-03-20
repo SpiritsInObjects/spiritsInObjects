@@ -38,7 +38,7 @@ async function spawnAsync (bin : string, args : string[]) {
 //sox audio.wav audio-clean.wav noisered noise.prof 0.21
 
 export class sox {
-    static async postProcess (input : string, output : string) {
+    static async postProcess (input : string, output : string) : Promise<string> {
         const args : string[] = [
             input,
             '--norm',
@@ -50,6 +50,31 @@ export class sox {
         ];
 
         try {
+            console.log(`${bin} ${args.join(' ')}`);
+            await spawnAsync(bin, args);
+        } catch (err) {
+            console.error(`${bin} ${args.join(' ')}`);
+            throw err
+        }
+
+        return output;
+    }
+
+    /**
+     * Resample audio to precise samplerate and merge down to mono.
+     **/
+    static async resample (input : string, output : string, sampleRate : number) : Promise<string> {
+        const args : string[] = [
+            input,
+            '--norm',
+            output,
+            'remix', `1-2`,
+            'rate',
+            `${sampleRate}`
+        ];
+
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
             await spawnAsync(bin, args);
         } catch (err) {
             console.error(`${bin} ${args.join(' ')}`);

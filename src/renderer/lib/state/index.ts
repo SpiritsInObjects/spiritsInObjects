@@ -6,7 +6,7 @@ const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra')
 
 interface StateStorage {
     [key: string]: any;
-    files? : string[];
+    filePath? : string[];
     type? : string;
     camera? : string;
     start? : number;

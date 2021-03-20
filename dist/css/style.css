@@ -236,6 +236,11 @@ body {
   display: block;
   margin: 0 auto;
 }
+input[type=text],
+input[type=number],
+input[type=submit] {
+  width: 120px;
+}
 select,
 input[type=text],
 input[type=number],
@@ -254,7 +259,7 @@ textarea,
   padding: 0px 10px;
   box-sizing: border-box;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   background: transparent;
 }
 input[type=text],
@@ -281,15 +286,19 @@ textarea:active,
 .info:active {
   background: #f6f6f7;
 }
-textarea,
-.info {
-  padding: 10px;
+.info div,
+.info div span {
+  font-family: monospace;
+}
+.info:active {
+  background: #cbcccf;
 }
 select {
   text-align-last: center;
 }
 textarea,
 .info {
+  text-align: left;
   width: 492px;
   height: 220px;
   padding: 10px;

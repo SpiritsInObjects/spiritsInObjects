@@ -24,7 +24,7 @@ let dnd;
 let f;
 async function confirm(message) {
     const config = {
-        buttons: ['Yes', 'Cancel'],
+        buttons: ['Yes', 'No'],
         message
     };
     const res = await dialog.showMessageBox(config);
@@ -161,9 +161,9 @@ class Files {
         let ext;
         let valid = true;
         let displayName;
+        let filePath;
         let type = 'video';
         let stats;
-        console.dir(files);
         try {
             stats = await fs_extra_1.lstat(files[0]);
         }
@@ -172,7 +172,6 @@ class Files {
         }
         if (stats.isDirectory()) {
             type = 'dir';
-            files = this.getDir(files[0]);
         }
         else {
             files = files.filter((file) => {
@@ -191,43 +190,18 @@ class Files {
             return false;
         }
         if (files.length === 1) {
-            ext = path_1.extname(files[0].toLowerCase());
+            filePath = files[0];
+            ext = path_1.extname(filePath.toLowerCase());
             if (stillExtensions.indexOf(ext) > -1) {
                 type = 'still';
             }
         }
-        else if (files.length > 1) {
-            console.dir(files);
-        }
-        displayName = video.set(files, type);
-        ipcRenderer.send('info', { files, type });
-        state.set('files', files);
+        displayName = video.set(filePath, type);
+        ipcRenderer.send('info', { filePath, type });
+        state.set('filePath', filePath);
         state.set('type', type);
         elem.value = displayName;
         sonifyStart();
-    }
-    async getDir(dir) {
-        let files;
-        let ext;
-        try {
-            files = await fs_extra_1.readdir(dir);
-        }
-        catch (err) {
-            console.error(err);
-            return [];
-        }
-        files.sort();
-        files = files.map((fileName) => {
-            return path_1.join(dir, fileName);
-        });
-        files = files.filter((file) => {
-            ext = path_1.extname(file.toLowerCase());
-            if (stillExtensions.indexOf(ext) > -1) {
-                return true;
-            }
-            return false;
-        });
-        return files;
     }
     async save(filePath) {
         const options = {

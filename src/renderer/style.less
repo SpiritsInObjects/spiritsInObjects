@@ -264,6 +264,11 @@ body{
 		margin: 0 auto;
 	}
 }
+input[type=text],
+input[type=number],
+input[type=submit]{
+	width: 120px;
+}
 select,
 input[type=text],
 input[type=number],
@@ -282,7 +287,7 @@ textarea,
 	padding: 0px 10px;
 	box-sizing: border-box;
 	cursor: pointer;
-	text-align: left;
+	text-align: center;
 	background: transparent;
 }
 input[type=text],
@@ -306,9 +311,14 @@ textarea,
 		background: lighten(#cecdd3, 15%);
 	}
 }
-textarea,
-.info{
-	padding: 10px;
+.info {
+	div,
+	div span{
+		font-family: monospace;
+	}
+	&:active{
+		background: @inputBg;
+	}
 }
 select{
 	text-align-last: center;
@@ -316,6 +326,8 @@ select{
 
 textarea,
 .info{
+	padding: 10px;
+	text-align: left;
 	width: 492px;
 	height: 220px;
 	padding: 10px;

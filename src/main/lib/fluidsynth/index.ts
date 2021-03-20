@@ -36,16 +36,18 @@ class Fluidsynth {
 	public installed : boolean = false;
 	private bin : string = 'fluidsynth';
 	private soundFont : string = './dist/contrib/Scc1t2.sf2';
-	
+
 	constructor () {
 		this.checkInstallation();
 	}
 
 	private async checkInstallation () {
+		const args : string[] = [ '--help' ];
 		let res : ProcessOutput;
 
 		try {
-			res = await spawnAsync(this.bin, [ '--help' ]);
+			console.log(`${this.bin} ${args.join(' ')}`);
+			res = await spawnAsync(this.bin, args);
 		} catch (err) {
 			if (err.errno === 'ENOENT') {
 				this.installed = false;
