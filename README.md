@@ -2,6 +2,8 @@
 
 This is an app that sonifies images and visualizes sound as an aide in creating optical sound films.
 
+Built off the work by [Carlos Dominguez](https://github.com/carlosdominguez) in the original project: [spiritsInObjects](https://github.com/carlosdominguez/spiritsInObjects).
+
 
 ### Dependencies
 

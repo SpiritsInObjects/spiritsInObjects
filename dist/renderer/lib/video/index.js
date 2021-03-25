@@ -140,26 +140,6 @@ class Video {
                 console.error(err);
             }
         }
-        else if (type === 'dir') {
-            this.stillLoader = new Image();
-            this.current.value = '0';
-            this.stillLoader.onload = this.onloadstartstill.bind(this);
-            try {
-                //this.frameArr = await this.getFrames(filePath);
-            }
-            catch (err) {
-                console.error(err);
-            }
-            this.still.setAttribute('src', this.frameArr[0]);
-            this.stillLoader.setAttribute('src', this.frameArr[0]);
-            this.element.classList.add('hide');
-            try {
-                this.still.classList.remove('hide');
-            }
-            catch (err) {
-                console.error(err);
-            }
-        }
     }
     onloadstart() {
         this.width = this.element.videoWidth;

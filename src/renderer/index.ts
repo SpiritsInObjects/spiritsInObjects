@@ -130,7 +130,7 @@ class Files {
     public async select () {
         const options : any = {
             title: `Select video or image sequence`,
-            properties: [`openFile`, `openDirectory`],
+            properties: [`openFile`],
             defaultPath: 'c:/',
             filters: [
                 {
@@ -142,30 +142,6 @@ class Files {
         let files : any;
         let proceed : boolean = false;
         let filePaths : string[] = [];
-
-        const linuxMessage : string = `Do you want to use a single file (video or still image) or a folder containing an image sequence?`;
-        const linuxChoices : string[] = ['File', 'Folder', 'Cancel'];
-        const config : any = {
-            buttons : linuxChoices,
-            message : linuxMessage
-        };
-        let linuxChoice : any;
-
-        if (process.platform === 'linux') {
-            try {
-                linuxChoice = await dialog.showMessageBox(config);
-            } catch (err) {
-                console.error(err);
-                return false;
-            }
-            if (linuxChoice.response === 0) {
-                options.properties = ['openFile'];
-            } else if (linuxChoice.response === 1) {
-                options.properties = ['openDirectory'];
-            } else {
-                return false;
-            }
-        }
         
         try {
             files = await dialog.showOpenDialog(options);
@@ -201,17 +177,13 @@ class Files {
             return false;
         }
 
-        if (stats.isDirectory()) {
-            type = 'dir';
-        } else {
-            files = files.filter((file : string) => {
-                ext = extname(file.toLowerCase());
-                if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
-                    return true;
-                }
-                return false;
-            });
-        }
+        files = files.filter((file : string) => {
+            ext = extname(file.toLowerCase());
+            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+                return true;
+            }
+            return false;
+        });
 
         if (files.length === 0) {
             valid = false;

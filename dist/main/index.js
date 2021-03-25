@@ -140,8 +140,6 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         else if (args.state.type === 'still') {
             filePath = args.state.filePath;
         }
-        else if (args.state.type === 'dir') {
-        }
         try {
             tmpExists = await fs_extra_1.pathExists(filePath);
         }
@@ -224,9 +222,6 @@ electron_1.ipcMain.on('info', async (evt, args) => {
             console.error(err);
         }
         res.frames = 1;
-    }
-    else if (args.type === 'dir') {
-        process.exit();
     }
     res.type = args.type;
     mainWindow.webContents.send('info', res);

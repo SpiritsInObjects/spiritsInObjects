@@ -80,6 +80,7 @@ class VisualizeMidi {
             }
         }
     }
+
     buildNote (track : number, pitch : number, ms : number) {
         const frameRaw : number = ms / this.frameLength;
         const frameCount : number = Math.round(frameRaw);
@@ -95,7 +96,8 @@ class VisualizeMidi {
         }
         return frames;
     }
-    frame (lines : number) {
+
+    frame ( lines : number ) {
         const segment : number = this.height / lines;
         const thickness : number = Math.floor(segment / 2);
         let position : number;

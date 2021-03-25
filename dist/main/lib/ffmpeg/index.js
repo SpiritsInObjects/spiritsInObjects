@@ -87,7 +87,7 @@ class ffmpeg {
             catch (err) {
                 console.error(err);
                 console.log(line);
-                process.exit();
+                process.exit(1);
             }
         }
         else {

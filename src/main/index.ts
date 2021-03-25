@@ -163,8 +163,6 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 			}
 		} else if (args.state.type === 'still' ) {
 			filePath = args.state.filePath;
-		} else if (args.state.type === 'dir') {
-
 		}
 
 		try {
@@ -260,8 +258,6 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 			console.error(err)
 		}
 		res.frames = 1;
-	} else if (args.type === 'dir') {
-		process.exit()
 	}
 	res.type = args.type;
 	mainWindow.webContents.send('info', res);

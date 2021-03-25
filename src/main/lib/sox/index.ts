@@ -54,7 +54,7 @@ export class sox {
             await spawnAsync(bin, args);
         } catch (err) {
             console.error(`${bin} ${args.join(' ')}`);
-            throw err
+            throw err;
         }
 
         return output;
