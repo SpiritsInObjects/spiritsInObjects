@@ -4,15 +4,17 @@ class VisualizeMidi {
         this.fps = 24;
         this.frameLength = 1000 / this.fps;
         this.frame_h = 7.62;
-        this.width = 720;
-        this.height = 405;
+        this.width = 1920;
+        this.height = 1080;
         this.state = state;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
         this.ctx.scale(1, 1);
         this.filePath = filePath;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        this.setFormat(this.width, this.height);
+    }
+    set(filePath) {
+        this.filePath = filePath;
     }
     async decode() {
         let midi;
@@ -30,7 +32,7 @@ class VisualizeMidi {
             throw err;
         }
         this.name = midi.name;
-        msMultiplier = (60000 / parseFloat(midi.header.tempos[0].bpm)) * 4;
+        msMultiplier = (60000.0 / parseFloat(midi.header.tempos[0].bpm)) * 4.0;
         this.duration = midi.duration * 1000;
         this.frameCount = Math.ceil(this.duration / this.frameLength);
         this.frames = new Array(this.frameCount);
@@ -72,6 +74,13 @@ class VisualizeMidi {
         }
         return frames;
     }
+    display(frameNumber) {
+        let lines;
+        if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
+        }
+        lines = Math.round(this.frames[frameNumber].pitch / 24.0);
+        this.frame(lines);
+    }
     frame(lines) {
         const segment = this.height / lines;
         const thickness = Math.floor(segment / 2);
@@ -87,6 +96,14 @@ class VisualizeMidi {
             this.ctx.lineTo(this.width, position);
             this.ctx.stroke();
         }
+    }
+    setFormat(width, height) {
+        this.width = width;
+        this.height = height;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.state.set('vWidth', this.width);
+        this.state.set('vHeight', this.height);
     }
 }
 //# sourceMappingURL=index.js.map

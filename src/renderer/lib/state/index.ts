@@ -17,7 +17,6 @@ interface StateStorage {
     height? : number;
     samplerate? : number;
 
-    visualize? : string[];
     vHeight? : number;
     vWidth? : number;
 

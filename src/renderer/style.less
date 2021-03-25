@@ -193,13 +193,15 @@ body{
     }
 }
 
-#theatre{
+#theatre,
+#vTheatre{
 	background : #000;
 	width: @videoWidth;
 	height: @videoHeight;
 	margin: 4px auto 2px;
 	position: relative;
 	box-shadow: 0px 0px 4px rgba(0, 0, 20, 0.3);
+	overflow: hidden;
 }
 
 #video {
@@ -221,6 +223,11 @@ body{
 	background: #000;
 	position: absolute;
 	margin: -10000px -10000px;
+}
+#vCanvas{
+	background: #000;
+	width: 1920px;
+	height: 1080px;
 }
 
 #startSelect,

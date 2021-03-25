@@ -14,8 +14,8 @@ class VisualizeMidi {
     private frameLength : number = 1000 / this.fps;
     private frame_h : number = 7.62;
 
-    private width : number = 720;
-    private height : number = 405;
+    private width : number = 1920;
+    private height : number = 1080;
 
     private duration : number; //ms
     private frameCount : number;
@@ -26,11 +26,14 @@ class VisualizeMidi {
         this.ctx = this.canvas.getContext('2d');
         this.ctx.scale(1, 1);
         this.filePath = filePath;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
+        this.setFormat(this.width, this.height);
     }
 
-    async decode () {
+    public set (filePath : string) {
+        this.filePath = filePath;
+    }
+
+    public async decode () {
         let midi : any;
         let msMultiplier : number;
         let pitch : number;
@@ -48,7 +51,7 @@ class VisualizeMidi {
         
         this.name = midi.name;
     
-        msMultiplier = (60000 / parseFloat(midi.header.tempos[0].bpm)) * 4;
+        msMultiplier = (60000.0 / parseFloat(midi.header.tempos[0].bpm)) * 4.0;
         
         this.duration = midi.duration * 1000;
         this.frameCount = Math.ceil(this.duration / this.frameLength);
@@ -97,6 +100,15 @@ class VisualizeMidi {
         return frames;
     }
 
+    public display (frameNumber : number) {
+        let lines : number;
+        if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
+
+        }
+        lines = Math.round(this.frames[frameNumber].pitch / 24.0);
+        this.frame(lines);
+    }
+
     frame ( lines : number ) {
         const segment : number = this.height / lines;
         const thickness : number = Math.floor(segment / 2);
@@ -115,4 +127,13 @@ class VisualizeMidi {
             this.ctx.stroke();
         }
     } 
+
+    public setFormat (width : number, height : number) {
+        this.width = width;
+        this.height = height;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.state.set('vWidth', this.width);
+        this.state.set('vHeight', this.height);
+    }
 }

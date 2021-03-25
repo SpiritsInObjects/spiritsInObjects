@@ -30,9 +30,5 @@ class Visualize {
         }
         this.frame++;
     }
-    renderMidi(frameNo) {
-    }
-    renderAudio(frameNo) {
-    }
 }
 //# sourceMappingURL=index.js.map

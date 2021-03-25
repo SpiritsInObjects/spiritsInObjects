@@ -35,12 +35,4 @@ class Visualize {
         }
         this.frame++;
     }
-
-    private renderMidi(frameNo : number) {
-
-    }
-
-    private renderAudio(frameNo : number) {
-
-    }
 }

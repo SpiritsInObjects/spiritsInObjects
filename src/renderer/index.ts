@@ -11,7 +11,8 @@ const humanizeDuration = require('humanize-duration');
 
 const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
-const audioExtensions : string[] = ['.mid', '.midi']; //'.wav', '.mp3', '.ogg', '.flac'
+const midiExtensions : string[] = ['.mid', '.midi'];
+const audioExtensions : string[] = ['.wav', '.wave'];
 let startMoving : boolean = false;
 let endMoving : boolean = false;
 
@@ -103,7 +104,7 @@ class DragDrop {
             } catch (err) {
                 console.error(err);
             }
-            f.set(paths);
+            f.determineProcess(paths[0]);
 
         }
         this.leave(evt);
@@ -140,8 +141,7 @@ class Files {
             ]
         };
         let files : any;
-        let proceed : boolean = false;
-        let filePaths : string[] = [];
+        let filePath : string;
         
         try {
             files = await dialog.showOpenDialog(options);
@@ -153,40 +153,28 @@ class Files {
             return false;
         }
 
-        for (let file of files.filePaths) {
-            filePaths.push(file);
-        }
+        filePath = files[0];
 
-        this.set(filePaths);
+        this.determineProcess(filePath);
     }
 
-    public async set (files : any) {
-        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
-        let ext : string;
+
+    public async determineProcess (filePath : string) {
         let valid : boolean = true;
-        let displayName : string;
-        let filePath : string;
         let type : string = 'video';
         let stats : any;
-
-        
+        let ext : string;
 
         try {
-            stats = await lstat(files[0]);
+            stats = await lstat(filePath);
         } catch (err) {
+            console.error(err);
             return false;
         }
 
-        files = files.filter((file : string) => {
-            ext = extname(file.toLowerCase());
-            if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
-                return true;
-            }
-            return false;
-        });
-
-        if (files.length === 0) {
-            valid = false;
+        ext = extname(filePath.toLowerCase());
+        if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+            valid = true
         }
 
         if (!valid) {
@@ -194,13 +182,26 @@ class Files {
             return false;
         }
 
-        if (files.length === 1) {
-            filePath = files[0];
-            ext = extname(filePath.toLowerCase());
-            if (stillExtensions.indexOf(ext) > -1) {
-                type = 'still';
-            }
+        if (stillExtensions.indexOf(ext) > -1) {
+            type = 'still';
+        } else if (audioExtensions.indexOf(ext) > -1) {
+            type = 'audio';
+        } else if (midiExtensions.indexOf(ext) > -1) {
+            type = 'midi';
         }
+
+        if (type === 'video' || type === 'still') {
+            ui.page('sonify');
+            this.setSonify(filePath, type);
+        } else if (type === 'audio' || type === 'midi') {
+            ui.page('visualize');
+            this.setVisualize(filePath, type);
+        }        
+    }
+
+    public async setSonify (filePath : string, type : string ) {
+        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
+        let displayName : string;
 
         displayName = video.set(filePath, type);
         ipcRenderer.send('info', { filePath, type } );
@@ -211,6 +212,15 @@ class Files {
         elem.value = displayName;
 
         sonifyStart();
+    }
+
+    public async setVisualize (filePath : string, type : string) {
+        const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
+        let displayName : string;
+        state.set('filePath', filePath );
+        state.set('type', type);
+        
+        visualizeStart();
     }
 
     public async save (filePath : string) {
@@ -350,6 +360,10 @@ function sonifyFrame () {
     }, 42);
 }
 
+async function visualizeStart () {
+
+}
+
 function playSync () {
     video.play();
     //audio.play();
@@ -404,60 +418,6 @@ function bindListeners () {
  * VISUALIZE
  **/
 
-async function vFileSelect () {
-    return;
-    const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
-    const options : any = {
-        title: `Select MIDI file`,
-        properties: [`openFile`],
-        defaultPath: 'c:/',
-        filters: [
-            {
-                name: 'MIDI files',
-                extensions: audioExtensions
-            }
-        ]
-    }
-    let files : any;
-    let valid : boolean = false;
-    let proceed : boolean = false;
-    let filePath : string;
-    let displayName : string;
-    let ext : string;
-
-    try {
-        files = await dialog.showOpenDialog(options);
-    } catch (err ) {
-        console.error(err)
-    }
-
-    if (!files || !files.filePaths || files.filePaths.length === 0) {
-        return false;
-    }
-
-    filePath = files.filePaths[0];
-
-    if (filePath && filePath !== '') {
-        ext = extname(filePath.toLowerCase());
-        valid = audioExtensions.indexOf(ext) === -1 ? false : true;
-
-        if (!valid) {
-            console.log(`Cannot select file ${filePath} is invald`)
-            return false;
-        }
-
-        //displayName = video.set(filePath, null);
-        ipcRenderer.send('midi', { filePath } );
-
-        state.set('visualize', [ filePath ]);
-
-        visualizeStart();
-    }
-}
-
-function visualizeStart () {
-    
-}
 
 (async function main () {
 

@@ -57,6 +57,8 @@ export default class UI {
     public onSelectionChange : Function;
     public overlay : Overlay;
 
+    public currentPage : string = 'sonify';
+
     constructor (state : State) {
         this.state = state;
 
