@@ -317,6 +317,10 @@ function sonifyFrame() {
     }, 42);
 }
 async function visualizeStart() {
+    if (state.get('type') === 'midi') {
+        await visualize.processMidi();
+        visualize.decodeMidi(0);
+    }
 }
 function playSync() {
     video.play();
@@ -393,7 +397,7 @@ function bindListeners() {
     ui = new UI(state);
     video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
+    sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
     visualize = new Visualize(state);
     bindListeners();
 })();

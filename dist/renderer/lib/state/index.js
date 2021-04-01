@@ -38,7 +38,7 @@ class State {
             }
         }
         try {
-            await this.restore();
+            //await this.restore();
         }
         catch (err) {
             throw err;

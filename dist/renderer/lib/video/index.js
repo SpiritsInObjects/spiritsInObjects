@@ -51,7 +51,7 @@ class Video {
         this.current.addEventListener('change', this.editFrame.bind(this));
         this.ui.onSelectionChange = this.displayInfo.bind(this);
         this.updateTimecodes(0, 0, 24);
-        this.restoreState();
+        //this.restoreState();
     }
     /**
      * Restore the apps saved state to the video UI
@@ -59,13 +59,13 @@ class Video {
     restoreState() {
         let filePath = this.state.get('filePath');
         let type = this.state.get('type');
-        if (filePath && filePath.length > 0 && type === 'still' || type === 'video') {
+        if (filePath && filePath.length > 0 && (type === 'still' || type === 'video')) {
             this.framerate = this.state.get('framerate');
             this.frames = this.state.get('frames');
             this.width = this.state.get('width');
             this.height = this.state.get('height');
             this.samplerate = this.state.get('samplerate');
-            this.type = this.state.get('type');
+            this.type = type;
             this.ui.updateSliders(this.width, this.height);
             this.file(filePath, this.type);
             this.displayName = basename(filePath);
@@ -222,6 +222,9 @@ class Video {
         const selection = Math.round((end - start) * this.width);
         const roundedRate = Math.floor(this.samplerate);
         const rough = this.samplerate - roundedRate > 0.0 ? '~' : '';
+        if (this.state.get('page') === 'visualize' || (this.state.get('type') === 'midi' || this.state.get('type') === 'audio')) {
+            return false;
+        }
         this.framesDisplay.innerHTML = String(this.frames);
         this.fpsDisplay.innerHTML = String(Math.round(this.framerate * 100) / 100);
         this.resolutionDisplay.innerHTML = `${this.width}x${this.height}`;
