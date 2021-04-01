@@ -170,7 +170,6 @@ body {
   margin: 4px auto 2px;
   position: relative;
   box-shadow: 0px 0px 4px rgba(0, 0, 20, 0.3);
-  overflow: hidden;
 }
 #video {
   height: 560px;
