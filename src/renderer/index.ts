@@ -367,7 +367,10 @@ function sonifyFrame () {
 }
 
 async function visualizeStart () {
-
+    if (state.get('type') === 'midi') {
+        await visualize.processMidi();
+        visualize.decodeMidi(0);
+    }
 }
 
 function playSync () {

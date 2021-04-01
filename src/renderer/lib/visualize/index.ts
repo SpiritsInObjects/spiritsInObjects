@@ -1,9 +1,12 @@
 'use strict';
 
-//import { basename } from 'path';
+const { Midi } = require('@tonejs/midi');
+const { Frequency } = require('tone');
 
 class Visualize {
     private state : State;
+
+    private tracksSelect : HTMLSelectElement;
 
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
@@ -26,6 +29,9 @@ class Visualize {
 
     private duration : number; //ms
     private frameCount : number;
+    private trackNo : number = 0;
+    private trackCount : number;
+    private tracksWithNotes : number[] = [];
 
     constructor (state : State) {
         this.state = state;
@@ -33,6 +39,7 @@ class Visualize {
         this.ctx = this.canvas.getContext('2d');
         this.display = document.getElementById('vCanvasDisplay') as HTMLCanvasElement;
         this.displayCtx = this.display.getContext('2d');
+        this.tracksSelect = document.getElementById('vTracks') as HTMLSelectElement;
         this.ctx.scale(1, 1);
         this.setFormat(this.width, this.height);
     }
@@ -44,23 +51,58 @@ class Visualize {
         return this.displayName;
     }
 
-    public async decode () {
+    private clearTracks () {
+
+    }
+
+    private showTracks () {
+        this.tracksSelect.
+    }
+
+    public async processMidi () {
+        let midi : any;
+
+        try {
+            midi = await Midi.fromUrl(this.filePath);
+        } catch (err) {
+            throw err;
+        }
+
+        this.tracksWithNotes = [];
+        this.clearTracks();
+
+        for (let i = 0; i < midi.tracks.length; i++) {
+            if (midi.tracks[i].notes.length === 0) {
+                continue;
+            }
+            this.tracksWithNotes.push(i);
+        }
+        console.log(`${midi.name} has ${this.tracksWithNotes.length} tracks with notes`);
+
+        this.showTracks();
+    }
+
+    public async decodeMidi (trackIndex : number = 0) {
         let midi : any;
         let msMultiplier : number;
         let pitch : number;
         let ms : number;
         let i : number = 0;
-        let tracks : any[] = [];
+        let notes : any[] = [];
         let frames : any[] = [];
+        let track : any;
+
+        this.trackNo = this.tracksWithNotes[trackIndex];
 
         try {
-            //@ts-ignore
             midi = await Midi.fromUrl(this.filePath);
         } catch (err) {
             throw err;
         }
         
         this.name = midi.name;
+        console.log(this.name);
+        console.log(`Decoding track ${this.trackNo}`);
     
         msMultiplier = (60000.0 / parseFloat(midi.header.tempos[0].bpm)) * 4.0;
         
@@ -68,31 +110,25 @@ class Visualize {
         this.frameCount = Math.ceil(this.duration / this.frameLength);
         this.frames = new Array(this.frameCount);
 
-        console.dir(midi);
         console.dir(midi.duration);
-        console.dir(midi.tracks);
         console.dir(this.frameCount);
 
-        midi.tracks.forEach(async (track : any) => {
-            if (track.notes.length === 0) {
-                return false;
-            }
-            tracks[i] = [];
-            for (let note of track.notes) {
-                //@ts-ignore
-                pitch = Math.round(Tone.Frequency(note.name) / this.fps);
-                ms = Math.round(1000 * parseFloat(note.duration));
-                frames = this.buildNote(i, pitch, ms);
-                tracks[i] = tracks[i].concat(frames);
-            }
-            i++;
-        });
-        for (let track of tracks) {
-            console.log(track.length + ' vs ' + this.frames.length);
-            for (let frame of frames) {
-                
-            }
+        track = midi.tracks[this.trackNo];
+        console.dir(track);
+
+        if (track.notes.length === 0) {
+            console.log('track does not contain any notes')
+            return false;
         }
+
+        for (let note of track.notes) {
+            pitch = Math.round(Frequency(note.name) / this.fps);
+            ms = Math.round(1000 * parseFloat(note.duration));
+            frames = this.buildNote(this.trackNo, pitch, ms);
+            notes[i] = frames;
+        }
+
+        console.dir(notes[i]);
     }
 
     private buildNote (track : number, pitch : number, ms : number) {
@@ -104,7 +140,8 @@ class Visualize {
         for (let i = 0; i < frameCount; i++) {
             frame = {
                 track,
-                pitch
+                pitch,
+                ms
             };
             frames.push(frame);
         }

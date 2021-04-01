@@ -1,5 +1,4 @@
 'use strict';
-const Peaks = require('peaks.js');
 /** class representing image sonification of a canvas element */
 class Sonify {
     /**
@@ -21,7 +20,6 @@ class Sonify {
         this.BLUE_MULTIPLIER = 0.11;
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
-        this.peaksInit(audioContext);
         if (state.get('framerate'))
             this.framerate = state.get('framerate');
         if (state.get('start'))
@@ -35,26 +33,6 @@ class Sonify {
         this.startLocation = Math.floor(this.width * this.start) * 4;
         this.endLocation = Math.floor(this.width * this.end) * 4;
         this.max = (Math.floor(this.width * this.end) - Math.floor(this.width * this.start)) * 255;
-    }
-    /**
-     *
-     **/
-    peaksInit(audioContext) {
-        const options = {
-            container: document.getElementById('sonifyPeaks'),
-            mediaElement: document.getElementById('sonifyPeaksAudio'),
-            webAudio: {
-                audioContext: audioContext
-            }
-        };
-        //@ts-ignore
-        Peaks.init(options, (err, peaks) => {
-            if (err) {
-                console.error(err);
-                return false;
-            }
-            this.peaks = peaks;
-        });
     }
     /**
      * Sonify's all image data in the canvas element

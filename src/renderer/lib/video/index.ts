@@ -79,7 +79,7 @@ class Video {
         this.ui.onSelectionChange = this.displayInfo.bind(this);
 
         this.updateTimecodes(0, 0, 24);
-        this.restoreState();
+        //this.restoreState();
     }
 
     /**
@@ -269,6 +269,10 @@ class Video {
         const selection : number = Math.round((end - start) * this.width);
         const roundedRate : number = Math.floor(this.samplerate);
         const rough : string = this.samplerate - roundedRate > 0.0 ? '~' : '';
+
+        if (this.state.get('page') === 'visualize' || (this.state.get('type') === 'midi' || this.state.get('type') === 'audio' )) {
+            return false;
+        }
 
         this.framesDisplay.innerHTML = String(this.frames);
         this.fpsDisplay.innerHTML =  String(Math.round(this.framerate * 100) / 100);
