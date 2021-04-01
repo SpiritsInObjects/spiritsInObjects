@@ -150,6 +150,7 @@ class Files {
             return false;
         }
         ext = path_1.extname(filePath.toLowerCase());
+        console.log(ext);
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
             valid = true;
         }
@@ -188,8 +189,10 @@ class Files {
     async setVisualize(filePath, type) {
         const elem = document.getElementById('vFileSourceProxy');
         let displayName;
+        displayName = visualize.set(filePath, type);
         state.set('filePath', filePath);
         state.set('type', type);
+        elem.value = displayName;
         visualizeStart();
     }
     async save(filePath) {
@@ -296,7 +299,7 @@ function sonifyFrame() {
     let mono = buf.getChannelData(0);
     let tmp;
     sonifyFrameBtn.classList.add('active');
-    sonify = new Sonify(state, video.canvas);
+    sonify = new Sonify(state, video.canvas, audioContext);
     tmp = sonify.sonifyCanvas();
     tmp = sonify.envelope(tmp, 100);
     mono.set(tmp, 0);
@@ -320,21 +323,31 @@ function playSync() {
     //audio.play();
 }
 function keyDown(evt) {
-    if (evt.code === 'Space') {
-        video.play();
+    if (ui.currentPage === 'sonify') {
+        if (evt.code === 'Space') {
+            video.play();
+        }
+        else if (evt.code === 'ArrowLeft') {
+            video.prevFrame();
+        }
+        else if (evt.code === 'ArrowRight') {
+            video.nextFrame();
+        }
+        else if (evt.code === 'KeyF') {
+            sonifyFrame();
+        }
+        else if (evt.code === 'KeyI') {
+        }
+        else if (evt.code === 'KeyO') {
+        }
     }
-    else if (evt.code === 'ArrowLeft') {
-        video.prevFrame();
-    }
-    else if (evt.code === 'ArrowRight') {
-        video.nextFrame();
-    }
-    else if (evt.code === 'KeyF') {
-        sonifyFrame();
-    }
-    else if (evt.code === 'KeyI') {
-    }
-    else if (evt.code === 'KeyO') {
+    else if (ui.currentPage === 'visualize') {
+        if (evt.code === 'ArrowLeft') {
+            visualize.prevFrame();
+        }
+        else if (evt.code === 'ArrowRight') {
+            visualize.nextFrame();
+        }
     }
     console.log(evt.code);
 }
@@ -358,7 +371,7 @@ function bindListeners() {
     ipcRenderer.on('sonify_cancel', onSonifyCancel);
     ipcRenderer.on('info', (evt, args) => {
         video.oninfo(evt, args);
-        sonify = new Sonify(state, video.canvas);
+        sonify = new Sonify(state, video.canvas, audioContext);
     });
 }
 /**
@@ -380,8 +393,8 @@ function bindListeners() {
     ui = new UI(state);
     video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, video.canvas); //need to refresh when settings change
-    visualize = new VisualizeMidi(state, document.createElement('canvas'), '');
+    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
+    visualize = new Visualize(state);
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map

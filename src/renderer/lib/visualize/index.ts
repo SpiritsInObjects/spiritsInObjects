@@ -1,46 +1,79 @@
 'use strict';
-class VisualizeMidi {
-    constructor(state, canvas, filePath) {
-        this.fps = 24;
-        this.frameLength = 1000 / this.fps;
-        this.frame_h = 7.62;
-        this.width = 1920;
-        this.height = 1080;
+
+//import { basename } from 'path';
+
+class Visualize {
+    private state : State;
+
+    private canvas : HTMLCanvasElement;
+    private ctx : CanvasRenderingContext2D;
+
+    private display : HTMLCanvasElement;
+    private displayCtx : CanvasRenderingContext2D;
+    private type : string = 'midi';
+
+    private filePath : string;
+    public displayName : string;
+    private name : string;
+    private frames : any[];
+
+    private fps : number = 24;
+    private frameLength : number = 1000 / this.fps;
+    private frame_h : number = 7.62;
+
+    private width : number = 1920;
+    private height : number = 1080;
+
+    private duration : number; //ms
+    private frameCount : number;
+
+    constructor (state : State) {
         this.state = state;
-        this.canvas = canvas;
+        this.canvas = document.getElementById('vCanvas') as HTMLCanvasElement;
         this.ctx = this.canvas.getContext('2d');
+        this.display = document.getElementById('vCanvasDisplay') as HTMLCanvasElement;
+        this.displayCtx = this.display.getContext('2d');
         this.ctx.scale(1, 1);
-        this.filePath = filePath;
         this.setFormat(this.width, this.height);
     }
-    set(filePath) {
+
+    public set (filePath : string, type : string) : string {
         this.filePath = filePath;
+        this.type = type;
+        this.displayName = basename(filePath);
+        return this.displayName;
     }
-    async decode() {
-        let midi;
-        let msMultiplier;
-        let pitch;
-        let ms;
-        let i = 0;
-        let tracks = [];
-        let frames = [];
+
+    public async decode () {
+        let midi : any;
+        let msMultiplier : number;
+        let pitch : number;
+        let ms : number;
+        let i : number = 0;
+        let tracks : any[] = [];
+        let frames : any[] = [];
+
         try {
             //@ts-ignore
             midi = await Midi.fromUrl(this.filePath);
-        }
-        catch (err) {
+        } catch (err) {
             throw err;
         }
+        
         this.name = midi.name;
+    
         msMultiplier = (60000.0 / parseFloat(midi.header.tempos[0].bpm)) * 4.0;
+        
         this.duration = midi.duration * 1000;
         this.frameCount = Math.ceil(this.duration / this.frameLength);
         this.frames = new Array(this.frameCount);
+
         console.dir(midi);
         console.dir(midi.duration);
         console.dir(midi.tracks);
         console.dir(this.frameCount);
-        midi.tracks.forEach(async (track) => {
+
+        midi.tracks.forEach(async (track : any) => {
             if (track.notes.length === 0) {
                 return false;
             }
@@ -57,14 +90,17 @@ class VisualizeMidi {
         for (let track of tracks) {
             console.log(track.length + ' vs ' + this.frames.length);
             for (let frame of frames) {
+                
             }
         }
     }
-    buildNote(track, pitch, ms) {
-        const frameRaw = ms / this.frameLength;
-        const frameCount = Math.round(frameRaw);
-        const frames = [];
-        let frame;
+
+    private buildNote (track : number, pitch : number, ms : number) {
+        const frameRaw : number = ms / this.frameLength;
+        const frameCount : number = Math.round(frameRaw);
+        const frames : any[] = [];
+        let frame : any;
+
         for (let i = 0; i < frameCount; i++) {
             frame = {
                 track,
@@ -74,20 +110,32 @@ class VisualizeMidi {
         }
         return frames;
     }
-    display(frameNumber) {
-        let lines;
+
+    public displayFrame (frameNumber : number) {
+        let lines : number;
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
+
         }
         lines = Math.round(this.frames[frameNumber].pitch / 24.0);
         this.frame(lines);
     }
-    frame(lines) {
-        const segment = this.height / lines;
-        const thickness = Math.floor(segment / 2);
-        let position;
+
+    public nextFrame () {
+
+    }
+    public prevFrame () {
+        
+    }
+
+    frame ( lines : number ) {
+        const segment : number = this.height / lines;
+        const thickness : number = Math.floor(segment / 2);
+        let position : number;
+      
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.strokeStyle = '#000000';
         this.ctx.fillRect(0, 0, this.width, this.height);
+        
         for (let i = 0; i < lines; i++) {
             position = (segment * (i + 0.5));
             this.ctx.lineWidth = thickness;
@@ -96,8 +144,11 @@ class VisualizeMidi {
             this.ctx.lineTo(this.width, position);
             this.ctx.stroke();
         }
-    }
-    setFormat(width, height) {
+        
+        this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, 300,150);
+    } 
+
+    public setFormat (width : number, height : number) {
         this.width = width;
         this.height = height;
         this.canvas.width = this.width;
@@ -106,4 +157,3 @@ class VisualizeMidi {
         this.state.set('vHeight', this.height);
     }
 }
-//# sourceMappingURL=index.js.map

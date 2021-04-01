@@ -226,8 +226,14 @@ body{
 }
 #vCanvas{
 	background: #000;
-	width: 1920px;
-	height: 1080px;
+	position: absolute;
+	margin: -10000px -10000px;
+}
+#vCanvasDisplay{
+	background : #000;
+	width: @videoWidth;
+	height: @videoHeight;
+	margin: 0;
 }
 
 #startSelect,
@@ -286,10 +292,7 @@ body{
 		display: block;
 	}
 }
-.optionWrapper{
-	margin-top: 30px;
 
-}
 .options {
 	width: 50%;
 	height: auto;
@@ -367,7 +370,7 @@ textarea,
 	padding: 10px;
 	text-align: left;
 	width: 492px;
-	height: 220px;
+	height: 175px;
 	padding: 10px;
 }
 

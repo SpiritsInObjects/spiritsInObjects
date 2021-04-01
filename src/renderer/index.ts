@@ -21,7 +21,7 @@ let state : State;
 let video : Video;
 let camera : Camera;
 let sonify : Sonify;
-let visualize : VisualizeMidi;
+let visualize : Visualize;
 let ui : any;
 
 let avgMs : number = -1;
@@ -173,8 +173,9 @@ class Files {
         }
 
         ext = extname(filePath.toLowerCase());
+        console.log(ext)
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
-            valid = true
+            valid = true;
         }
 
         if (!valid) {
@@ -217,8 +218,13 @@ class Files {
     public async setVisualize (filePath : string, type : string) {
         const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
         let displayName : string;
+
+        displayName = visualize.set(filePath, type);
+        
         state.set('filePath', filePath );
         state.set('type', type);
+
+        elem.value = displayName;
         
         visualizeStart();
     }
@@ -341,7 +347,7 @@ function sonifyFrame () {
 
     sonifyFrameBtn.classList.add('active');
 
-    sonify = new Sonify(state, video.canvas);
+    sonify = new Sonify(state, video.canvas, audioContext);
 
     tmp = sonify.sonifyCanvas();
     tmp = sonify.envelope(tmp, 100);
@@ -370,20 +376,29 @@ function playSync () {
 }
 
 function keyDown (evt : KeyboardEvent) {
-    if (evt.code === 'Space') {
-        video.play();
-    } else if (evt.code === 'ArrowLeft') {
-        video.prevFrame();
-    } else if (evt.code === 'ArrowRight') {
-        video.nextFrame();
-    } else if (evt.code === 'KeyF') {
-        sonifyFrame();
-    } else if (evt.code === 'KeyI') {
+    if (ui.currentPage === 'sonify') {
+        if (evt.code === 'Space') {
+            video.play();
+        } else if (evt.code === 'ArrowLeft') {
+            video.prevFrame();
+        } else if (evt.code === 'ArrowRight') {
+            video.nextFrame();
+        } else if (evt.code === 'KeyF') {
+            sonifyFrame();
+        } else if (evt.code === 'KeyI') {
 
-    } else if (evt.code === 'KeyO') {
+        } else if (evt.code === 'KeyO') {
 
+        }
+    } else if (ui.currentPage === 'visualize') {
+        if (evt.code === 'ArrowLeft') {
+            visualize.prevFrame();
+        } else if (evt.code === 'ArrowRight') {
+            visualize.nextFrame();
+        } 
     }
     console.log(evt.code);
+
 }
 
 function bindListeners () {
@@ -410,7 +425,7 @@ function bindListeners () {
 
     ipcRenderer.on('info', (evt : Event, args : any) => {
         video.oninfo(evt, args);
-        sonify = new Sonify(state, video.canvas);
+        sonify = new Sonify(state, video.canvas, audioContext);
     });
 }
 
@@ -438,8 +453,8 @@ function bindListeners () {
     ui = new UI(state);
     video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, video.canvas); //need to refresh when settings change
-    visualize = new VisualizeMidi(state, document.createElement('canvas'), '');
+    sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
+    visualize = new Visualize(state);
 
     bindListeners();
 

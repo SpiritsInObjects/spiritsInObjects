@@ -1,68 +1,52 @@
 'use strict';
-
-class VisualizeMidi {
-    private state : State;
-
-    private canvas : HTMLCanvasElement;
-    private ctx : CanvasRenderingContext2D;
-
-    private filePath : string;
-    private name : string;
-    private frames : any[];
-
-    private fps : number = 24;
-    private frameLength : number = 1000 / this.fps;
-    private frame_h : number = 7.62;
-
-    private width : number = 1920;
-    private height : number = 1080;
-
-    private duration : number; //ms
-    private frameCount : number;
-
-    constructor (state : State, canvas : HTMLCanvasElement, filePath : string) {
+//import { basename } from 'path';
+class Visualize {
+    constructor(state) {
+        this.type = 'midi';
+        this.fps = 24;
+        this.frameLength = 1000 / this.fps;
+        this.frame_h = 7.62;
+        this.width = 1920;
+        this.height = 1080;
         this.state = state;
-        this.canvas = canvas;
+        this.canvas = document.getElementById('vCanvas');
         this.ctx = this.canvas.getContext('2d');
+        this.display = document.getElementById('vCanvasDisplay');
+        this.displayCtx = this.display.getContext('2d');
         this.ctx.scale(1, 1);
-        this.filePath = filePath;
         this.setFormat(this.width, this.height);
     }
-
-    public set (filePath : string) {
+    set(filePath, type) {
         this.filePath = filePath;
+        this.type = type;
+        this.displayName = basename(filePath);
+        return this.displayName;
     }
-
-    public async decode () {
-        let midi : any;
-        let msMultiplier : number;
-        let pitch : number;
-        let ms : number;
-        let i : number = 0;
-        let tracks : any[] = [];
-        let frames : any[] = [];
-
+    async decode() {
+        let midi;
+        let msMultiplier;
+        let pitch;
+        let ms;
+        let i = 0;
+        let tracks = [];
+        let frames = [];
         try {
             //@ts-ignore
             midi = await Midi.fromUrl(this.filePath);
-        } catch (err) {
+        }
+        catch (err) {
             throw err;
         }
-        
         this.name = midi.name;
-    
         msMultiplier = (60000.0 / parseFloat(midi.header.tempos[0].bpm)) * 4.0;
-        
         this.duration = midi.duration * 1000;
         this.frameCount = Math.ceil(this.duration / this.frameLength);
         this.frames = new Array(this.frameCount);
-
         console.dir(midi);
         console.dir(midi.duration);
         console.dir(midi.tracks);
         console.dir(this.frameCount);
-
-        midi.tracks.forEach(async (track : any) => {
+        midi.tracks.forEach(async (track) => {
             if (track.notes.length === 0) {
                 return false;
             }
@@ -79,17 +63,14 @@ class VisualizeMidi {
         for (let track of tracks) {
             console.log(track.length + ' vs ' + this.frames.length);
             for (let frame of frames) {
-                
             }
         }
     }
-
-    buildNote (track : number, pitch : number, ms : number) {
-        const frameRaw : number = ms / this.frameLength;
-        const frameCount : number = Math.round(frameRaw);
-        const frames : any[] = [];
-        let frame : any;
-
+    buildNote(track, pitch, ms) {
+        const frameRaw = ms / this.frameLength;
+        const frameCount = Math.round(frameRaw);
+        const frames = [];
+        let frame;
         for (let i = 0; i < frameCount; i++) {
             frame = {
                 track,
@@ -99,25 +80,24 @@ class VisualizeMidi {
         }
         return frames;
     }
-
-    public display (frameNumber : number) {
-        let lines : number;
+    displayFrame(frameNumber) {
+        let lines;
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
-
         }
         lines = Math.round(this.frames[frameNumber].pitch / 24.0);
         this.frame(lines);
     }
-
-    frame ( lines : number ) {
-        const segment : number = this.height / lines;
-        const thickness : number = Math.floor(segment / 2);
-        let position : number;
-      
+    nextFrame() {
+    }
+    prevFrame() {
+    }
+    frame(lines) {
+        const segment = this.height / lines;
+        const thickness = Math.floor(segment / 2);
+        let position;
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.strokeStyle = '#000000';
         this.ctx.fillRect(0, 0, this.width, this.height);
-        
         for (let i = 0; i < lines; i++) {
             position = (segment * (i + 0.5));
             this.ctx.lineWidth = thickness;
@@ -126,9 +106,9 @@ class VisualizeMidi {
             this.ctx.lineTo(this.width, position);
             this.ctx.stroke();
         }
-    } 
-
-    public setFormat (width : number, height : number) {
+        this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, 300, 150);
+    }
+    setFormat(width, height) {
         this.width = width;
         this.height = height;
         this.canvas.width = this.width;
@@ -137,3 +117,4 @@ class VisualizeMidi {
         this.state.set('vHeight', this.height);
     }
 }
+//# sourceMappingURL=index.js.map

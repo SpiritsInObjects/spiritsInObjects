@@ -58,7 +58,8 @@ class Video {
      */
     restoreState() {
         let filePath = this.state.get('filePath');
-        if (filePath && filePath.length > 0) {
+        let type = this.state.get('type');
+        if (filePath && filePath.length > 0 && type === 'still' || type === 'video') {
             this.framerate = this.state.get('framerate');
             this.frames = this.state.get('frames');
             this.width = this.state.get('width');

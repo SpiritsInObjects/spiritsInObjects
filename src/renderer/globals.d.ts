@@ -1,8 +1,4 @@
 
-interface CameraConstructor {
-    new() : Camera;
-}
-
 interface Midi {
 
 }

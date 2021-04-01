@@ -58,6 +58,8 @@
                     
                 </div>
             </div>
+            <div id="sonifyPeaks"></div>
+            <audio id="sonifyPeaksAudio"></audio>
             <div class="optionWrapper">
                 <div class="options">
                     <textarea id="fileSourceProxy" placeholder="File(s)" title="Select a video or image sequence" readonly></textarea>
@@ -84,6 +86,7 @@
         <div id="visualize" class="page">
             <div id="vTheatre">
                 <canvas id="vCanvas"></canvas>
+                <canvas id="vCanvasDisplay"></canvas>
             </div>
             <div class="optionsWrapper">
                 <input type="text" id="vFileSourceProxy" placeholder="File" title="Select a midi or wav file" readonly />
@@ -111,13 +114,12 @@
         <script src="../contrib/Tone.js"></script>
         <script src="../contrib/midi.js"></script>
         <script src="../contrib/spin.js"></script>
-        <script src="../contrib/peaks.js"></script>
         <script src="../renderer/lib/state/index.js"></script>
         <script src="../renderer/lib/spinner/index.js"></script>
         <script src="../renderer/lib/video/index.js"></script>
         <script src="../renderer/lib/camera/index.js"></script>
         <script src="../renderer/lib/sonifyCanvas/index.js"></script>
-        <script src="../renderer/lib/visualizeMidi/index.js"></script>
+        <script src="../renderer/lib/visualize/index.js"></script>
         <script src="../renderer/lib/ui/index.js"></script>
         <script src="../renderer/index.js"></script>
     </body>

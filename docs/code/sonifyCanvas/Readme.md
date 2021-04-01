@@ -29,6 +29,7 @@ class representing image sonification of a canvas element
 **Kind**: global class  
 
 * [Sonify](#Sonify)
+    * [.peaksInit()](#Sonify+peaksInit)
     * [.sonifyCanvas()](#Sonify+sonifyCanvas) ⇒ <code>array</code>
     * [.sonify(imageData)](#Sonify+sonify) ⇒ <code>array</code>
     * [.brightness(r, g, b)](#Sonify+brightness) ⇒ <code>number</code>
@@ -36,6 +37,10 @@ class representing image sonification of a canvas element
     * [.getSample(row)](#Sonify+getSample)
     * [.envelope(original, envLen)](#Sonify+envelope)
 
+<a name="Sonify+peaksInit"></a>
+
+### sonify.peaksInit()
+**Kind**: instance method of [<code>Sonify</code>](#Sonify)  
 <a name="Sonify+sonifyCanvas"></a>
 
 ### sonify.sonifyCanvas() ⇒ <code>array</code>

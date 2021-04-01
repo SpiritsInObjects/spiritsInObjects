@@ -4,6 +4,7 @@
 class Sonify {
     private canvas : HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
+    private peaks : any;
     private framerate : number = 24;
     private samplerate : number = 48000;
     private samplesPerFrame : number = this.samplerate / this.framerate;
@@ -19,6 +20,7 @@ class Sonify {
     private GREEN_MULTIPLIER : number = 0.59;
     private BLUE_MULTIPLIER : number = 0.11;
 
+
     /**
      * @constructor
      * 
@@ -28,7 +30,7 @@ class Sonify {
      * @param {Object} canvas Canvas to sonify
      */
 
-    constructor (state : any, canvas : HTMLCanvasElement) {
+    constructor (state : any, canvas : HTMLCanvasElement, audioContext : AudioContext) {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext('2d');
 
@@ -45,6 +47,7 @@ class Sonify {
         this.endLocation = Math.floor(this.width * this.end) * 4;
         this.max = (Math.floor(this.width * this.end) - Math.floor(this.width * this.start)) * 255;
     }
+    
 
     /**
      * Sonify's all image data in the canvas element

@@ -193,8 +193,14 @@ body {
 }
 #vCanvas {
   background: #000;
-  width: 1920px;
-  height: 1080px;
+  position: absolute;
+  margin: -10000px -10000px;
+}
+#vCanvasDisplay {
+  background: #000;
+  width: 996px;
+  height: 560px;
+  margin: 0;
 }
 #startSelect,
 #endSelect {
@@ -251,9 +257,6 @@ body {
 }
 #visualize.show {
   display: block;
-}
-.optionWrapper {
-  margin-top: 30px;
 }
 .options {
   width: 50%;
@@ -331,7 +334,7 @@ textarea,
 .info {
   text-align: left;
   width: 492px;
-  height: 220px;
+  height: 175px;
   padding: 10px;
 }
 #timecodes {
