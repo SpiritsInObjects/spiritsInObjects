@@ -16,7 +16,7 @@ mkdir -p ./releases/mac
 
 echo "Building application..."
 #--icon=assets/icons/icon.icns
-./node_modules/.bin/electron-packager . --overwrite --platform=darwin --arch=x64 --prune=true --out=./releases/mac
+./node_modules/.bin/electron-packager . --overwrite --platform=darwin --ignore=^/proto_imagetosound-nw --arch=x64 --prune=true --out=./releases/mac
 #build dmg for mac install
 sleep 5s
 echo "Building dmg installer..."

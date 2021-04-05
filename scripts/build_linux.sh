@@ -18,7 +18,7 @@ npm i
 #--icon=assets/icons/icon.png
 # for json root "icon": "./assets/icons/icon.png",
 echo "Building application..."
-../node_modules/.bin/electron-packager . spiritsinobjects --overwrite --platform=linux --arch=x64  --prune=true --out=../releases/linux
+../node_modules/.bin/electron-packager . spiritsinobjects --overwrite --platform=linux --arch=x64 --ignore=^/proto_imagetosound-nw --prune=true --out=../releases/linux
 #build a .deb installer
 echo "Creating debian installer..."
 ../node_modules/.bin/electron-installer-debian --src ../releases/linux/spiritsinobjects-linux-x64/ --arch amd64 --config ../scripts/build_linux.json
