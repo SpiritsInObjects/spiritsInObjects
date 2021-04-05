@@ -27,6 +27,7 @@ class Video {
 
 
     private cursor : HTMLElement = document.querySelector('#sonifyTimeline .cursor');
+    private scrubbing : boolean = false;
 
     private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
     private source : HTMLSourceElement;
@@ -76,6 +77,10 @@ class Video {
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
 
+        this.cursor.addEventListener('mousedown', this.beginScrubbing.bind(this), false);
+        document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
+        document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
+
         this.ui.onSelectionChange = this.displayInfo.bind(this);
 
         this.updateTimecodes(0, 0, 24);
@@ -102,6 +107,40 @@ class Video {
             this.displayInfo();
             this.sonifyFrameBtn.removeAttribute('disabled');
             this.sonifyVideoBtn.removeAttribute('disabled');
+        }
+    }
+
+    private beginScrubbing () {
+        this.scrubbing = true;
+    }
+
+    private moveScrubbing (evt : MouseEvent) {
+        let cursor : number;
+        let leftX : number;
+        let width : number;
+        if (this.scrubbing) {
+            leftX = this.cursor.parentElement.offsetLeft;
+            width = this.cursor.parentElement.clientWidth;
+            cursor = ((evt.pageX - leftX) / width) * 100.0;
+            if (cursor < 0) {
+                cursor = 0;
+            } else if (cursor > 100) {
+                cursor = 100;
+            }
+            this.cursor.style.left = `${cursor}%`;
+        }
+    }
+
+    private endScrubbing () {
+        let percent : number;
+        let frame : number;
+        if (this.scrubbing) {
+            percent = parseFloat((this.cursor.style.left).replace('%', '')) / 100.0;
+            frame = Math.floor(this.frames * percent);
+            //snap to frame
+            this.scrubbing = false;
+            this.current.value = String(frame);
+            this.editFrame();
         }
     }
 
@@ -358,6 +397,7 @@ class Video {
     }
     public prevFrame () {
         let frame : number = this.currentFrame();
+        console.log('peing called');
         frame--;
         if (frame < 0) {
             frame = 0;

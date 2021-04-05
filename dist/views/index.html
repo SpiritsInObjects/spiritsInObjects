@@ -84,18 +84,49 @@
             </div>
         </div>
         <div id="visualize" class="page">
+            <div id="vTimecodes">
+                <input type="text" id="vStartTimecode" value="00:00:00;00" />
+                <select id="vFormat">
+                    <option value="1080">1920x1080</option>
+                </select>
+                <input type="text" id="vEndTimecode" value="00:00:00;00" />
+            </div>
             <div id="vTheatre">
                 <canvas id="vCanvas"></canvas>
                 <canvas id="vCanvasDisplay"></canvas>
             </div>
+            <div id="visualizeTimeline">
+                <div class="timeline">
+                    <div class="center-line"></div>
+                    <div class="cursor"></div>
+                </div>
+            </div>
+            <div id="visualizeControl">
+                <div class="bg"></div>
+                <div>
+                    <button id="vPrevFrame"><img src="../image/navigate_before.svg" alt="Previous Frame"></button>
+                    <input type="number" id="vCurrentFrame" alt="Current Frame" value="0" />
+                    <button id="vNextFrame"><img src="../image/navigate_next.svg" alt="Next Frame"></button>
+                </div>
+                <div id="vSonifyControl">
+                    <div>
+                        <button id="sonifyVisualizeBtn" disabled>Play Frame</button>
+                        <!--<button id="sonifyVideo" disabled>Sonify Video</button>-->
+                    </div>
+                </div>
+            </div>
             <div class="optionsWrapper">
                 <input type="text" id="vFileSourceProxy" placeholder="File" title="Select a midi or wav file" readonly />
-                <button id="vClear hide">Clear</button>
-                <select id="vFormat">
-                    <option value="1080">1920x1080</option>
-                </select>
+                <button id="vClear" class="hide">Clear</button>
                 <select id="vTracks" class="hide">
                     
+                </select>
+                <select id="vType" class="hide">
+                    <option value="variable density">Variable density</option>
+                    <option value="unilateral">Unilateral</option>
+                    <option value="variable area">Variable area</option>
+                    <option value="dual variable area">Dual variable area</option>
+                    <option value="multiple variable area">Multiple variable area</option>
                 </select>
             </div>
         </div>
@@ -114,9 +145,8 @@
             </div>
         </div>
         <script>var exports = {"__esModule": true};</script>
-        <script src="../contrib/Tone.js"></script>
-        <script src="../contrib/midi.js"></script>
         <script src="../contrib/spin.js"></script>
+        <script src="../contrib/SoundtrackOptical.js"></script>
         <script src="../renderer/lib/state/index.js"></script>
         <script src="../renderer/lib/spinner/index.js"></script>
         <script src="../renderer/lib/video/index.js"></script>

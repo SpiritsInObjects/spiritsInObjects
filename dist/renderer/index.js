@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const os_1 = require("os");
-const fs_extra_1 = require("fs-extra");
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
@@ -26,11 +25,13 @@ let f;
 /* ELEMENTS */
 let dropArea;
 let fileSourceProxy;
+let vFileSourceProxy;
 let sonifyFrameBtn;
 let sonifyVideo;
 let sonifyBtn;
 let sonifyCancelBtn;
 let visualizeBtn;
+let sonifyVisualizeBtn;
 async function confirm(message) {
     const config = {
         buttons: ['Yes', 'No'],
@@ -113,7 +114,7 @@ class DragDrop {
 class Files {
     async select() {
         const options = {
-            title: `Select video or image sequence`,
+            title: `Select video, image or audio file`,
             properties: [`openFile`],
             defaultPath: 'c:/',
             filters: [
@@ -131,10 +132,11 @@ class Files {
         catch (err) {
             console.error(err);
         }
+        console.dir(files);
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
-        filePath = files[0];
+        filePath = files.filePaths[0];
         this.determineProcess(filePath);
     }
     async determineProcess(filePath) {
@@ -142,15 +144,15 @@ class Files {
         let type = 'video';
         let stats;
         let ext;
+        /*
         try {
-            stats = await fs_extra_1.lstat(filePath);
-        }
-        catch (err) {
+            stats = await lstat(filePath);
+        } catch (err) {
             console.error(err);
             return false;
-        }
+        }*/
         ext = path_1.extname(filePath.toLowerCase());
-        console.log(ext);
+        //console.log(ext)
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
             valid = true;
         }
@@ -177,7 +179,7 @@ class Files {
         }
     }
     async setSonify(filePath, type) {
-        const elem = document.getElementById('fileSourceProxy');
+        const elem = fileSourceProxy;
         let displayName;
         displayName = video.set(filePath, type);
         ipcRenderer.send('info', { filePath, type });
@@ -187,7 +189,7 @@ class Files {
         sonifyStart();
     }
     async setVisualize(filePath, type) {
-        const elem = document.getElementById('vFileSourceProxy');
+        const elem = vFileSourceProxy;
         let displayName;
         displayName = visualize.set(filePath, type);
         state.set('filePath', filePath);
@@ -318,9 +320,31 @@ function sonifyFrame() {
 }
 async function visualizeStart() {
     if (state.get('type') === 'midi') {
+        sonifyVisualizeBtn.removeAttribute('disabled');
         await visualize.processMidi();
         visualize.decodeMidi(0);
     }
+}
+function sonifyVisualizeFrame() {
+    const source = audioContext.createBufferSource();
+    let buf = audioContext.createBuffer(1, visualize.height, visualize.samplerate);
+    let mono = buf.getChannelData(0);
+    let tmp;
+    sonifyVisualizeBtn.classList.add('active');
+    tmp = visualize.sonify.sonifyCanvas();
+    tmp = visualize.sonify.envelope(tmp, 100);
+    mono.set(tmp, 0);
+    source.buffer = buf;
+    source.connect(audioContext.destination);
+    source.start();
+    setTimeout(() => {
+        try {
+            sonifyVisualizeBtn.classList.remove('active');
+        }
+        catch (err) {
+            //
+        }
+    }, 42);
 }
 function playSync() {
     video.play();
@@ -358,15 +382,19 @@ function keyDown(evt) {
 function bindListeners() {
     dropArea = document.getElementById('dragOverlay');
     fileSourceProxy = document.getElementById('fileSourceProxy');
+    vFileSourceProxy = document.getElementById('vFileSourceProxy');
     sonifyFrameBtn = document.getElementById('sonifyFrame');
     sonifyVideo = document.getElementById('sonifyVideo');
     sonifyBtn = document.getElementById('sonifyBtn');
     sonifyCancelBtn = document.getElementById('sonifyCancel');
     visualizeBtn = document.getElementById('visualizeBtn');
+    sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
+    sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
+    vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
@@ -398,7 +426,7 @@ function bindListeners() {
     video = new Video(state, ui);
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
-    visualize = new Visualize(state);
+    visualize = new Visualize(state, audioContext);
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map

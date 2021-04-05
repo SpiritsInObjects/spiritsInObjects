@@ -33,11 +33,13 @@ let f : Files;
 
 let dropArea : HTMLElement;
 let fileSourceProxy : HTMLInputElement;
+let vFileSourceProxy : HTMLInputElement;
 let sonifyFrameBtn : HTMLButtonElement;
 let sonifyVideo : HTMLButtonElement;
 let sonifyBtn : HTMLElement;
 let sonifyCancelBtn : HTMLElement;
 let visualizeBtn : HTMLElement;
+let sonifyVisualizeBtn : HTMLButtonElement;
 
 async function confirm (message : string) {
     const config = {
@@ -130,7 +132,7 @@ class DragDrop {
 class Files {
     public async select () {
         const options : any = {
-            title: `Select video or image sequence`,
+            title: `Select video, image or audio file`,
             properties: [`openFile`],
             defaultPath: 'c:/',
             filters: [
@@ -149,11 +151,13 @@ class Files {
             console.error(err);
         }
 
+        console.dir(files)
+
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
 
-        filePath = files[0];
+        filePath = files.filePaths[0];
 
         this.determineProcess(filePath);
     }
@@ -165,15 +169,16 @@ class Files {
         let stats : any;
         let ext : string;
 
+        /*
         try {
             stats = await lstat(filePath);
         } catch (err) {
             console.error(err);
             return false;
-        }
+        }*/
 
         ext = extname(filePath.toLowerCase());
-        console.log(ext)
+        //console.log(ext)
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
             valid = true;
         }
@@ -201,7 +206,7 @@ class Files {
     }
 
     public async setSonify (filePath : string, type : string ) {
-        const elem : HTMLInputElement = document.getElementById('fileSourceProxy') as HTMLInputElement
+        const elem : HTMLInputElement = fileSourceProxy;
         let displayName : string;
 
         displayName = video.set(filePath, type);
@@ -216,7 +221,7 @@ class Files {
     }
 
     public async setVisualize (filePath : string, type : string) {
-        const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement
+        const elem : HTMLInputElement = vFileSourceProxy;
         let displayName : string;
 
         displayName = visualize.set(filePath, type);
@@ -368,9 +373,35 @@ function sonifyFrame () {
 
 async function visualizeStart () {
     if (state.get('type') === 'midi') {
+        sonifyVisualizeBtn.removeAttribute('disabled');
         await visualize.processMidi();
         visualize.decodeMidi(0);
     }
+}
+
+function sonifyVisualizeFrame () {
+    const source : any = audioContext.createBufferSource();
+    let buf : any = audioContext.createBuffer(1, visualize.height, visualize.samplerate);
+    let mono : any = buf.getChannelData(0);
+    let tmp : Float32Array;
+
+    sonifyVisualizeBtn.classList.add('active');
+
+    tmp = visualize.sonify.sonifyCanvas();
+    tmp = visualize.sonify.envelope(tmp, 100);
+    mono.set(tmp, 0);
+
+    source.buffer = buf;
+    source.connect(audioContext.destination);
+    source.start();
+
+    setTimeout(() => {
+        try {
+            sonifyVisualizeBtn.classList.remove('active');
+        } catch (err) {
+            //
+        }
+    }, 42);
 }
 
 function playSync () {
@@ -407,17 +438,21 @@ function keyDown (evt : KeyboardEvent) {
 function bindListeners () {
     dropArea = document.getElementById('dragOverlay');
     fileSourceProxy = document.getElementById('fileSourceProxy') as HTMLInputElement;
+    vFileSourceProxy = document.getElementById('vFileSourceProxy') as HTMLInputElement;
     sonifyFrameBtn = document.getElementById('sonifyFrame') as HTMLButtonElement;
     sonifyVideo = document.getElementById('sonifyVideo') as HTMLButtonElement;
     sonifyBtn = document.getElementById('sonifyBtn');
     sonifyCancelBtn = document.getElementById('sonifyCancel');
     visualizeBtn = document.getElementById('visualizeBtn');
+    sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn') as HTMLButtonElement;
 
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
+    sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
+    vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
@@ -457,7 +492,7 @@ function bindListeners () {
     video = new Video(state, ui);
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
-    visualize = new Visualize(state);
+    visualize = new Visualize(state, audioContext);
 
     bindListeners();
 

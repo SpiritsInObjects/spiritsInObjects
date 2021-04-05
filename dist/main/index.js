@@ -37,6 +37,11 @@ async function pixels(filePath) {
         });
     });
 }
+async function save(filePath, data) {
+    return new Promise((resolve, reject) => {
+        //return savePixels('PNG')
+    });
+}
 function hashStr(str) {
     return crypto_1.createHash('sha256').update(str).digest('base64');
 }
@@ -236,6 +241,8 @@ electron_1.ipcMain.on('save', async (evt, args) => {
             console.error(err);
         }
     }
+});
+electron_1.ipcMain.on('visualize', async (evt, args) => {
 });
 (async () => {
     const menu = menu_1.createMenu();

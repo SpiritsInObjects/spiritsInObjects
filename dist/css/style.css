@@ -69,14 +69,16 @@ body {
   color: #2b2b2b;
   text-shadow: 0px 1px 0px rgba(0, 0, 20, 0.1);
 }
-#sonifyTimeline {
+#sonifyTimeline,
+#visualizeTimeline {
   position: relative;
   height: 20px;
   border-bottom: 1px solid #83878b;
   background: #dbdfe3;
   width: 1000px;
 }
-#sonifyTimeline .timeline {
+#sonifyTimeline .timeline,
+#visualizeTimeline .timeline {
   position: relative;
   background: #fff;
   width: 970px;
@@ -85,14 +87,16 @@ body {
   border-right: 1px solid #83878b;
   border-left: 1px solid #83878b;
 }
-#sonifyTimeline .center-line {
+#sonifyTimeline .center-line,
+#visualizeTimeline .center-line {
   position: absolute;
   width: 968px;
   height: 10px;
   top: 0;
   border-bottom: 1px solid #e6e6ed;
 }
-#sonifyTimeline .cursor {
+#sonifyTimeline .cursor,
+#visualizeTimeline .cursor {
   cursor: e-resize;
   position: absolute;
   z-index: 100;
@@ -102,7 +106,8 @@ body {
   top: 0;
   left: 0%;
 }
-#sonifyTimeline .cursor:after {
+#sonifyTimeline .cursor:after,
+#visualizeTimeline .cursor:after {
   content: "";
   display: block;
   position: absolute;
@@ -113,7 +118,8 @@ body {
   width: 0;
   height: 0;
 }
-#sonifyTimeline .cursor:before {
+#sonifyTimeline .cursor:before,
+#visualizeTimeline .cursor:before {
   content: "";
   display: block;
   position: absolute;
@@ -125,6 +131,10 @@ body {
   height: 0;
   margin-top: -1px;
 }
+#currentFrame,
+#vCurrentFrame {
+  text-align: center;
+}
 #sonify,
 #visualize {
   display: none;
@@ -133,13 +143,15 @@ body {
 #visualize.show {
   display: block;
 }
-#sonifyControl {
+#sonifyControl,
+#vSonifyControl {
   position: absolute;
   top: 0;
   right: 0;
   width: 385px !important;
 }
-#sonifyControl button {
+#sonifyControl button,
+#vSonifyControl button {
   -webkit-appearance: none;
   outline: none;
   height: 24px;
@@ -155,7 +167,9 @@ body {
   background: #cecdd3;
 }
 #sonifyControl button:active,
-#sonifyControl button.active {
+#vSonifyControl button:active,
+#sonifyControl button.active,
+#vSonifyControl button.active {
   background: #f6f6f7;
   border-top: 1px solid #f2f2f3;
   border-left: 1px solid #f2f2f3;
@@ -275,31 +289,12 @@ input[type=number],
 input[type=submit] {
   width: 120px;
 }
-select,
-input[type=text],
-input[type=number],
-input[type=submit],
-button,
-textarea,
-.info {
-  -webkit-appearance: none;
-  border: 2px solid rgba(100, 100, 100, 0.3);
-  outline: 0;
-  border-radius: 5px;
-  height: 30px;
-  line-height: 30px;
-  margin: 5px auto 0;
-  padding: 0px 10px;
-  box-sizing: border-box;
-  cursor: pointer;
-  text-align: center;
-  background: transparent;
-}
 input[type=text],
 input[type=number],
 input[type=submit],
 textarea,
-.info {
+.info,
+select {
   background: #cbcccf;
   font-family: monospace;
   border-top: 1px solid #5d616a;
@@ -316,7 +311,8 @@ input[type=text]:active,
 input[type=number]:active,
 input[type=submit]:active,
 textarea:active,
-.info:active {
+.info:active,
+select:active {
   background: #f6f6f7;
 }
 .info div,
@@ -336,17 +332,28 @@ textarea,
   height: 175px;
   padding: 10px;
 }
-#timecodes {
+#timecodes,
+#vTimecodes {
   height: 26px;
 }
-#startTimecode {
+#startTimecode,
+#vStartTimecode {
   float: left;
 }
-#endTimecode {
+#endTimecode,
+#vEndTimecode {
   float: right;
 }
+#vFormat {
+  display: block;
+  position: absolute;
+  left: 448px;
+  margin-top: 4px;
+}
 #nextFrame,
-#prevFrame {
+#prevFrame,
+#vNextFrame,
+#vPrevFrame {
   -webkit-appearance: none;
   outline: none;
   width: 36px;
@@ -358,31 +365,41 @@ textarea,
   box-shadow: inset 1px 2px 2px rgba(0, 0, 0, 0.2), 0 2px 2px rgba(255, 255, 255, 0.4);
 }
 #nextFrame img,
-#prevFrame img {
+#prevFrame img,
+#vNextFrame img,
+#vPrevFrame img {
   width: 24px;
   height: auto;
 }
 #nextFrame:active,
 #prevFrame:active,
+#vNextFrame:active,
+#vPrevFrame:active,
 #nextFrame.active,
-#prevFrame.active {
+#prevFrame.active,
+#vNextFrame.active,
+#vPrevFrame.active {
   box-shadow: 1px 2px 2px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.4);
   background: rgba(89, 99, 151);
   background: radial-gradient(circle, #596397 0%, #dee0e6 100%);
 }
-#nextFrame img {
+#nextFrame img,
+#vNextFrame img {
   margin-left: -3px;
 }
-#prevFrame img {
+#prevFrame img,
+#vPrevFrame img {
   margin-left: -4px;
 }
-#videoControl {
+#videoControl,
+#visualizeControl {
   background: #d6d6d6;
   position: relative;
   z-index: 1;
   height: 50px;
 }
-#videoControl .bg {
+#videoControl .bg,
+#visualizeControl .bg {
   position: absolute;
   z-index: -1;
   height: 50px;
@@ -395,11 +412,13 @@ textarea,
   -webkit-filter: blur(1px);
   opacity: 0.8;
 }
-#videoControl > div:not(.bg) {
+#videoControl > div:not(.bg),
+#visualizeControl > div:not(.bg) {
   width: 220px;
   margin: 0 auto;
 }
-#videoControl > div:not(.bg) *:last-child {
+#videoControl > div:not(.bg) *:last-child,
+#visualizeControl > div:not(.bg) *:last-child {
   float: none;
 }
 #overlay {

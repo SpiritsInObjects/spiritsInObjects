@@ -89,7 +89,8 @@ body{
     }
 }
 
-#sonifyTimeline{
+#sonifyTimeline,
+#visualizeTimeline{
 	position: relative;
 	height: 20px;
 	border-bottom: 1px solid #83878b;
@@ -148,6 +149,11 @@ body{
 	}
 }
 
+#currentFrame,
+#vCurrentFrame{
+	text-align: center;
+}
+
 #sonify,
 #visualize {
 	display: none;
@@ -156,7 +162,8 @@ body{
 	}
 }
 
-#sonifyControl {
+#sonifyControl,
+#vSonifyControl {
     position: absolute;
     top: 0;
     right: 0;
@@ -310,31 +317,13 @@ input[type=number],
 input[type=submit]{
 	width: 120px;
 }
-select,
-input[type=text],
-input[type=number],
-input[type=submit],
-button,
-textarea,
-.info{
-	-webkit-appearance: none;
-	border: 2px solid rgba(100, 100, 100, 0.3);
-	outline: 0;
-	border-radius: 5px;
-	height: 30px;
-	line-height: 30px;
-	margin: 5px auto 0;
-	padding: 0px 10px;
-	box-sizing: border-box;
-	cursor: pointer;
-	text-align: center;
-	background: transparent;
-}
+
 input[type=text],
 input[type=number],
 input[type=submit],
 textarea,
-.info{
+.info,
+select{
 	background: @inputBg;
 	font-family: monospace;
 
@@ -373,20 +362,31 @@ textarea,
 	padding: 10px;
 }
 
-#timecodes{
+#timecodes,
+#vTimecodes{
 	height: 26px;
 }
 
-#startTimecode{
+#startTimecode,
+#vStartTimecode{
 	float: left;
 }
-#endTimecode{
+#endTimecode,
+#vEndTimecode{
 	float: right;
 }
 
+#vFormat{
+	display: block;
+    position: absolute;
+    left: 448px;
+    margin-top: 4px;
+}
 
 #nextFrame,
-#prevFrame{
+#prevFrame,
+#vNextFrame,
+#vPrevFrame{
 	-webkit-appearance: none;
 	outline: none;
     width: 36px;
@@ -408,17 +408,20 @@ textarea,
 	}
 
 }
-#nextFrame{
+#nextFrame,
+#vNextFrame{
 	img{
 		margin-left: -3px;
 	}
 }
-#prevFrame{
+#prevFrame,
+#vPrevFrame{
 	img{
 		margin-left: -4px;
 	}
 }
-#videoControl{
+#videoControl,
+#visualizeControl{
 	background: #d6d6d6;
 	position: relative;
 	z-index: 1;

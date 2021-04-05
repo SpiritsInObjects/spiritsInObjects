@@ -8,6 +8,7 @@ import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
 import { pathExists, unlink, writeFile, copyFile } from 'fs-extra';
 import getPixels from 'get-pixels';
+import savePixels from 'save-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
 import { createHash } from 'crypto';
@@ -41,6 +42,12 @@ async function pixels (filePath : string) {
 			}
 			return resolve(imageData);
 		});
+	});
+}
+
+async function save (filePath : string, data : any[]) {
+	return new Promise((resolve : Function, reject: Function) => {
+		//return savePixels('PNG')
 	});
 }
 
@@ -272,6 +279,10 @@ ipcMain.on('save', async (evt : Event, args : any) => {
 			console.error(err);
 		}
 	}
+});
+
+ipcMain.on('visualize', async (evt : Event, args : any) => {
+
 });
 
 (async () => {
