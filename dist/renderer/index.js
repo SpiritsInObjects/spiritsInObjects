@@ -198,7 +198,7 @@ class Files {
         elem.value = displayName;
         visualizeStart();
     }
-    async save(filePath) {
+    async saveAudio(filePath) {
         const options = {
             defaultPath: os_1.homedir()
         };
@@ -210,11 +210,11 @@ class Files {
             console.error(err);
         }
         if (savePath) {
-            savePath.filePath = await this.validatePath(savePath.filePath);
+            savePath.filePath = await this.validatePathAudio(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
-    async validatePath(savePath) {
+    async validatePathAudio(savePath) {
         const saveExt = '.wav';
         const ext = path_1.extname(savePath);
         let proceed = false;
@@ -225,6 +225,46 @@ class Files {
         else if (ext.toLowerCase() !== saveExt) {
             try {
                 proceed = await confirm(`Sonification file is a WAVE but has the extension "${ext}". Keep extension and continue?`);
+            }
+            catch (err) {
+                console.error(err);
+            }
+            if (!proceed) {
+                i = savePath.lastIndexOf(ext);
+                if (i >= 0 && i + ext.length >= savePath.length) {
+                    savePath = savePath.substring(0, i) + saveExt;
+                }
+            }
+        }
+        return savePath;
+    }
+    async saveVideo(filePath) {
+        const options = {
+            defaultPath: os_1.homedir()
+        };
+        let savePath;
+        try {
+            savePath = await dialog.showSaveDialog(null, options);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        if (savePath) {
+            savePath.filePath = await this.validatePathVideo(savePath.filePath);
+            ipcRenderer.send('save', { filePath, savePath });
+        }
+    }
+    async validatePathVideo(savePath) {
+        const saveExt = '.mkv';
+        const ext = path_1.extname(savePath);
+        let proceed = false;
+        let i;
+        if (ext === '') {
+            savePath += saveExt;
+        }
+        else if (ext.toLowerCase() !== saveExt) {
+            try {
+                proceed = await confirm(`Sonification file is an MKV but has the extension "${ext}". Keep extension and continue?`);
             }
             catch (err) {
                 console.error(err);
@@ -289,7 +329,7 @@ function onSonifyComplete(evt, args) {
     avgMs = -1;
     timeAvg = -1;
     ui.overlay.hide();
-    f.save(args.tmpAudio);
+    f.saveAudio(args.tmpAudio);
 }
 function onCancel(evt, args) {
     avgMs = -1;
@@ -363,10 +403,49 @@ async function visualizeExportStart() {
         ipcRenderer.send('visualize_start', {});
     });
 }
+function visualizeExportProgress(frameNumber, ms) {
+    let timeLeft;
+    let timeStr;
+    if (avgMs !== -1) {
+        timeLeft = (visualize.frames.length - frameNumber) * ms;
+        timeAvg = timeLeft;
+    }
+    else {
+        avgMs = (avgMs + ms) / 2;
+        timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+        timeAvg = (timeAvg + timeLeft) / 2;
+    }
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
+}
+async function visualizeExportFrame(frameNumber, data, width, height) {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_frame', (evt, args) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                visualizeExportProgress(args.frameNumber, args.ms);
+                return resolve(true);
+            }
+            return reject('Failed to export');
+        });
+        ipcRenderer.send('visualize_frame', { frameNumber, data, width, height });
+    });
+}
+async function visualizeExportEnd() {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_end', (evt, args) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                return resolve(args.tmpVideo);
+            }
+            return reject('Failed to export');
+        });
+        ipcRenderer.send('visualize_end', {});
+    });
+}
 async function visualizeExport() {
     const width = visualize.width;
     const height = visualize.height;
     let frameData;
+    let tmpVideo;
     if (visualize.frames.length > 0) {
         ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
         try {
@@ -378,10 +457,28 @@ async function visualizeExport() {
         }
         for (let i = 0; i < visualize.frames.length; i++) {
             frameData = visualize.exportFrame(i);
-            ipcRenderer.send('visualize_frame', { frameNumber: i, data: frameData.data, width, height });
-            break;
+            try {
+                await visualizeExportFrame(i, frameData.data, width, height);
+            }
+            catch (err) {
+                console.error(err);
+                ui.overlay.hide();
+                return false;
+            }
         }
+        ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
+        try {
+            tmpVideo = await visualizeExportEnd();
+        }
+        catch (err) {
+            console.error(err);
+            ui.overlay.hide();
+            return false;
+        }
+        avgMs = -1;
+        timeAvg = -1;
         ui.overlay.hide();
+        f.saveVideo(tmpVideo);
     }
 }
 function processAudio() {

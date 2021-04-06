@@ -307,20 +307,29 @@ ipcMain.on('visualize_start', async (evt : Event, args : any) => {
 });
 
 ipcMain.on('visualize_frame', async (evt : Event, args : any) => {
+	const ms : number = +new Date();
+	let success : boolean = false;
 	try {
 		await visualize.exportFrame(args.frameNumber, args.data, args.width, args.height);
+		success = true;
 	} catch (err) {
 		console.error(err);
 	}
+	mainWindow.webContents.send('visualize_frame', { success, ms : (+new Date()) - ms, frameNumber : args.frameNumber });
 });
 
 ipcMain.on('visualize_end', async (evt : Event, args : any) => {
+	let success : boolean = false;
 	let tmpVideo : string;
+
 	try {
 		tmpVideo = await visualize.endExport();
+		success = true;
 	} catch (err) {
 		console.error(err);
 	}
+	
+	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 
 (async () => {

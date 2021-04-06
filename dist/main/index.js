@@ -269,21 +269,28 @@ electron_1.ipcMain.on('visualize_start', async (evt, args) => {
     mainWindow.webContents.send('visualize_start', { success });
 });
 electron_1.ipcMain.on('visualize_frame', async (evt, args) => {
+    const ms = +new Date();
+    let success = false;
     try {
         await visualize.exportFrame(args.frameNumber, args.data, args.width, args.height);
+        success = true;
     }
     catch (err) {
         console.error(err);
     }
+    mainWindow.webContents.send('visualize_frame', { success, ms: (+new Date()) - ms, frameNumber: args.frameNumber });
 });
 electron_1.ipcMain.on('visualize_end', async (evt, args) => {
+    let success = false;
     let tmpVideo;
     try {
         tmpVideo = await visualize.endExport();
+        success = true;
     }
     catch (err) {
         console.error(err);
     }
+    mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 (async () => {
     const menu = menu_1.createMenu();

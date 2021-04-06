@@ -47,8 +47,7 @@ export class Visualize {
 		const paddedNum = `${frameNumber}`.padStart(8, '0');
 		const framePath = pathJoin(this.tmp, `${paddedNum}.png`);
 		const nd : ndarray = ndarray(data, [width, height, 4], [4, width*4, 1]);
-		console.log(nd)
-		console.log(framePath);
+
 		return new Promise((resolve : Function, reject: Function) => {
 			const stream : any = createWriteStream(framePath);
 
@@ -91,7 +90,8 @@ export class Visualize {
 		}
 
 		try {
-			await rmdir(this.tmp);
+			//@ts-ignore
+			await rmdir(this.tmp, { recursive : true });
 		} catch (err) {
 			throw err;
 		}

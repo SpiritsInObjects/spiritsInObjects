@@ -153,8 +153,6 @@ class Files {
             console.error(err);
         }
 
-        console.dir(files)
-
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
@@ -236,7 +234,7 @@ class Files {
         visualizeStart();
     }
 
-    public async save (filePath : string) {
+    public async saveAudio (filePath : string) {
         const options : any = {
             defaultPath: homedir()
         };
@@ -249,12 +247,12 @@ class Files {
         }
 
         if (savePath) {
-            savePath.filePath = await this.validatePath(savePath.filePath);
+            savePath.filePath = await this.validatePathAudio(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
 
-    public async validatePath (savePath : string) {
+    public async validatePathAudio (savePath : string) {
         const saveExt : string = '.wav';
         const ext : string = extname(savePath);
         let proceed : boolean = false;
@@ -276,6 +274,50 @@ class Files {
         }
         return savePath;
     }
+
+    public async saveVideo (filePath : string) {
+        const options : any = {
+            defaultPath: homedir()
+        };
+        let savePath : any;
+
+        try {
+            savePath = await dialog.showSaveDialog(null, options)
+        } catch (err) {
+            console.error(err);
+        }
+
+        if (savePath) {
+            savePath.filePath = await this.validatePathVideo(savePath.filePath);
+            ipcRenderer.send('save', { filePath, savePath });
+        }
+    }
+
+    public async validatePathVideo (savePath : string) {
+        const saveExt : string = '.mkv';
+        const ext : string = extname(savePath);
+        let proceed : boolean = false;
+        let i : number;
+
+        if (ext === '') {
+            savePath += saveExt;
+        } else if (ext.toLowerCase() !== saveExt) {
+            try {
+                proceed = await confirm(`Sonification file is an MKV but has the extension "${ext}". Keep extension and continue?`);
+            } catch (err) {
+                console.error(err);
+            }
+            if (!proceed) {
+                i = savePath.lastIndexOf(ext);
+                if (i >= 0 && i + ext.length >= savePath.length) {
+                    savePath = savePath.substring(0, i) + saveExt;
+                }
+            }
+        }
+
+        return savePath;
+    }
+
 }
 
 const audioCtx : AudioContext = new window.AudioContext();
@@ -337,7 +379,7 @@ function onSonifyComplete (evt : Event, args : any) {
     avgMs = -1;
     timeAvg = -1;
     ui.overlay.hide();
-    f.save(args.tmpAudio);
+    f.saveAudio(args.tmpAudio);
 }
 
 function onCancel (evt : Event, args : any) {
@@ -422,10 +464,53 @@ async function visualizeExportStart () {
     });
 }
 
+function visualizeExportProgress (frameNumber : number, ms : number) {
+    let timeLeft : number;
+    let timeStr : string;
+
+    if (avgMs !== -1) {
+        timeLeft = (visualize.frames.length - frameNumber) * ms;
+        timeAvg = timeLeft;
+    } else {
+        avgMs = (avgMs + ms) / 2;
+        timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+        timeAvg = (timeAvg + timeLeft) / 2;
+    }
+
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
+}
+
+async function visualizeExportFrame (frameNumber : number, data : any, width : number, height : number) {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_frame', (evt : Event, args : any) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                visualizeExportProgress(args.frameNumber, args.ms);
+                return resolve(true);
+            }
+            return reject('Failed to export');
+        });
+        ipcRenderer.send('visualize_frame', { frameNumber, data , width, height });
+    });
+}
+
+async function visualizeExportEnd () : Promise<string> {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_end', (evt : Event, args : any) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                return resolve(args.tmpVideo);
+            }
+            return reject('Failed to export');
+        });
+        ipcRenderer.send('visualize_end', {  });
+    });
+}
+
 async function visualizeExport () {
     const width : number = visualize.width;
     const height : number = visualize.height;
     let frameData : any;
+    let tmpVideo : string;
 
     if (visualize.frames.length > 0) {
         ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
@@ -439,11 +524,30 @@ async function visualizeExport () {
 
         for (let i : number = 0; i < visualize.frames.length; i++) {
             frameData = visualize.exportFrame(i);
-            ipcRenderer.send('visualize_frame', { frameNumber : i, data : frameData.data, width, height });
-            break;
+            try {
+                await visualizeExportFrame(i, frameData.data, width, height);
+            } catch (err) {
+                console.error(err);
+                ui.overlay.hide();
+                return false;
+            }
         }
-        
+
+        ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
+
+        try {
+            tmpVideo = await visualizeExportEnd();
+        } catch (err) {
+            console.error(err);
+            ui.overlay.hide();
+            return false;
+        }
+
+        avgMs = -1;
+        timeAvg = -1;
         ui.overlay.hide();
+        f.saveVideo(tmpVideo);
+
     }
 }
 
