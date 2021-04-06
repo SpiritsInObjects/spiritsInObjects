@@ -68,23 +68,6 @@ export class ffmpeg {
     static hash (data : string) : string {
         return createHash('sha1').update(data).digest('hex');
     }
-
-    	/**
-	 * Add padding to a number to 5 places. Return a string.
-	 *
-	 * @param {integer} i Integer to pad
-	 *
-	 * @returns {string} Padded string
-	 **/
-
-	static padded_frame (i : number) : string {
-		let len = (i + '').length;
-		let str = i + '';
-		for (let x = 0; x < 8 - len; x++) {
-			str = '0' + str;
-		}
-		return str;
-    }
     
     static parseStderr (line : string) : StdErr {
         //frame= 6416 fps= 30 q=31.0 size=   10251kB time=00:03:34.32 bitrate= 391.8kbits/s speed=   1x
@@ -141,6 +124,7 @@ export class ffmpeg {
             '-y',
              output
         ];
+        console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
             const child = spawn(bin, args);
             let stdout = '';
@@ -180,6 +164,12 @@ export class ffmpeg {
         });
     }
 
+    static exportFramePath (hash : string, frameNum : number) : string {
+        const padded : string = `${frameNum}`.padStart(8, '0');
+        return join(tmp, `${hash}-export-${padded}.png`);
+
+    }
+
     /**
      * Export a single frame from a video.
      * 
@@ -187,7 +177,7 @@ export class ffmpeg {
      * @param frameNum
      */
     static async exportFrame (filePath : string, frameNum : number) : Promise<string> {
-        const padded : string = this.padded_frame(frameNum);
+        const padded : string = `${frameNum}`.padStart(8, '0');
         const hash = this.hash(filePath);
         const output : string = join(tmp, `${hash}-export-${padded}.png`);
         const args : string[] = [
@@ -233,6 +223,8 @@ export class ffmpeg {
 
         return outputPath;
     }
+
+    //ffmpeg -i "movie.wav" -itsoffset 1.0833 -i "movie.mp4" -map 1:v -map 0:a -c copy "movie-video-delayed.mp4"
 }
 
 module.exports.ffmpeg = ffmpeg;

@@ -40,7 +40,7 @@ async function pixels(filePath) {
     });
 }
 function hashStr(str) {
-    return crypto_1.createHash('sha256').update(str).digest('base64');
+    return crypto_1.createHash('sha1').update(str).digest('hex');
 }
 let mainWindow;
 let visualize;
@@ -111,7 +111,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     let tmpAudio;
     let normalAudio;
     let hash;
-    console.log(args.state);
+    let fileHash;
     try {
         tmp = await ffmpeg_1.ffmpeg.exportPath();
         tmpExists = true;
@@ -122,10 +122,18 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     sonify = new sonifyNode_1.SonifyNode(args.state);
     if (args.state.type === 'video') {
         hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
+        fileHash = hashStr(args.state.filePath);
         if (typeof CACHE[hash] !== 'undefined') {
             //return cached audio
             endTime = +new Date();
             mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: CACHE[hash] });
+            return;
+        }
+        try {
+            await ffmpeg_1.ffmpeg.export(args.state.filePath);
+        }
+        catch (err) {
+            console.error(err);
             return;
         }
     }
@@ -133,7 +141,8 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         frameStart = +new Date();
         if (args.state.type === 'video') {
             try {
-                filePath = await ffmpeg_1.ffmpeg.exportFrame(args.state.filePath, i);
+                //filePath = await ffmpeg.exportFrame(args.state.filePath, i);
+                filePath = ffmpeg_1.ffmpeg.exportFramePath(fileHash, i);
             }
             catch (err) {
                 console.error(err);

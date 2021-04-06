@@ -133,7 +133,6 @@ class Files {
         catch (err) {
             console.error(err);
         }
-        console.dir(files);
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
@@ -313,13 +312,17 @@ function onSonifyProgress(evt, args) {
     let timeLeft;
     let timeStr;
     if (avgMs !== -1) {
-        timeLeft = (args.frames - args.i) * args.ms;
-        timeAvg = timeLeft;
+        avgMs = (avgMs + args.ms) / 2.0;
     }
     else {
-        avgMs = (avgMs + args.ms) / 2;
-        timeLeft = (args.frames - args.i) * avgMs;
-        timeAvg = (timeAvg + timeLeft) / 2;
+        avgMs = args.ms;
+    }
+    timeLeft = (args.frames - args.i) * avgMs;
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    }
+    else {
+        timeAvg = timeLeft;
     }
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
     ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
@@ -407,13 +410,17 @@ function visualizeExportProgress(frameNumber, ms) {
     let timeLeft;
     let timeStr;
     if (avgMs !== -1) {
-        timeLeft = (visualize.frames.length - frameNumber) * ms;
-        timeAvg = timeLeft;
+        avgMs = (avgMs + ms) / 2.0;
     }
     else {
-        avgMs = (avgMs + ms) / 2;
-        timeLeft = (visualize.frames.length - frameNumber) * avgMs;
-        timeAvg = (timeAvg + timeLeft) / 2;
+        avgMs = ms;
+    }
+    timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    }
+    else {
+        timeAvg = timeLeft;
     }
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
     ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
@@ -448,6 +455,8 @@ async function visualizeExport() {
     let tmpVideo;
     if (visualize.frames.length > 0) {
         ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
+        avgMs = -1;
+        timeAvg = -1;
         try {
             await visualizeExportStart();
         }
@@ -466,7 +475,10 @@ async function visualizeExport() {
                 return false;
             }
         }
+        avgMs = -1;
+        timeAvg = -1;
         ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
+        ui.overlay.progress(0, `N/A`);
         try {
             tmpVideo = await visualizeExportEnd();
         }

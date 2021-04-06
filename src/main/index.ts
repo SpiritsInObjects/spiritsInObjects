@@ -46,7 +46,7 @@ async function pixels (filePath : string) {
 }
 
 function hashStr (str : string) : string {
-	return createHash('sha256').update(str).digest('base64');
+	return createHash('sha1').update(str).digest('hex');
 }
 
 let mainWindow : any;
@@ -132,8 +132,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	let tmpAudio : string;
 	let normalAudio : string;
 	let hash : string;
-	
-	console.log(args.state)
+	let fileHash : string;
 
 	try {
 		tmp = await ffmpeg.exportPath();
@@ -146,19 +145,30 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 	if (args.state.type === 'video') {
 		hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
+		fileHash = hashStr(args.state.filePath);
 		if (typeof CACHE[hash] !== 'undefined') {
 			//return cached audio
 			endTime = +new Date();
 			mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio : CACHE[hash] });
 			return;
 		}
+
+		try {
+			await ffmpeg.export(args.state.filePath);
+		} catch (err) {
+			console.error(err);
+			return;
+		}
+
 	}
 	
 	for (i = 0; i < args.state.frames; i++) {
 		frameStart = +new Date();
+
 		if (args.state.type === 'video') {
 			try {
-				filePath = await ffmpeg.exportFrame(args.state.filePath, i);
+				//filePath = await ffmpeg.exportFrame(args.state.filePath, i);
+				filePath = ffmpeg.exportFramePath(fileHash, i);
 			} catch (err) {
 				console.error(err);
 				continue;
@@ -328,7 +338,7 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 	} catch (err) {
 		console.error(err);
 	}
-	
+
 	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 

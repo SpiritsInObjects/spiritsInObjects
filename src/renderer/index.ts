@@ -362,12 +362,17 @@ function onSonifyProgress (evt : Event, args : any) {
     let timeStr : string;
 
     if (avgMs !== -1) {
-        timeLeft = (args.frames - args.i) * args.ms;
-        timeAvg = timeLeft;
+        avgMs = (avgMs + args.ms) / 2.0;
     } else {
-        avgMs = (avgMs + args.ms) / 2;
-        timeLeft = (args.frames - args.i) * avgMs;
-        timeAvg = (timeAvg + timeLeft) / 2;
+        avgMs = args.ms;
+    }
+
+    timeLeft = (args.frames - args.i) * avgMs;
+
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    } else {
+        timeAvg = timeLeft;
     }
 
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
@@ -469,12 +474,17 @@ function visualizeExportProgress (frameNumber : number, ms : number) {
     let timeStr : string;
 
     if (avgMs !== -1) {
-        timeLeft = (visualize.frames.length - frameNumber) * ms;
-        timeAvg = timeLeft;
+        avgMs = (avgMs + ms) / 2.0;
     } else {
-        avgMs = (avgMs + ms) / 2;
-        timeLeft = (visualize.frames.length - frameNumber) * avgMs;
-        timeAvg = (timeAvg + timeLeft) / 2;
+        avgMs = ms;
+    }
+
+    timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    } else {
+        timeAvg = timeLeft;
     }
 
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
@@ -515,6 +525,9 @@ async function visualizeExport () {
     if (visualize.frames.length > 0) {
         ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
 
+        avgMs = -1;
+        timeAvg = -1;
+
         try {
             await visualizeExportStart();
         } catch (err) {
@@ -533,7 +546,11 @@ async function visualizeExport () {
             }
         }
 
+        avgMs = -1;
+        timeAvg = -1;
+
         ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
+        ui.overlay.progress(0, `N/A`);
 
         try {
             tmpVideo = await visualizeExportEnd();

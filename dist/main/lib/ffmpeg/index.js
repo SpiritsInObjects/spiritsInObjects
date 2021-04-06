@@ -55,21 +55,6 @@ class ffmpeg {
     static hash(data) {
         return crypto_1.createHash('sha1').update(data).digest('hex');
     }
-    /**
- * Add padding to a number to 5 places. Return a string.
- *
- * @param {integer} i Integer to pad
- *
- * @returns {string} Padded string
- **/
-    static padded_frame(i) {
-        let len = (i + '').length;
-        let str = i + '';
-        for (let x = 0; x < 8 - len; x++) {
-            str = '0' + str;
-        }
-        return str;
-    }
     static parseStderr(line) {
         //frame= 6416 fps= 30 q=31.0 size=   10251kB time=00:03:34.32 bitrate= 391.8kbits/s speed=   1x
         let obj = {};
@@ -160,6 +145,10 @@ class ffmpeg {
             return child;
         });
     }
+    static exportFramePath(hash, frameNum) {
+        const padded = `${frameNum}`.padStart(8, '0');
+        return path_1.join(tmp, `${hash}-export-${padded}.png`);
+    }
     /**
      * Export a single frame from a video.
      *
@@ -167,7 +156,7 @@ class ffmpeg {
      * @param frameNum
      */
     static async exportFrame(filePath, frameNum) {
-        const padded = this.padded_frame(frameNum);
+        const padded = `${frameNum}`.padStart(8, '0');
         const hash = this.hash(filePath);
         const output = path_1.join(tmp, `${hash}-export-${padded}.png`);
         const args = [
