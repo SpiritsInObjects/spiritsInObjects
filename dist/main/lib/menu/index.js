@@ -11,7 +11,7 @@ const showPreferences = () => {
 const helpSubmenu = [
     openUrlMenuItem({
         label: 'Website',
-        url: 'https://github.com/carlosdominguez/spiritsInObjects'
+        url: 'https://github.com/sixteenmillimeter/spiritsInObjects#readme'
     }),
     openUrlMenuItem({
         label: 'Source Code',

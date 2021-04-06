@@ -366,5 +366,9 @@ class Visualize {
             console.error(err);
         }
     }
+    exportFrame(frameNumber) {
+        this.displayFrame(frameNumber);
+        return this.ctx.getImageData(0, 0, this.width, this.height);
+    }
 }
 //# sourceMappingURL=index.js.map

@@ -44,7 +44,7 @@ class Visualize {
     private tmpAudio : string;
     public displayName : string;
     private name : string;
-    private frames : any[];
+    public frames : any[];
 
     private fps : number = 24;
     private frameLength : number = 1000 / this.fps;
@@ -448,5 +448,10 @@ class Visualize {
             console.log(framerate);
             console.error(err);
         }
+    }
+
+    public exportFrame (frameNumber : number) {
+        this.displayFrame(frameNumber);
+        return this.ctx.getImageData(0, 0, this.width, this.height);
     }
 }

@@ -41,6 +41,7 @@ let sonifyBtn : HTMLElement;
 let sonifyCancelBtn : HTMLElement;
 let visualizeBtn : HTMLElement;
 let sonifyVisualizeBtn : HTMLButtonElement;
+let visualizeExportBtn : HTMLButtonElement;
 
 async function confirm (message : string) {
     const config = {
@@ -374,12 +375,12 @@ function sonifyFrame () {
 
 async function visualizeStart () {
     let type : string = state.get('type');
+    sonifyVisualizeBtn.removeAttribute('disabled');
+    visualizeExportBtn.removeAttribute('disabled');
     if (type === 'midi') {
-        sonifyVisualizeBtn.removeAttribute('disabled');
         await visualize.processMidi();
         visualize.decodeMidi(0);
     } else if (type === 'audio') {
-        sonifyVisualizeBtn.removeAttribute('disabled');
         processAudio();
     }
 }
@@ -407,6 +408,43 @@ function sonifyVisualizeFrame () {
             //
         }
     }, 42);
+}
+
+async function visualizeExportStart () {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_start', (evt : Event, args : any) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                return resolve(true);
+            }
+            return reject('Failed to start');
+        });
+        ipcRenderer.send('visualize_start', {});
+    });
+}
+
+async function visualizeExport () {
+    const width : number = visualize.width;
+    const height : number = visualize.height;
+    let frameData : any;
+
+    if (visualize.frames.length > 0) {
+        ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
+
+        try {
+            await visualizeExportStart();
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        for (let i : number = 0; i < visualize.frames.length; i++) {
+            frameData = visualize.exportFrame(i);
+            ipcRenderer.send('visualize_frame', { frameNumber : i, data : frameData.data, width, height });
+            break;
+        }
+        
+        ui.overlay.hide();
+    }
 }
 
 function processAudio () {
@@ -455,11 +493,13 @@ function bindListeners () {
     sonifyCancelBtn = document.getElementById('sonifyCancel');
     visualizeBtn = document.getElementById('visualizeBtn');
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn') as HTMLButtonElement;
+    visualizeExportBtn = document.getElementById('visualizeExportBtn') as HTMLButtonElement;
 
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
+    visualizeExportBtn.addEventListener('click', visualizeExport, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);

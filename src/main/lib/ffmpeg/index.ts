@@ -184,7 +184,7 @@ export class ffmpeg {
      * Export a single frame from a video.
      * 
      * @param filePath 
-     * @param frame 
+     * @param frameNum
      */
     static async exportFrame (filePath : string, frameNum : number) : Promise<string> {
         const padded : string = this.padded_frame(frameNum);
@@ -209,6 +209,29 @@ export class ffmpeg {
         }
 
         return output;
+    }
+
+    static async exportVideo (inputPath : string, outputPath : string) : Promise<string> {
+        const args : string[] = [
+            '-f', 'image2',
+            '-i',  inputPath,
+            '-r', '24',
+            '-c:v', 'libx264',
+            '-preset', 'slow',
+            '-crf', '5',
+            '-y',
+             outputPath
+        ];
+        let res : any;
+
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
+            res = await spawnAsync(bin, args);
+        } catch (err) {
+            throw err;
+        }
+
+        return outputPath;
     }
 }
 

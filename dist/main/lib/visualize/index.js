@@ -1,9 +1,19 @@
-"use strict";
+'use strict';
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Visualize = void 0;
+const save_pixels_1 = __importDefault(require("save-pixels"));
+const os_1 = require("os");
+const uuid_1 = require("uuid");
+const path_1 = require("path");
+const fs_extra_1 = require("fs-extra");
+const ndarray_1 = __importDefault(require("ndarray"));
 class Visualize {
-    constructor(sox) {
+    constructor(sox, ffmpeg) {
         this.sox = sox;
+        this.ffmpeg = ffmpeg;
     }
     async processAudio(state, info, tmpAudio) {
         const filePath = state.filePath;
@@ -26,6 +36,59 @@ class Visualize {
             throw err;
         }
         return true;
+    }
+    async exportFrame(frameNumber, data, width, height) {
+        const paddedNum = `${frameNumber}`.padStart(8, '0');
+        const framePath = path_1.join(this.tmp, `${paddedNum}.png`);
+        const nd = ndarray_1.default(data, [width, height, 4], [4, width * 4, 1]);
+        console.log(nd);
+        console.log(framePath);
+        return new Promise((resolve, reject) => {
+            const stream = fs_extra_1.createWriteStream(framePath);
+            stream.on('finish', function () {
+                stream.close(() => {
+                    resolve(true);
+                });
+            });
+            stream.on('error', async (err) => {
+                try {
+                    await fs_extra_1.unlink(framePath);
+                }
+                catch (err) {
+                    console.error(err);
+                }
+                reject(err);
+            });
+            save_pixels_1.default(nd, 'PNG').pipe(stream);
+        });
+    }
+    async startExport() {
+        this.tmp = path_1.join(os_1.tmpdir(), uuid_1.v4());
+        try {
+            await fs_extra_1.mkdir(this.tmp);
+        }
+        catch (err) {
+            throw err;
+        }
+        return true;
+    }
+    async endExport() {
+        const inputPath = path_1.join(this.tmp, `%8d.png`);
+        const tmpVideo = `${this.tmp}.mkv`;
+        try {
+            await this.ffmpeg.exportVideo(inputPath, tmpVideo);
+        }
+        catch (err) {
+            throw err;
+        }
+        try {
+            await fs_extra_1.rmdir(this.tmp);
+        }
+        catch (err) {
+            throw err;
+        }
+        this.tmp = null;
+        return tmpVideo;
     }
 }
 exports.Visualize = Visualize;

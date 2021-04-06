@@ -8,7 +8,6 @@ import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
 import { pathExists, unlink, writeFile, copyFile } from 'fs-extra';
 import getPixels from 'get-pixels';
-import savePixels from 'save-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
 import { createHash } from 'crypto';
@@ -43,12 +42,6 @@ async function pixels (filePath : string) {
 			}
 			return resolve(imageData);
 		});
-	});
-}
-
-async function save (filePath : string, data : any[]) {
-	return new Promise((resolve : Function, reject: Function) => {
-		//return savePixels('PNG')
 	});
 }
 
@@ -302,10 +295,38 @@ ipcMain.on('process_audio', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('process_audio', { tmpAudio });
 });
 
+ipcMain.on('visualize_start', async (evt : Event, args : any) => {
+	let success : boolean = false;
+	try {
+		await visualize.startExport();
+		success = true;
+	} catch (err) {
+		console.error(err);
+	}
+	mainWindow.webContents.send('visualize_start', { success });
+});
+
+ipcMain.on('visualize_frame', async (evt : Event, args : any) => {
+	try {
+		await visualize.exportFrame(args.frameNumber, args.data, args.width, args.height);
+	} catch (err) {
+		console.error(err);
+	}
+});
+
+ipcMain.on('visualize_end', async (evt : Event, args : any) => {
+	let tmpVideo : string;
+	try {
+		tmpVideo = await visualize.endExport();
+	} catch (err) {
+		console.error(err);
+	}
+});
+
 (async () => {
 	const menu = createMenu();
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();
-	visualize = new Visualize(sox);
+	visualize = new Visualize(sox, ffmpeg);
 })();

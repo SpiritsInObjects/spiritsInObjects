@@ -1,18 +1,29 @@
+'use strict';
+
+import savePixels from 'save-pixels';
+import { tmpdir } from 'os';
+import { v4 as uuid } from 'uuid';
+import { join as pathJoin } from 'path';
+import { mkdir, rmdir, createWriteStream, unlink } from 'fs-extra';
+import ndarray from 'ndarray';
 
 export class Visualize {
 	private sox : any;
+	private ffmpeg : any;
+	private tmp : string;
 
-	constructor (sox : any) {
+	constructor (sox : any, ffmpeg : any) {
 		this.sox = sox;
+		this.ffmpeg = ffmpeg;
 	}
 
-	async processAudio (state : any, info : any, tmpAudio : string) {
-		const filePath : string = state.filePath;
-		const fps : number = typeof state.fps !== 'undefined' ? state.fps : 24;
-		const height : number = state.vHeight;
+	public async processAudio (state : any, info : any, tmpAudio : string) {
+		const filePath   : string = state.filePath;
+		const fps        : number = typeof state.fps !== 'undefined' ? state.fps : 24;
+		const height     : number = state.vHeight;
 		const samplerate : number = height * fps;
 
-		const stream : any = info.streams.find((stream : any) => {
+		const stream : any = info.streams.find( (stream : any) => {
 			if (typeof stream.codec_type !== 'undefined' && stream.codec_type === 'audio') {
 				return true;
 			}
@@ -30,6 +41,64 @@ export class Visualize {
 		}
 
 		return true
+	}
+
+	public async exportFrame (frameNumber : number, data : any[], width : number, height : number) {
+		const paddedNum = `${frameNumber}`.padStart(8, '0');
+		const framePath = pathJoin(this.tmp, `${paddedNum}.png`);
+		const nd : ndarray = ndarray(data, [width, height, 4], [4, width*4, 1]);
+		console.log(nd)
+		console.log(framePath);
+		return new Promise((resolve : Function, reject: Function) => {
+			const stream : any = createWriteStream(framePath);
+
+			stream.on('finish', function() {
+				stream.close(() => {
+					resolve(true);
+				});
+			});
+
+			stream.on('error', async (err : Error) => {
+				try {
+					await unlink(framePath);
+				} catch (err) {
+					console.error(err);
+				}
+				reject(err);
+			});
+			savePixels(nd, 'PNG').pipe(stream);
+		});
+	}
+
+	public async startExport () {
+		this.tmp = pathJoin(tmpdir(), uuid());
+		try {
+			await mkdir(this.tmp);
+		} catch (err) {
+			throw err;
+		}
+		return true;
+	}
+
+	public async endExport () {
+		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
+		const tmpVideo : string = `${this.tmp}.mkv`;
+
+		try {
+			await this.ffmpeg.exportVideo(inputPath, tmpVideo);
+		} catch (err) {
+			throw err;
+		}
+
+		try {
+			await rmdir(this.tmp);
+		} catch (err) {
+			throw err;
+		}
+
+		this.tmp = null;
+
+		return tmpVideo;
 	}
 }
 

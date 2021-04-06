@@ -39,11 +39,6 @@ async function pixels(filePath) {
         });
     });
 }
-async function save(filePath, data) {
-    return new Promise((resolve, reject) => {
-        //return savePixels('PNG')
-    });
-}
 function hashStr(str) {
     return crypto_1.createHash('sha256').update(str).digest('base64');
 }
@@ -262,11 +257,39 @@ electron_1.ipcMain.on('process_audio', async (evt, args) => {
     }
     mainWindow.webContents.send('process_audio', { tmpAudio });
 });
+electron_1.ipcMain.on('visualize_start', async (evt, args) => {
+    let success = false;
+    try {
+        await visualize.startExport();
+        success = true;
+    }
+    catch (err) {
+        console.error(err);
+    }
+    mainWindow.webContents.send('visualize_start', { success });
+});
+electron_1.ipcMain.on('visualize_frame', async (evt, args) => {
+    try {
+        await visualize.exportFrame(args.frameNumber, args.data, args.width, args.height);
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
+electron_1.ipcMain.on('visualize_end', async (evt, args) => {
+    let tmpVideo;
+    try {
+        tmpVideo = await visualize.endExport();
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
 (async () => {
     const menu = menu_1.createMenu();
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();
-    visualize = new visualize_1.Visualize(sox_1.sox);
+    visualize = new visualize_1.Visualize(sox_1.sox, ffmpeg_1.ffmpeg);
 })();
 //# sourceMappingURL=index.js.map
