@@ -25,7 +25,6 @@ class Video {
     private selectionDisplay : HTMLSpanElement = document.getElementById('selectedarea') as HTMLSpanElement;
     private errorDisplay : HTMLElement = document.getElementById('displayError');
 
-
     private cursor : HTMLElement = document.querySelector('#sonifyTimeline .cursor');
     private scrubbing : boolean = false;
 
@@ -80,6 +79,7 @@ class Video {
         this.cursor.addEventListener('mousedown', this.beginScrubbing.bind(this), false);
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
+        this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
 
         this.ui.onSelectionChange = this.displayInfo.bind(this);
 
@@ -144,6 +144,17 @@ class Video {
         }
     }
 
+    private clickScrub (evt : MouseEvent) {
+        const leftX : number = this.cursor.parentElement.offsetLeft;
+        const width : number = this.cursor.parentElement.clientWidth;
+        const percent : number  = (evt.pageX - leftX) / width;
+        const frame : number = Math.floor(this.frames * percent);
+        //snap to frame
+        this.scrubbing = false;
+        this.current.value = String(frame);
+        this.editFrame();
+    }
+
     private closestFramerate (framerate : number) : number {
         const closest = this.framerates.reduce((a, b) => {
             return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
@@ -152,7 +163,7 @@ class Video {
     }
 
     /**
-     *    Display the timecode in the two
+     *    Display the timecode in the two inputs on top of the screen
      **/
     private updateTimecodes (startFrame : number, endFrame : number, framerate : number) {
         framerate = this.closestFramerate(framerate);
@@ -231,6 +242,8 @@ class Video {
     }
 
     private onloadstartstill () {
+        this.width = this.stillLoader.naturalWidth;
+        this.height = this.stillLoader.naturalHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
@@ -389,20 +402,23 @@ class Video {
 
     public nextFrame () {
         let frame : number = this.currentFrame();
-        frame++;
-        if (frame >= this.frames) {
-            frame = this.frames - 1;
+        if (this.type === 'video') {
+            frame++;
+            if (frame >= this.frames) {
+                frame = this.frames - 1;
+            }
+            this.setFrame(frame);
         }
-        this.setFrame(frame);
     }
     public prevFrame () {
         let frame : number = this.currentFrame();
-        console.log('peing called');
-        frame--;
-        if (frame < 0) {
-            frame = 0;
+        if (this.type === 'video') {
+            frame--;
+            if (frame < 0) {
+                frame = 0;
+            }
+            this.setFrame(frame);
         }
-        this.setFrame(frame);
     }
     public editFrame () {
         let frame : number = parseInt(this.current.value);

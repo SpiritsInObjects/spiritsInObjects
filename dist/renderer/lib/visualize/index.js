@@ -13,8 +13,12 @@ class Visualize {
         this.current = document.getElementById('vCurrentFrame');
         this.cursor = document.querySelector('#visualizeTimeline .cursor');
         this.scrubbing = false;
+        this.startTimecode = document.getElementById('vStartTimecode');
+        this.endTimecode = document.getElementById('vEndTimecode');
+        this.framerates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
         this.type = 'midi';
         this.soundtrackType = 'dual variable area';
+        this.soundtrackFull = false;
         this.fps = 24;
         this.frameLength = 1000 / this.fps;
         this.frame_h = 7.62;
@@ -46,6 +50,7 @@ class Visualize {
         this.cursor.addEventListener('mousedown', this.beginScrubbing.bind(this), false);
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
+        this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
     }
     set(filePath, type) {
         this.filePath = filePath;
@@ -97,6 +102,14 @@ class Visualize {
         }
         this.displayFrame(frame);
     }
+    changeTrack() {
+        const val = this.tracksSelect.value;
+        this.decodeMidi(parseInt(val));
+    }
+    changeType() {
+        this.soundtrackType = this.typesSelect.value;
+        this.decodeAudio();
+    }
     async processMidi() {
         let midi;
         let trackStr;
@@ -120,14 +133,6 @@ class Visualize {
         }
         console.log(`${midi.name} has ${this.tracksWithNotes.length} tracks with notes`);
         this.showTracks();
-    }
-    changeTrack() {
-        const val = this.tracksSelect.value;
-        this.decodeMidi(parseInt(val));
-    }
-    changeType() {
-        this.soundtrackType = this.typesSelect.value;
-        this.decodeAudio();
     }
     async decodeMidi(trackIndex = 0) {
         let midi;
@@ -189,6 +194,7 @@ class Visualize {
             }
         }
         console.log(`${this.frames.length} vs. ${this.frameCount}`);
+        this.updateTimecodes(0, this.frames.length - 1, this.fps);
         this.displayFrame(firstNote);
     }
     buildNote(track, midiNote) {
@@ -238,6 +244,28 @@ class Visualize {
             this.displayFrame(frame);
         }
     }
+    clickScrub(evt) {
+        const leftX = this.cursor.parentElement.offsetLeft;
+        const width = this.cursor.parentElement.clientWidth;
+        const percent = (evt.pageX - leftX) / width;
+        const frame = Math.floor(this.frames.length * percent);
+        //snap to frame
+        this.scrubbing = false;
+        this.current.value = String(frame);
+        this.displayFrame(frame);
+    }
+    nextFrame() {
+        if (this.frameNumber < this.frames.length) {
+            this.frameNumber++;
+        }
+        this.displayFrame(this.frameNumber);
+    }
+    prevFrame() {
+        if (this.frameNumber > 0) {
+            this.frameNumber--;
+        }
+        this.displayFrame(this.frameNumber);
+    }
     displayFrame(frameNumber) {
         const cursor = (frameNumber / this.frames.length) * 100.0;
         let lines;
@@ -254,18 +282,6 @@ class Visualize {
         }
         this.current.value = String(frameNumber);
         this.cursor.style.left = `${cursor}%`;
-    }
-    nextFrame() {
-        if (this.frameNumber < this.frames.length) {
-            this.frameNumber++;
-        }
-        this.displayFrame(this.frameNumber);
-    }
-    prevFrame() {
-        if (this.frameNumber > 0) {
-            this.frameNumber--;
-        }
-        this.displayFrame(this.frameNumber);
     }
     frameMidi(lines) {
         const segment = this.height / lines;
@@ -302,9 +318,11 @@ class Visualize {
     }
     async decodeAudio() {
         const dpi = Math.round((this.height / 7.605) * 25.4);
-        //need to resample
+        const soundtrackTypeParts = this.soundtrackType.split(' full');
+        const soundtrackType = soundtrackTypeParts[0];
+        this.soundtrackFull = soundtrackTypeParts.length > 1;
         //@ts-ignore
-        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, this.soundtrackType, 'short', true);
+        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, soundtrackType, 'short', true);
         try {
             await this.so.decode();
         }
@@ -312,17 +330,41 @@ class Visualize {
             console.error(err);
         }
         this.frames = new Array(this.so.FRAMES);
+        this.updateTimecodes(0, this.frames.length - 1, this.fps);
         this.displayFrame(0);
     }
     frameAudio(frameNumber) {
-        let ratio = this.audioCanvas.width / this.audioCanvas.height;
-        let scaledWidth = this.height * ratio;
+        const ratio = this.audioCanvas.width / this.audioCanvas.height;
+        const scaledWidth = this.height * ratio;
         this.so.frame(frameNumber);
-        console.log(this.audioCanvas.width);
-        console.log(this.audioCanvas.height);
-        console.log(this.so.RAW_RATE);
-        this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+        this.ctx.fillStyle = '#000000';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        if (this.soundtrackFull) {
+            this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width, this.height);
+        }
+        else {
+            this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+        }
         this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
+    }
+    closestFramerate(framerate) {
+        const closest = this.framerates.reduce((a, b) => {
+            return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
+        });
+        return closest;
+    }
+    updateTimecodes(startFrame, endFrame, framerate) {
+        framerate = this.closestFramerate(framerate);
+        try {
+            this.startTC = new Timecode(startFrame, framerate, false);
+            this.endTC = new Timecode(endFrame, framerate, false);
+            this.startTimecode.value = this.startTC.toString();
+            this.endTimecode.value = this.endTC.toString();
+        }
+        catch (err) {
+            console.log(framerate);
+            console.error(err);
+        }
     }
 }
 //# sourceMappingURL=index.js.map

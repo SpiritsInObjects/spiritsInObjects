@@ -29,8 +29,16 @@ class Visualize {
     private cursor : HTMLElement = document.querySelector('#visualizeTimeline .cursor');
     private scrubbing : boolean = false;
 
+    private startTimecode : HTMLInputElement = document.getElementById('vStartTimecode') as HTMLInputElement;
+    private endTimecode : HTMLInputElement = document.getElementById('vEndTimecode') as HTMLInputElement;
+    private startTC : Timecode;
+    private endTC : Timecode;
+
+    private framerates : number[] = [ 23.976, 24, 25, 29.97, 30, 50, 59.94, 60 ]; 
+
     private type : string = 'midi';
     private soundtrackType : string = 'dual variable area';
+    private soundtrackFull : boolean = false;
 
     private filePath : string;
     private tmpAudio : string;
@@ -81,6 +89,7 @@ class Visualize {
         this.cursor.addEventListener('mousedown', this.beginScrubbing.bind(this), false);
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
+        this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
     }
 
     public set (filePath : string, type : string) : string {
@@ -134,6 +143,16 @@ class Visualize {
         this.displayFrame(frame);
     }
 
+    private changeTrack () {
+        const val : string = this.tracksSelect.value;
+        this.decodeMidi(parseInt(val));
+    }
+
+    private changeType () {
+        this.soundtrackType = this.typesSelect.value;
+        this.decodeAudio();
+    }
+
     public async processMidi () {
         let midi : any;
         let trackStr : string;
@@ -161,16 +180,6 @@ class Visualize {
         console.log(`${midi.name} has ${this.tracksWithNotes.length} tracks with notes`);
 
         this.showTracks();
-    }
-
-    private changeTrack () {
-        const val : string = this.tracksSelect.value;
-        this.decodeMidi(parseInt(val));
-    }
-
-    private changeType () {
-        this.soundtrackType = this.typesSelect.value;
-        this.decodeAudio();
     }
 
     public async decodeMidi (trackIndex : number = 0) {
@@ -244,7 +253,7 @@ class Visualize {
         }
 
         console.log(`${this.frames.length} vs. ${this.frameCount}`)
-
+        this.updateTimecodes(0, this.frames.length - 1, this.fps);
         this.displayFrame(firstNote);
     }
 
@@ -299,6 +308,30 @@ class Visualize {
         }
     }
 
+    private clickScrub (evt : MouseEvent) {
+        const leftX : number = this.cursor.parentElement.offsetLeft;
+        const width : number = this.cursor.parentElement.clientWidth;
+        const percent : number  = (evt.pageX - leftX) / width;
+        const frame : number = Math.floor(this.frames.length * percent);
+        //snap to frame
+        this.scrubbing = false;
+        this.current.value = String(frame);
+        this.displayFrame(frame);
+    }
+
+    public nextFrame () {
+        if (this.frameNumber < this.frames.length) {
+            this.frameNumber++;
+        }
+        this.displayFrame(this.frameNumber);
+    }
+    public prevFrame () {
+        if (this.frameNumber > 0) {
+            this.frameNumber--;
+        }
+        this.displayFrame(this.frameNumber);
+    }
+
     public displayFrame (frameNumber : number) {
         const cursor : number = (frameNumber / this.frames.length) * 100.0;
         let lines : number;
@@ -318,19 +351,6 @@ class Visualize {
 
         this.current.value = String(frameNumber);
         this.cursor.style.left = `${cursor}%`;
-    }
-
-    public nextFrame () {
-        if (this.frameNumber < this.frames.length) {
-            this.frameNumber++;
-        }
-        this.displayFrame(this.frameNumber);
-    }
-    public prevFrame () {
-        if (this.frameNumber > 0) {
-            this.frameNumber--;
-        }
-        this.displayFrame(this.frameNumber);
     }
 
     private frameMidi ( lines : number ) {
@@ -373,11 +393,14 @@ class Visualize {
     }
 
     public async decodeAudio () {
-        const dpi : number = Math.round((this.height / 7.605) * 25.4); 
-        //need to resample
+        const dpi : number = Math.round((this.height / 7.605) * 25.4);
+        const soundtrackTypeParts : string[] = this.soundtrackType.split(' full');
+        const soundtrackType : string = soundtrackTypeParts[0];
+
+        this.soundtrackFull = soundtrackTypeParts.length > 1;
 
         //@ts-ignore
-        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, this.soundtrackType, 'short', true);
+        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, soundtrackType, 'short', true);
         
         try {
             await this.so.decode();
@@ -386,17 +409,44 @@ class Visualize {
         }
 
         this.frames = new Array(this.so.FRAMES);
+        this.updateTimecodes(0, this.frames.length - 1, this.fps);
         this.displayFrame(0);
     }
 
     private frameAudio (frameNumber : number) {
-        let ratio : number = this.audioCanvas.width / this.audioCanvas.height;
-        let scaledWidth : number  = this.height * ratio;
+        const ratio : number = this.audioCanvas.width / this.audioCanvas.height;
+        const scaledWidth : number  = this.height * ratio;
+
         this.so.frame(frameNumber);
-        console.log(this.audioCanvas.width);
-        console.log(this.audioCanvas.height);
-        console.log(this.so.RAW_RATE);
-        this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+
+        this.ctx.fillStyle = '#000000';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        if (this.soundtrackFull) {
+            this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width, this.height);
+        } else {
+            this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+        }
         this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
+    }
+
+    private closestFramerate (framerate : number) : number {
+        const closest = this.framerates.reduce((a, b) => {
+            return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
+        });
+        return closest;
+    }
+
+    private updateTimecodes (startFrame : number, endFrame : number, framerate : number) {
+        framerate = this.closestFramerate(framerate);
+        try {
+            this.startTC = new Timecode(startFrame, framerate, false);
+            this.endTC   = new Timecode(endFrame,   framerate, false);
+            this.startTimecode.value = this.startTC.toString();
+            this.endTimecode.value   = this.endTC.toString();
+        } catch (err) {
+            console.log(framerate);
+            console.error(err);
+        }
     }
 }

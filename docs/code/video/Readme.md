@@ -20,7 +20,7 @@ Restore the apps saved state to the video UI
 <a name="Video+updateTimecodes"></a>
 
 ### video.updateTimecodes()
-Display the timecode in the two
+Display the timecode in the two inputs on top of the screen
 
 **Kind**: instance method of [<code>Video</code>](#Video)  
 <a name="Video+stream"></a>

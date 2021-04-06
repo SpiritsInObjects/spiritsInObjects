@@ -53,6 +53,7 @@ class Video {
         this.cursor.addEventListener('mousedown', this.beginScrubbing.bind(this), false);
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
+        this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
         this.ui.onSelectionChange = this.displayInfo.bind(this);
         this.updateTimecodes(0, 0, 24);
         //this.restoreState();
@@ -110,6 +111,16 @@ class Video {
             this.editFrame();
         }
     }
+    clickScrub(evt) {
+        const leftX = this.cursor.parentElement.offsetLeft;
+        const width = this.cursor.parentElement.clientWidth;
+        const percent = (evt.pageX - leftX) / width;
+        const frame = Math.floor(this.frames * percent);
+        //snap to frame
+        this.scrubbing = false;
+        this.current.value = String(frame);
+        this.editFrame();
+    }
     closestFramerate(framerate) {
         const closest = this.framerates.reduce((a, b) => {
             return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
@@ -117,7 +128,7 @@ class Video {
         return closest;
     }
     /**
-     *    Display the timecode in the two
+     *    Display the timecode in the two inputs on top of the screen
      **/
     updateTimecodes(startFrame, endFrame, framerate) {
         framerate = this.closestFramerate(framerate);
@@ -191,6 +202,8 @@ class Video {
         this.sonifyVideoBtn.removeAttribute('disabled');
     }
     onloadstartstill() {
+        this.width = this.stillLoader.naturalWidth;
+        this.height = this.stillLoader.naturalHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
@@ -328,20 +341,23 @@ class Video {
     }
     nextFrame() {
         let frame = this.currentFrame();
-        frame++;
-        if (frame >= this.frames) {
-            frame = this.frames - 1;
+        if (this.type === 'video') {
+            frame++;
+            if (frame >= this.frames) {
+                frame = this.frames - 1;
+            }
+            this.setFrame(frame);
         }
-        this.setFrame(frame);
     }
     prevFrame() {
         let frame = this.currentFrame();
-        console.log('peing called');
-        frame--;
-        if (frame < 0) {
-            frame = 0;
+        if (this.type === 'video') {
+            frame--;
+            if (frame < 0) {
+                frame = 0;
+            }
+            this.setFrame(frame);
         }
-        this.setFrame(frame);
     }
     editFrame() {
         let frame = parseInt(this.current.value);
