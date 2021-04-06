@@ -253,7 +253,7 @@ class Visualize {
         }
 
         console.log(`${this.frames.length} vs. ${this.frameCount}`)
-        this.updateTimecodes(0, this.frames.length - 1, this.fps);
+        this.updateTimecodes(0, this.frames.length, this.fps);
         this.displayFrame(firstNote);
     }
 
@@ -409,7 +409,7 @@ class Visualize {
         }
 
         this.frames = new Array(this.so.FRAMES);
-        this.updateTimecodes(0, this.frames.length - 1, this.fps);
+        this.updateTimecodes(0, this.frames.length, this.fps);
         this.displayFrame(0);
     }
 
