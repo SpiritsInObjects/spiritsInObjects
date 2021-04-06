@@ -6,15 +6,21 @@ const { Frequency } = require('tone');
 class Visualize {
     private state : State;
     public sonify : Sonify;
-    public so : SoundtrackOptical;
+    private ui : any;
+
+    public so : any;
 
     private tracksSelect : HTMLSelectElement = document.getElementById('vTracks') as HTMLSelectElement;
+    private typesSelect : HTMLSelectElement = document.getElementById('vType') as HTMLSelectElement;
 
     private canvas : HTMLCanvasElement = document.getElementById('vCanvas') as HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
 
     private display : HTMLCanvasElement = document.getElementById('vCanvasDisplay') as HTMLCanvasElement;
     private displayCtx : CanvasRenderingContext2D;
+
+    private audioCanvas : HTMLCanvasElement = document.getElementById('aCanvas') as HTMLCanvasElement;
+    private audioCtx : CanvasRenderingContext2D;
 
     public prev : HTMLButtonElement = document.getElementById('vPrevFrame') as HTMLButtonElement;
     public next : HTMLButtonElement = document.getElementById('vNextFrame') as HTMLButtonElement;
@@ -24,8 +30,10 @@ class Visualize {
     private scrubbing : boolean = false;
 
     private type : string = 'midi';
+    private soundtrackType : string = 'dual variable area';
 
     private filePath : string;
+    private tmpAudio : string;
     public displayName : string;
     private name : string;
     private frames : any[];
@@ -65,6 +73,7 @@ class Visualize {
 
     private bindListeners () {
         this.tracksSelect.addEventListener('change', this.changeTrack.bind(this));
+        this.typesSelect.addEventListener('change', this.changeType.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -91,6 +100,24 @@ class Visualize {
     private showTracks () {
         try {
             this.tracksSelect.classList.remove('hide');
+        } catch (err) {
+            //
+        }
+        try {
+            this.typesSelect.classList.add('hide');
+        } catch (err) {
+            //
+        }
+    }
+
+    private showTypes () {
+        try {
+            this.tracksSelect.classList.add('hide');
+        } catch (err) {
+            //
+        }
+        try {
+            this.typesSelect.classList.remove('hide');
         } catch (err) {
             //
         }
@@ -139,6 +166,11 @@ class Visualize {
     private changeTrack () {
         const val : string = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
+    }
+
+    private changeType () {
+        this.soundtrackType = this.typesSelect.value;
+        this.decodeAudio();
     }
 
     public async decodeMidi (trackIndex : number = 0) {
@@ -279,6 +311,11 @@ class Visualize {
             }
         }
 
+        if (this.type === 'audio') {
+            this.frameNumber = frameNumber
+            this.frameAudio(frameNumber);
+        }
+
         this.current.value = String(frameNumber);
         this.cursor.style.left = `${cursor}%`;
     }
@@ -327,5 +364,39 @@ class Visualize {
         this.state.set('vWidth', this.width);
         this.state.set('vHeight', this.height);
         this.samplerate = this.height * this.fps;
+    }
+
+    public onProcessAudio (evt : Event, args : any) {
+        this.tmpAudio = args.tmpAudio;
+        this.showTypes();
+        this.decodeAudio();
+    }
+
+    public async decodeAudio () {
+        const dpi : number = Math.round((this.height / 7.605) * 25.4); 
+        //need to resample
+
+        //@ts-ignore
+        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, this.soundtrackType, 'short', true);
+        
+        try {
+            await this.so.decode();
+        } catch (err) {
+            console.error(err);
+        }
+
+        this.frames = new Array(this.so.FRAMES);
+        this.displayFrame(0);
+    }
+
+    private frameAudio (frameNumber : number) {
+        let ratio : number = this.audioCanvas.width / this.audioCanvas.height;
+        let scaledWidth : number  = this.height * ratio;
+        this.so.frame(frameNumber);
+        console.log(this.audioCanvas.width);
+        console.log(this.audioCanvas.height);
+        console.log(this.so.RAW_RATE);
+        this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+        this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
     }
 }

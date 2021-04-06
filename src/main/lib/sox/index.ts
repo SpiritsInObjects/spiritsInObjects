@@ -63,15 +63,20 @@ export class sox {
     /**
      * Resample audio to precise samplerate and merge down to mono.
      **/
-    static async resample (input : string, output : string, sampleRate : number) : Promise<string> {
+    static async resample (input : string, output : string, sampleRate : number, channels : number) : Promise<string> {
         const args : string[] = [
             input,
             '--norm',
-            output,
-            'remix', `1-2`,
-            'rate',
-            `${sampleRate}`
+            output
         ];
+
+        if (channels > 1) {
+            args.push('remix');
+            args.push(`1-${channels}`);
+        }
+
+        args.push('rate')
+        args.push(`${sampleRate}`);
 
         try {
             console.log(`${bin} ${args.join(' ')}`);

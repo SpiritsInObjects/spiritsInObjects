@@ -4,14 +4,17 @@ const { Frequency } = require('tone');
 class Visualize {
     constructor(state, audioContext) {
         this.tracksSelect = document.getElementById('vTracks');
+        this.typesSelect = document.getElementById('vType');
         this.canvas = document.getElementById('vCanvas');
         this.display = document.getElementById('vCanvasDisplay');
+        this.audioCanvas = document.getElementById('aCanvas');
         this.prev = document.getElementById('vPrevFrame');
         this.next = document.getElementById('vNextFrame');
         this.current = document.getElementById('vCurrentFrame');
         this.cursor = document.querySelector('#visualizeTimeline .cursor');
         this.scrubbing = false;
         this.type = 'midi';
+        this.soundtrackType = 'dual variable area';
         this.fps = 24;
         this.frameLength = 1000 / this.fps;
         this.frame_h = 7.62;
@@ -36,6 +39,7 @@ class Visualize {
     }
     bindListeners() {
         this.tracksSelect.addEventListener('change', this.changeTrack.bind(this));
+        this.typesSelect.addEventListener('change', this.changeType.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -58,6 +62,26 @@ class Visualize {
     showTracks() {
         try {
             this.tracksSelect.classList.remove('hide');
+        }
+        catch (err) {
+            //
+        }
+        try {
+            this.typesSelect.classList.add('hide');
+        }
+        catch (err) {
+            //
+        }
+    }
+    showTypes() {
+        try {
+            this.tracksSelect.classList.add('hide');
+        }
+        catch (err) {
+            //
+        }
+        try {
+            this.typesSelect.classList.remove('hide');
         }
         catch (err) {
             //
@@ -100,6 +124,10 @@ class Visualize {
     changeTrack() {
         const val = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
+    }
+    changeType() {
+        this.soundtrackType = this.typesSelect.value;
+        this.decodeAudio();
     }
     async decodeMidi(trackIndex = 0) {
         let midi;
@@ -220,6 +248,10 @@ class Visualize {
                 this.frameMidi(lines);
             }
         }
+        if (this.type === 'audio') {
+            this.frameNumber = frameNumber;
+            this.frameAudio(frameNumber);
+        }
         this.current.value = String(frameNumber);
         this.cursor.style.left = `${cursor}%`;
     }
@@ -262,6 +294,35 @@ class Visualize {
         this.state.set('vWidth', this.width);
         this.state.set('vHeight', this.height);
         this.samplerate = this.height * this.fps;
+    }
+    onProcessAudio(evt, args) {
+        this.tmpAudio = args.tmpAudio;
+        this.showTypes();
+        this.decodeAudio();
+    }
+    async decodeAudio() {
+        const dpi = Math.round((this.height / 7.605) * 25.4);
+        //need to resample
+        //@ts-ignore
+        this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, this.soundtrackType, 'short', true);
+        try {
+            await this.so.decode();
+        }
+        catch (err) {
+            console.error(err);
+        }
+        this.frames = new Array(this.so.FRAMES);
+        this.displayFrame(0);
+    }
+    frameAudio(frameNumber) {
+        let ratio = this.audioCanvas.width / this.audioCanvas.height;
+        let scaledWidth = this.height * ratio;
+        this.so.frame(frameNumber);
+        console.log(this.audioCanvas.width);
+        console.log(this.audioCanvas.height);
+        console.log(this.so.RAW_RATE);
+        this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
+        this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
     }
 }
 //# sourceMappingURL=index.js.map

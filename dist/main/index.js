@@ -19,6 +19,8 @@ const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
+const sox_1 = require("./lib/sox");
+const visualize_1 = require("./lib/visualize");
 const CACHE = {};
 let CANCEL = false;
 electron_unhandled_1.default();
@@ -46,6 +48,7 @@ function hashStr(str) {
     return crypto_1.createHash('sha256').update(str).digest('base64');
 }
 let mainWindow;
+let visualize;
 const BrowserOptions = {
     title: electron_1.app.name,
     show: false,
@@ -177,7 +180,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         }
         arr.set(arrBuffer, i * arrBuffer.length);
         if (CANCEL) {
-            mainWindow.webContents.send('sonify_cancel', {});
+            mainWindow.webContents.send('cancel', {});
             CANCEL = false;
             return false;
         }
@@ -206,7 +209,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     endTime = +new Date();
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
 });
-electron_1.ipcMain.on('sonify_cancel', async (evt, args) => {
+electron_1.ipcMain.on('cancel', async (evt, args) => {
     CANCEL = true;
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
@@ -242,12 +245,28 @@ electron_1.ipcMain.on('save', async (evt, args) => {
         }
     }
 });
-electron_1.ipcMain.on('visualize', async (evt, args) => {
+electron_1.ipcMain.on('process_audio', async (evt, args) => {
+    const tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
+    let info = {};
+    try {
+        info = await ffmpeg_1.ffmpeg.info(args.state.filePath);
+    }
+    catch (err) {
+        console.error(err);
+    }
+    try {
+        await visualize.processAudio(args.state, info, tmpAudio);
+    }
+    catch (err) {
+        console.error(err);
+    }
+    mainWindow.webContents.send('process_audio', { tmpAudio });
 });
 (async () => {
     const menu = menu_1.createMenu();
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();
+    visualize = new visualize_1.Visualize(sox_1.sox);
 })();
 //# sourceMappingURL=index.js.map

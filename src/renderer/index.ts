@@ -12,7 +12,8 @@ const humanizeDuration = require('humanize-duration');
 const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions : string[] = ['.mid', '.midi'];
-const audioExtensions : string[] = ['.wav', '.wave'];
+const audioExtensions : string[] = ['.mp3', '.ogg', '.aiff', '.aif',  '.wav', '.wave'];
+
 let startMoving : boolean = false;
 let endMoving : boolean = false;
 
@@ -301,7 +302,7 @@ async function sonifyCancel () {
     let proceed : boolean = false;
     
     try {
-        proceed = await confirm(`Cancel sonification process?`);
+        proceed = await confirm(`Are you sure you want to cancel?`);
     } catch (err) {
         console.log(err);
     }
@@ -310,7 +311,7 @@ async function sonifyCancel () {
         return false;
     }
 
-    ipcRenderer.send('sonify_cancel', { });
+    ipcRenderer.send('cancel', { });
 }
 
 function onSonifyProgress (evt : Event, args : any) {
@@ -338,7 +339,7 @@ function onSonifyComplete (evt : Event, args : any) {
     f.save(args.tmpAudio);
 }
 
-function onSonifyCancel (evt : Event, args : any) {
+function onCancel (evt : Event, args : any) {
     avgMs = -1;
     timeAvg = -1;
     ui.overlay.hide();
@@ -372,10 +373,14 @@ function sonifyFrame () {
 }
 
 async function visualizeStart () {
-    if (state.get('type') === 'midi') {
+    let type : string = state.get('type');
+    if (type === 'midi') {
         sonifyVisualizeBtn.removeAttribute('disabled');
         await visualize.processMidi();
         visualize.decodeMidi(0);
+    } else if (type === 'audio') {
+        sonifyVisualizeBtn.removeAttribute('disabled');
+        processAudio();
     }
 }
 
@@ -402,6 +407,12 @@ function sonifyVisualizeFrame () {
             //
         }
     }, 42);
+}
+
+function processAudio () {
+    const visualizeState : any = state.get();
+    ui.overlay.show(`Preparing audio file ${visualize.displayName}...`);
+    ipcRenderer.send('process_audio', { state : visualizeState });
 }
 
 function playSync () {
@@ -432,7 +443,6 @@ function keyDown (evt : KeyboardEvent) {
         } 
     }
     console.log(evt.code);
-
 }
 
 function bindListeners () {
@@ -459,11 +469,15 @@ function bindListeners () {
 
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
-    ipcRenderer.on('sonify_cancel', onSonifyCancel);
+    ipcRenderer.on('cancel', onCancel);
 
     ipcRenderer.on('info', (evt : Event, args : any) => {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas, audioContext);
+    });
+    ipcRenderer.on('process_audio', (evt : Event, args : any) => {
+        visualize.onProcessAudio(evt, args);
+        ui.overlay.hide();
     });
 }
 

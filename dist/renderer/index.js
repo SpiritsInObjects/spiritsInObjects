@@ -8,7 +8,7 @@ const humanizeDuration = require('humanize-duration');
 const videoExtensions = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions = ['.mid', '.midi'];
-const audioExtensions = ['.wav', '.wave'];
+const audioExtensions = ['.mp3', '.ogg', '.aiff', '.aif', '.wav', '.wave'];
 let startMoving = false;
 let endMoving = false;
 let audioContext;
@@ -258,7 +258,7 @@ async function sonifyStart() {
 async function sonifyCancel() {
     let proceed = false;
     try {
-        proceed = await confirm(`Cancel sonification process?`);
+        proceed = await confirm(`Are you sure you want to cancel?`);
     }
     catch (err) {
         console.log(err);
@@ -266,7 +266,7 @@ async function sonifyCancel() {
     if (!proceed) {
         return false;
     }
-    ipcRenderer.send('sonify_cancel', {});
+    ipcRenderer.send('cancel', {});
 }
 function onSonifyProgress(evt, args) {
     let timeLeft;
@@ -290,7 +290,7 @@ function onSonifyComplete(evt, args) {
     ui.overlay.hide();
     f.save(args.tmpAudio);
 }
-function onSonifyCancel(evt, args) {
+function onCancel(evt, args) {
     avgMs = -1;
     timeAvg = -1;
     ui.overlay.hide();
@@ -319,10 +319,15 @@ function sonifyFrame() {
     }, 42);
 }
 async function visualizeStart() {
-    if (state.get('type') === 'midi') {
+    let type = state.get('type');
+    if (type === 'midi') {
         sonifyVisualizeBtn.removeAttribute('disabled');
         await visualize.processMidi();
         visualize.decodeMidi(0);
+    }
+    else if (type === 'audio') {
+        sonifyVisualizeBtn.removeAttribute('disabled');
+        processAudio();
     }
 }
 function sonifyVisualizeFrame() {
@@ -345,6 +350,11 @@ function sonifyVisualizeFrame() {
             //
         }
     }, 42);
+}
+function processAudio() {
+    const visualizeState = state.get();
+    ui.overlay.show(`Preparing audio file ${visualize.displayName}...`);
+    ipcRenderer.send('process_audio', { state: visualizeState });
 }
 function playSync() {
     video.play();
@@ -400,10 +410,14 @@ function bindListeners() {
     document.addEventListener('keydown', keyDown, false);
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
-    ipcRenderer.on('sonify_cancel', onSonifyCancel);
+    ipcRenderer.on('cancel', onCancel);
     ipcRenderer.on('info', (evt, args) => {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas, audioContext);
+    });
+    ipcRenderer.on('process_audio', (evt, args) => {
+        visualize.onProcessAudio(evt, args);
+        ui.overlay.hide();
     });
 }
 /**

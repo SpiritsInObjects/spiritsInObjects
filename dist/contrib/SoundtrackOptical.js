@@ -75,6 +75,7 @@ class SoundtrackOptical {
                 throw err;
             }
             audioData = request.response;
+            console.dir(audioData);
             try {
                 this.audioBuffer = yield this.decodeBuffer(audioData);
             }

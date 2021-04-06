@@ -21,6 +21,7 @@ import { fluidsynth } from './lib/fluidsynth';
 //import config from './lib/config';
 import { createMenu } from './lib/menu';
 import { sox } from './lib/sox';
+import { Visualize } from './lib/visualize';
 
 const CACHE : any = {};
 let CANCEL : boolean = false;
@@ -56,6 +57,7 @@ function hashStr (str : string) : string {
 }
 
 let mainWindow : any;
+let visualize : Visualize;
 
 const BrowserOptions = {
 	title: app.name,
@@ -210,7 +212,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		arr.set(arrBuffer, i * arrBuffer.length);
 
 		if (CANCEL) {
-			mainWindow.webContents.send('sonify_cancel', { });
+			mainWindow.webContents.send('cancel', { });
 			CANCEL = false;
 			return false;
 		}
@@ -246,7 +248,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
 });
 
-ipcMain.on('sonify_cancel', async (evt : Event, args : any) => {
+ipcMain.on('cancel', async (evt : Event, args : any) => {
 	CANCEL = true;
 });
 
@@ -281,8 +283,23 @@ ipcMain.on('save', async (evt : Event, args : any) => {
 	}
 });
 
-ipcMain.on('visualize', async (evt : Event, args : any) => {
+ipcMain.on('process_audio', async (evt : Event, args : any) => {
+	const tmpAudio : string = pathJoin(tmpdir(), `${uuid()}_tmp_audio.wav`);
+	let info : any = {};
 
+	try {
+		info = await ffmpeg.info(args.state.filePath);
+	} catch (err) {
+		console.error(err)
+	}
+
+	try {
+		await visualize.processAudio(args.state, info, tmpAudio);
+	} catch (err) {
+		console.error(err);
+	}
+
+	mainWindow.webContents.send('process_audio', { tmpAudio });
 });
 
 (async () => {
@@ -290,4 +307,5 @@ ipcMain.on('visualize', async (evt : Event, args : any) => {
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();
+	visualize = new Visualize(sox);
 })();

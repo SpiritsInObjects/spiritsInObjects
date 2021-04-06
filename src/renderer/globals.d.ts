@@ -12,5 +12,3 @@ declare module 'smpte-timecode';
 interface Timecode {
 	
 }
-
-interface SoundtrackOptical {}
