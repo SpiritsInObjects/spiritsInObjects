@@ -337,8 +337,17 @@ async function sonifyStart () {
         return false;
     }
 
-    ui.overlay.show(`Sonifying ${displayName}...`);
+    timeAvg = -1;
+    avgMs = -1;
+
+    ui.overlay.show(`Exporting frames from ${displayName}...`);
+    ui.overlay.progress(0, `Determining time left...`);
     ipcRenderer.send('sonify', { state : sonifyState });
+}
+
+async function onStartSonify () {
+    ui.overlay.show(`Sonifying ${video.displayName}...`);
+    ui.overlay.progress(0, `Determining time left...`);
 }
 
 async function sonifyCancel () {
@@ -377,7 +386,6 @@ function onSonifyProgress (evt : Event, args : any) {
 
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
     ui.overlay.progress(args.i / args.frames, `~${timeStr}`);
-    //console.log(`progress ${args.i}/${args.frames}, time left ${timeLeft / 1000} sec...`);
 }
 
 function onSonifyComplete (evt : Event, args : any) {
@@ -629,6 +637,7 @@ function bindListeners () {
     document.addEventListener('keydown', keyDown, false);
 
     ipcRenderer.on('sonify_complete', onSonifyComplete);
+    ipcRenderer.on('sonify_sonify', onStartSonify);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
     ipcRenderer.on('cancel', onCancel);
 

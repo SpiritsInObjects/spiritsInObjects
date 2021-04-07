@@ -95,8 +95,9 @@ class ffmpeg {
         }
         return tmp;
     }
-    static async export(filePath) {
+    static async export(filePath, onProgress = () => { }) {
         const hash = this.hash(filePath);
+        const input = {};
         const output = path_1.join(tmp, `${hash}-export-%08d.png`);
         const args = [
             '-i', filePath,
@@ -127,21 +128,10 @@ class ffmpeg {
             child.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
-                /*if (obj.frame && input.frames) {
-                    obj.progress = obj.frame / input.frames;
-                }
-                if (obj.frame && obj.speed && input.frames && input.fps) {
-                    //scale by speed
-                    obj.remaining = ((input.frames - obj.frame) / input.fps) / obj.speed;
-                    obj.estimated = input.seconds / obj.speed;
-                    if (obj.estimated > estimated) {
-                        estimated = obj.estimated;
-                    }
-                }
+                let estimated;
                 if (obj.frame) {
-                    log.info(`${input.name} ${obj.frame}/${input.frames} ${Math.round(obj.progress * 1000) / 10}% ${Math.round(obj.remaining)} seconds remaining of ${Math.round(obj.estimated)}`);
-                    if (onProgress) onProgress(obj);
-                }*/
+                    onProgress(obj);
+                }
             });
             return child;
         });

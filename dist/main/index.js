@@ -112,6 +112,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     let normalAudio;
     let hash;
     let fileHash;
+    let onProgress;
     try {
         tmp = await ffmpeg_1.ffmpeg.exportPath();
         tmpExists = true;
@@ -129,14 +130,20 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: CACHE[hash] });
             return;
         }
+        frameStart = +new Date();
+        onProgress = (obj) => {
+            ms = ((+new Date()) - frameStart) / obj.frame;
+            mainWindow.webContents.send('sonify_progress', { i: obj.frame, frames: args.state.frames, ms });
+        };
         try {
-            await ffmpeg_1.ffmpeg.export(args.state.filePath);
+            await ffmpeg_1.ffmpeg.export(args.state.filePath, onProgress);
         }
         catch (err) {
             console.error(err);
             return;
         }
     }
+    mainWindow.webContents.send('sonify_sonify', {});
     for (i = 0; i < args.state.frames; i++) {
         frameStart = +new Date();
         if (args.state.type === 'video') {
