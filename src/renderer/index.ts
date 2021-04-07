@@ -294,7 +294,7 @@ class Files {
     }
 
     public async validatePathVideo (savePath : string) {
-        const saveExt : string = '.mkv';
+        const saveExt : string = '.mp4';
         const ext : string = extname(savePath);
         let proceed : boolean = false;
         let i : number;
@@ -303,7 +303,7 @@ class Files {
             savePath += saveExt;
         } else if (ext.toLowerCase() !== saveExt) {
             try {
-                proceed = await confirm(`Sonification file is an MKV but has the extension "${ext}". Keep extension and continue?`);
+                proceed = await confirm(`The exported video is an MP4 wrapper but has the extension "${ext}". Keep extension and continue?`);
             } catch (err) {
                 console.error(err);
             }
