@@ -106,6 +106,7 @@ class ffmpeg {
             '-y',
             output
         ];
+        console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
             const child = child_process_1.spawn(bin, args);
             let stdout = '';
