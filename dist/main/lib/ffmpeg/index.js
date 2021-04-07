@@ -95,7 +95,7 @@ class ffmpeg {
         }
         return tmp;
     }
-    static async export(filePath, onProgress = () => { }) {
+    static async exportFrames(filePath, onProgress = () => { }) {
         const hash = this.hash(filePath);
         const input = {};
         const output = path_1.join(tmp, `${hash}-export-%08d.png`);
@@ -169,7 +169,7 @@ class ffmpeg {
         }
         return output;
     }
-    static async exportVideo(inputPath, outputPath) {
+    static async exportVideo(inputPath, outputPath, onProgress = () => { }) {
         const args = [
             '-f', 'image2',
             '-i', inputPath,
@@ -181,13 +181,34 @@ class ffmpeg {
             outputPath
         ];
         let res;
-        try {
-            console.log(`${bin} ${args.join(' ')}`);
-            res = await spawnAsync(bin, args);
-        }
-        catch (err) {
-            throw err;
-        }
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve, reject) => {
+            const child = child_process_1.spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            child.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(tmp);
+                }
+                else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            child.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            child.stderr.on('data', (data) => {
+                const line = data.toString();
+                const obj = this.parseStderr(line);
+                let estimated;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return child;
+        });
         return outputPath;
     }
 }

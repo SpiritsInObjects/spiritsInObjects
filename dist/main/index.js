@@ -136,7 +136,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
             mainWindow.webContents.send('sonify_progress', { i: obj.frame, frames: args.state.frames, ms });
         };
         try {
-            await ffmpeg_1.ffmpeg.export(args.state.filePath, onProgress);
+            await ffmpeg_1.ffmpeg.exportFrames(args.state.filePath, onProgress);
         }
         catch (err) {
             console.error(err);
@@ -297,10 +297,15 @@ electron_1.ipcMain.on('visualize_frame', async (evt, args) => {
     mainWindow.webContents.send('visualize_frame', { success, ms: (+new Date()) - ms, frameNumber: args.frameNumber });
 });
 electron_1.ipcMain.on('visualize_end', async (evt, args) => {
+    const frameStart = +new Date();
     let success = false;
     let tmpVideo;
+    const onProgress = (obj) => {
+        const ms = ((+new Date()) - frameStart) / obj.frame;
+        mainWindow.webContents.send('visualize_progress', { ms, frameNumber: obj.frame });
+    };
     try {
-        tmpVideo = await visualize.endExport();
+        tmpVideo = await visualize.endExport(onProgress);
         success = true;
     }
     catch (err) {

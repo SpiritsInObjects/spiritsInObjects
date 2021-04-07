@@ -443,6 +443,9 @@ async function visualizeExportFrame(frameNumber, data, width, height) {
         ipcRenderer.send('visualize_frame', { frameNumber, data, width, height });
     });
 }
+function onVisualizeProgress(evt, args) {
+    visualizeExportProgress(args.frameNumber, args.ms);
+}
 async function visualizeExportEnd() {
     return new Promise((resolve, reject) => {
         ipcRenderer.once('visualize_end', (evt, args) => {
@@ -460,7 +463,8 @@ async function visualizeExport() {
     let frameData;
     let tmpVideo;
     if (visualize.frames.length > 0) {
-        ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
+        ui.overlay.show(`Exporting frames of ${visualize.displayName}...`);
+        ui.overlay.progress(0, `Determining time left...`);
         avgMs = -1;
         timeAvg = -1;
         try {
@@ -484,7 +488,7 @@ async function visualizeExport() {
         avgMs = -1;
         timeAvg = -1;
         ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
-        ui.overlay.progress(0, `N/A`);
+        ui.overlay.progress(0, `Determining time left...`);
         try {
             tmpVideo = await visualizeExportEnd();
         }
@@ -562,6 +566,7 @@ function bindListeners() {
     ipcRenderer.on('sonify_sonify', onStartSonify);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
     ipcRenderer.on('cancel', onCancel);
+    ipcRenderer.on('visualize_progress', onVisualizeProgress);
     ipcRenderer.on('info', (evt, args) => {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas, audioContext);

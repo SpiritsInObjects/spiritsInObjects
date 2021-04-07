@@ -512,6 +512,10 @@ async function visualizeExportFrame (frameNumber : number, data : any, width : n
     });
 }
 
+function onVisualizeProgress (evt : Event, args : any) {
+    visualizeExportProgress(args.frameNumber, args.ms);
+}
+
 async function visualizeExportEnd () : Promise<string> {
     return new Promise((resolve, reject) => {
         ipcRenderer.once('visualize_end', (evt : Event, args : any) => {
@@ -531,7 +535,8 @@ async function visualizeExport () {
     let tmpVideo : string;
 
     if (visualize.frames.length > 0) {
-        ui.overlay.show(`Exporting visualization of ${visualize.displayName}...`);
+        ui.overlay.show(`Exporting frames of ${visualize.displayName}...`);
+        ui.overlay.progress(0, `Determining time left...`);
 
         avgMs = -1;
         timeAvg = -1;
@@ -558,7 +563,7 @@ async function visualizeExport () {
         timeAvg = -1;
 
         ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
-        ui.overlay.progress(0, `N/A`);
+        ui.overlay.progress(0, `Determining time left...`);
 
         try {
             tmpVideo = await visualizeExportEnd();
@@ -640,6 +645,8 @@ function bindListeners () {
     ipcRenderer.on('sonify_sonify', onStartSonify);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
     ipcRenderer.on('cancel', onCancel);
+
+    ipcRenderer.on('visualize_progress', onVisualizeProgress);
 
     ipcRenderer.on('info', (evt : Event, args : any) => {
         video.oninfo(evt, args);

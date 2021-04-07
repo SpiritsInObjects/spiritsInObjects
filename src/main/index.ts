@@ -147,20 +147,22 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	if (args.state.type === 'video') {
 		hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
 		fileHash = hashStr(args.state.filePath);
+
 		if (typeof CACHE[hash] !== 'undefined') {
 			//return cached audio
 			endTime = +new Date();
 			mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio : CACHE[hash] });
 			return;
 		}
+
 		frameStart = +new Date();
 		onProgress = (obj : any) => {
 			ms = ((+new Date()) - frameStart) / obj.frame;
 			mainWindow.webContents.send('sonify_progress', { i : obj.frame, frames : args.state.frames, ms });
-		}
+		};
 
 		try {
-			await ffmpeg.export(args.state.filePath, onProgress);
+			await ffmpeg.exportFrames(args.state.filePath, onProgress);
 		} catch (err) {
 			console.error(err);
 			return;
@@ -337,11 +339,17 @@ ipcMain.on('visualize_frame', async (evt : Event, args : any) => {
 });
 
 ipcMain.on('visualize_end', async (evt : Event, args : any) => {
+	const frameStart : number = +new Date();
 	let success : boolean = false;
 	let tmpVideo : string;
 
+	const onProgress : Function = (obj : any) => {
+		const ms : number = ((+new Date()) - frameStart) / obj.frame;
+		mainWindow.webContents.send('visualize_progress', { ms, frameNumber : obj.frame });
+	};
+
 	try {
-		tmpVideo = await visualize.endExport();
+		tmpVideo = await visualize.endExport(onProgress);
 		success = true;
 	} catch (err) {
 		console.error(err);

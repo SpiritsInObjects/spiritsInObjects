@@ -112,7 +112,7 @@ export class ffmpeg {
         return tmp;
     }
     
-    static async export (filePath : string, onProgress : Function = () => {}) : Promise<any> {
+    static async exportFrames (filePath : string, onProgress : Function = () => {}) : Promise<any> {
         const hash = this.hash(filePath);
         const input : any = {};
         const output : string = join(tmp, `${hash}-export-%08d.png`);
@@ -191,7 +191,7 @@ export class ffmpeg {
         return output;
     }
 
-    static async exportVideo (inputPath : string, outputPath : string) : Promise<string> {
+    static async exportVideo (inputPath : string, outputPath : string, onProgress : Function = () => {}) : Promise<string> {
         const args : string[] = [
             '-f', 'image2',
             '-i',  inputPath,
@@ -204,12 +204,33 @@ export class ffmpeg {
         ];
         let res : any;
 
-        try {
-            console.log(`${bin} ${args.join(' ')}`);
-            res = await spawnAsync(bin, args);
-        } catch (err) {
-            throw err;
-        }
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve : Function, reject : Function) => {
+            const child = spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            child.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(tmp);
+                } else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            child.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            child.stderr.on('data', (data) => {
+                const line : string = data.toString();
+                const obj : StdErr = this.parseStderr(line);
+                let estimated : any;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return child;
+        });
 
         return outputPath;
     }
