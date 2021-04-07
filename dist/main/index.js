@@ -142,7 +142,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
         if (args.state.type === 'video') {
             try {
                 //filePath = await ffmpeg.exportFrame(args.state.filePath, i);
-                filePath = ffmpeg_1.ffmpeg.exportFramePath(fileHash, i);
+                filePath = ffmpeg_1.ffmpeg.exportFramePath(fileHash, i + 1);
             }
             catch (err) {
                 console.error(err);

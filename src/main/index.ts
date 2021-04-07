@@ -168,7 +168,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		if (args.state.type === 'video') {
 			try {
 				//filePath = await ffmpeg.exportFrame(args.state.filePath, i);
-				filePath = ffmpeg.exportFramePath(fileHash, i);
+				filePath = ffmpeg.exportFramePath(fileHash, i+1);
 			} catch (err) {
 				console.error(err);
 				continue;
