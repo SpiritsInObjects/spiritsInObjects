@@ -72,7 +72,7 @@ class Visualize {
     }
     async endExport(onProgress) {
         const inputPath = path_1.join(this.tmp, `%8d.png`);
-        const tmpVideo = `${this.tmp}.mkv`;
+        const tmpVideo = `${this.tmp}.mp4`;
         try {
             await this.ffmpeg.exportVideo(inputPath, tmpVideo, onProgress);
         }
