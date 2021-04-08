@@ -13,7 +13,7 @@ class Visualize {
     private tracksSelect : HTMLSelectElement = document.getElementById('vTracks') as HTMLSelectElement;
     private typesSelect : HTMLSelectElement = document.getElementById('vType') as HTMLSelectElement;
     private wavesSelect : HTMLSelectElement = document.getElementById('vWaves') as HTMLSelectElement;
-    //private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
+    private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
 
     private canvas : HTMLCanvasElement = document.getElementById('vCanvas') as HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
@@ -117,6 +117,7 @@ class Visualize {
         try {
             this.tracksSelect.classList.remove('hide');
             this.wavesSelect.classList.remove('hide');
+            //this.stylesSelect.classList.remove('hide');
         } catch (err) {
             //
         }
@@ -131,6 +132,7 @@ class Visualize {
         try {
             this.tracksSelect.classList.add('hide');
             this.wavesSelect.classList.add('hide');
+            //this.wavesSelect.classList.add('hide');
         } catch (err) {
             //
         }
@@ -156,12 +158,17 @@ class Visualize {
         const val : string = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
     }
-    
+
     private changeWaves () {
         this.waves = this.wavesSelect.value;
         this.decodeMidi(this.trackIndex);
     }
 
+    private changeStyle () {
+        this.style = this.stylesSelect.value;
+        this.decodeMidi(this.trackIndex);
+    }
+    
     private changeType () {
         this.soundtrackType = this.typesSelect.value;
         this.decodeAudio();

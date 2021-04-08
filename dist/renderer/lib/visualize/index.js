@@ -6,7 +6,7 @@ class Visualize {
         this.tracksSelect = document.getElementById('vTracks');
         this.typesSelect = document.getElementById('vType');
         this.wavesSelect = document.getElementById('vWaves');
-        //private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
+        this.stylesSelect = document.getElementById('vStyle');
         this.canvas = document.getElementById('vCanvas');
         this.display = document.getElementById('vCanvasDisplay');
         this.audioCanvas = document.getElementById('aCanvas');
@@ -75,6 +75,7 @@ class Visualize {
         try {
             this.tracksSelect.classList.remove('hide');
             this.wavesSelect.classList.remove('hide');
+            //this.stylesSelect.classList.remove('hide');
         }
         catch (err) {
             //
@@ -90,6 +91,7 @@ class Visualize {
         try {
             this.tracksSelect.classList.add('hide');
             this.wavesSelect.classList.add('hide');
+            //this.wavesSelect.classList.add('hide');
         }
         catch (err) {
             //
@@ -117,6 +119,10 @@ class Visualize {
     }
     changeWaves() {
         this.waves = this.wavesSelect.value;
+        this.decodeMidi(this.trackIndex);
+    }
+    changeStyle() {
+        this.style = this.stylesSelect.value;
         this.decodeMidi(this.trackIndex);
     }
     changeType() {
