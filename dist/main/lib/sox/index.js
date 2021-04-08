@@ -4,8 +4,19 @@ exports.sox = void 0;
 const child_process_1 = require("child_process");
 const os_1 = require("os");
 const path_1 = require("path");
-const bin = require('sox-static');
+let soxSupported = false;
+let bin;
 const tmp = path_1.join(os_1.tmpdir(), 'sio');
+try {
+    bin = require('sox-static');
+    soxSupported = true;
+}
+catch (err) {
+    console.error(err);
+}
+if (!soxSupported) {
+    bin = require('ffmpeg-static');
+}
 async function spawnAsync(bin, args) {
     return new Promise((resolve, reject) => {
         const child = child_process_1.spawn(bin, args);
@@ -59,17 +70,41 @@ class sox {
      * Resample audio to precise samplerate and merge down to mono.
      **/
     static async resample(input, output, sampleRate, channels) {
+        if (!soxSupported) {
+            return sox.altResample(input, output, sampleRate, channels);
+        }
         const args = [
             input,
             '--norm',
             output
         ];
         if (channels > 1) {
+            //mix to mono if more than 1 channel provided
             args.push('remix');
             args.push(`1-${channels}`);
         }
+        //resample
         args.push('rate');
         args.push(`${sampleRate}`);
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
+            await spawnAsync(bin, args);
+        }
+        catch (err) {
+            console.error(`${bin} ${args.join(' ')}`);
+            throw err;
+        }
+        return output;
+    }
+    static async altResample(input, output, sampleRate, channels) {
+        const args = [
+            '-i', input,
+            //mix to mono however many channels provided
+            '-ac', '1',
+            //resample
+            '-ar', `${sampleRate}`,
+            output
+        ];
         try {
             console.log(`${bin} ${args.join(' ')}`);
             await spawnAsync(bin, args);
