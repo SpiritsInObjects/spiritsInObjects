@@ -462,6 +462,9 @@ class Visualize {
 
         this.soundtrackFull = soundtrackTypeParts.length > 1;
 
+        this.midiCtx.fillStyle = '#FFFFFF';
+        this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
+
         //@ts-ignore
         this.so = new SoundtrackOptical(this.audioCanvas, this.tmpAudio, dpi, 0.95, soundtrackType, 'short', true);
         
