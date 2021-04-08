@@ -367,15 +367,19 @@ class Visualize {
         this.state.set('vHeight', this.height);
         this.samplerate = this.height * this.fps;
     }
-    onProcessAudio(evt, args) {
+    async onProcessAudio(evt, args) {
         this.tmpAudio = args.tmpAudio;
         this.showAudio();
-        this.decodeAudio();
+        await this.decodeAudio();
     }
     async decodeAudio() {
         const dpi = Math.round((this.height / 7.605) * 25.4);
         const soundtrackTypeParts = this.soundtrackType.split(' full');
         const soundtrackType = soundtrackTypeParts[0];
+        let soundData;
+        let timelineScale;
+        let topY;
+        let bottomY;
         this.soundtrackFull = soundtrackTypeParts.length > 1;
         this.midiCtx.fillStyle = '#FFFFFF';
         this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
@@ -386,6 +390,20 @@ class Visualize {
         }
         catch (err) {
             console.error(err);
+        }
+        soundData = Array.from(this.so.soundData);
+        timelineScale = Math.floor(soundData.length / this.midiTimeline.width);
+        //quick downsample, can improve
+        soundData = soundData.filter((elem, i) => i % timelineScale === 0);
+        soundData = soundData.map((val) => Math.round(Math.abs(val) * 19));
+        this.midiCtx.fillStyle = '#E6E6ED';
+        for (let x = 0; x < this.midiTimeline.width; x++) {
+            topY = (this.midiTimeline.height - soundData[x]) / 2;
+            bottomY = this.midiTimeline.height - topY;
+            this.midiCtx.beginPath();
+            this.midiCtx.moveTo(x, topY);
+            this.midiCtx.lineTo(x, bottomY);
+            this.midiCtx.stroke();
         }
         this.frames = new Array(this.so.FRAMES);
         this.updateTimecodes(0, this.frames.length, this.fps);

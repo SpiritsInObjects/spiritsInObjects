@@ -449,16 +449,20 @@ class Visualize {
         this.samplerate = this.height * this.fps;
     }
 
-    public onProcessAudio (evt : Event, args : any) {
+    public async onProcessAudio (evt : Event, args : any) {
         this.tmpAudio = args.tmpAudio;
         this.showAudio();
-        this.decodeAudio();
+        await this.decodeAudio();
     }
 
     public async decodeAudio () {
         const dpi : number = Math.round((this.height / 7.605) * 25.4);
         const soundtrackTypeParts : string[] = this.soundtrackType.split(' full');
         const soundtrackType : string = soundtrackTypeParts[0];
+        let soundData : number[];
+        let timelineScale : number;
+        let topY : number;
+        let bottomY : number;
 
         this.soundtrackFull = soundtrackTypeParts.length > 1;
 
@@ -472,6 +476,23 @@ class Visualize {
             await this.so.decode();
         } catch (err) {
             console.error(err);
+        }
+
+        soundData = Array.from(this.so.soundData);
+        timelineScale = Math.floor(soundData.length / this.midiTimeline.width);
+        //quick downsample, can improve
+        soundData = soundData.filter((elem : number , i : number) => i % timelineScale === 0);
+        soundData = soundData.map((val : number) => Math.round(Math.abs(val) * 19) )
+
+        this.midiCtx.fillStyle = '#E6E6ED';
+        
+        for (let x = 0; x < this.midiTimeline.width; x++) {
+            topY = (this.midiTimeline.height - soundData[x]) / 2;
+            bottomY = this.midiTimeline.height - topY;
+            this.midiCtx.beginPath();            
+            this.midiCtx.moveTo(x, topY);
+            this.midiCtx.lineTo(x, bottomY);
+            this.midiCtx.stroke();
         }
 
         this.frames = new Array(this.so.FRAMES);

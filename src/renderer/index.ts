@@ -12,7 +12,7 @@ const humanizeDuration = require('humanize-duration');
 const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v', '.ogg', '.webm'];
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions : string[] = ['.mid', '.midi'];
-const audioExtensions : string[] = ['.mp3', '.ogg', '.aiff', '.aif',  '.wav', '.wave'];
+const audioExtensions : string[] = ['.mp3', '.aiff', '.aif',  '.wav', '.wave'];
 
 let startMoving : boolean = false;
 let endMoving : boolean = false;
@@ -654,8 +654,8 @@ function bindListeners () {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas, audioContext);
     });
-    ipcRenderer.on('process_audio', (evt : Event, args : any) => {
-        visualize.onProcessAudio(evt, args);
+    ipcRenderer.on('process_audio', async (evt : Event, args : any) => {
+        await visualize.onProcessAudio(evt, args);
         ui.overlay.hide();
     });
 }
