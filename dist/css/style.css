@@ -131,6 +131,12 @@ body {
   height: 0;
   margin-top: -1px;
 }
+#midiTimeline {
+  position: absolute;
+  width: 970px;
+  height: 19px;
+  background: white;
+}
 #currentFrame,
 #vCurrentFrame {
   text-align: center;

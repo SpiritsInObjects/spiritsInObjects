@@ -174,6 +174,7 @@ class UI {
             targetElement.classList.add('show');
             this.state.set('page', name);
         }
+        this.currentPage = name;
     }
 }
 exports.default = UI;

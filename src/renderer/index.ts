@@ -595,7 +595,7 @@ function playSync () {
 function keyDown (evt : KeyboardEvent) {
     if (ui.currentPage === 'sonify') {
         if (evt.code === 'Space') {
-            video.play();
+            //video.play();
         } else if (evt.code === 'ArrowLeft') {
             video.prevFrame();
         } else if (evt.code === 'ArrowRight') {
@@ -612,6 +612,8 @@ function keyDown (evt : KeyboardEvent) {
             visualize.prevFrame();
         } else if (evt.code === 'ArrowRight') {
             visualize.nextFrame();
+        } else if (evt.code === 'KeyF') {
+            sonifyVisualizeFrame();
         } 
     }
     console.log(evt.code);

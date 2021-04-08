@@ -218,6 +218,7 @@ export default class UI {
     public page (name : string) {
         const btnElement : HTMLElement = document.querySelector(`#${name}Btn`);
         const targetElement : HTMLElement = document.querySelector(`#${name}`);
+
         if ( !btnElement.classList.contains('active') ) {
             this.removeClass('.pageBtn', 'active');
             btnElement.classList.add('active');
@@ -227,5 +228,7 @@ export default class UI {
             targetElement.classList.add('show');
             this.state.set('page', name);
         }
+        
+        this.currentPage = name;
     }
 }

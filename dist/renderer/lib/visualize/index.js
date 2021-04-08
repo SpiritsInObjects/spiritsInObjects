@@ -10,6 +10,7 @@ class Visualize {
         this.canvas = document.getElementById('vCanvas');
         this.display = document.getElementById('vCanvasDisplay');
         this.audioCanvas = document.getElementById('aCanvas');
+        this.midiTimeline = document.getElementById('midiTimeline');
         this.prev = document.getElementById('vPrevFrame');
         this.next = document.getElementById('vNextFrame');
         this.current = document.getElementById('vCurrentFrame');
@@ -41,6 +42,10 @@ class Visualize {
         this.state = state;
         this.ctx = this.canvas.getContext('2d');
         this.displayCtx = this.display.getContext('2d');
+        this.midiTimeline.width = 970;
+        this.midiTimeline.height = 19;
+        this.midiCtx = this.midiTimeline.getContext('2d');
+        this.audioCtx = this.audioCanvas.getContext('2d');
         this.ctx.scale(1, 1);
         this.setFormat(this.width, this.height);
         this.sonify = new Sonify(visualizeState, this.canvas, audioContext);
@@ -164,6 +169,8 @@ class Visualize {
         let track;
         let lastNote = 0;
         let firstNote = -1;
+        let noteX;
+        let noteLen;
         this.frameNumber = 0;
         this.trackIndex = trackIndex;
         this.trackNo = this.tracksWithNotes[trackIndex];
@@ -185,7 +192,7 @@ class Visualize {
         //this.frames = new Array(this.frameCount);
         this.frames = new Array();
         track = midi.tracks[this.trackNo];
-        console.dir(track);
+        //console.dir(track);
         if (track.notes.length === 0) {
             console.log('track does not contain any notes');
             return false;
@@ -213,21 +220,31 @@ class Visualize {
                 this.frames.push(0);
             }
         }
+        this.midiCtx.fillStyle = '#FFFFFF';
+        this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
+        this.midiCtx.fillStyle = '#E6E6ED';
+        for (let note of notes) {
+            noteX = (note.startMs / this.duration) * this.midiTimeline.width;
+            noteLen = (note.ms / this.duration) * this.midiTimeline.width;
+            this.midiCtx.fillRect(noteX, 5, noteLen, 8);
+        }
         console.log(`${this.frames.length} vs. ${this.frameCount}`);
         this.updateTimecodes(0, this.frames.length, this.fps);
         this.displayFrame(firstNote);
     }
     buildNote(track, midiNote) {
         const pitch = Math.round(Frequency(midiNote.name) / this.fps);
-        const ms = Math.round(1000.0 * parseFloat(midiNote.duration));
+        const ms = Math.floor(1000.0 * parseFloat(midiNote.duration));
         const frameRaw = ms / this.frameLength;
-        const frameCount = Math.round(frameRaw);
-        const startFrame = Math.floor((midiNote.time * 1000.0) / this.frameLength);
+        const frameCount = Math.floor(frameRaw);
+        const startMs = (midiNote.time * 1000.0);
+        const startFrame = Math.floor(startMs / this.frameLength);
         const note = {
             track,
             pitch,
             frames: frameCount,
             startFrame,
+            startMs,
             ms
         };
         return note;
