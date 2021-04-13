@@ -6,7 +6,7 @@ mkdir -p ./releases
 mkdir -p ./releases/mac
 
 #--icon=assets/icons/icon.icns
-if [ -f "./appleIdentity" ]; then 
+if [ -f "./.appleIdentity" ]; then 
 	echo "Building, signing and notarizing application..."
 	node ./scripts/build_and_sign_mac.js
 else
