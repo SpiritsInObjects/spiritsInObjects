@@ -4,3 +4,6 @@ releases/*/*
 buffer*
 src/renderer/style.css
 build/
+.appleIdentity
+.appleId
+.applePwd
