@@ -11,7 +11,7 @@ if [ -f "./.appleIdentity" ]; then
 	node ./scripts/build_and_sign_mac.js
 else
 	echo "Building application..."
-	./node_modules/.bin/electron-packager . --overwrite --platform=darwin --ignore=^/proto_imagetosound-nw --arch=x64 --prune=true --out=./releases/mac
+	./node_modules/.bin/electron-packager . --overwrite --platform=darwin --ignore=^/releases --arch=x64 --prune=true --out=./releases/mac
 fi
 
 #build dmg for mac install

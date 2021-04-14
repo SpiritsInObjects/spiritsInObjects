@@ -14,7 +14,7 @@
  	arch : 'x64',
  	prune : true,
  	//icon : './assets/icons/icon.icns',
- 	ignore : '^/proto_imagetosound-nw ',
+ 	ignore : '^/releases',
  	overwrite : true,
  	out : '../releases/mac',
  	osxSign : {
