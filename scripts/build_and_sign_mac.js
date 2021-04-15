@@ -16,7 +16,7 @@
  	//icon : './assets/icons/icon.icns',
  	ignore : '^/releases',
  	overwrite : true,
- 	out : '../releases/mac',
+ 	out : './releases/mac',
  	osxSign : {
  		identity : appleIdentity,
  		'hardened-runtime' : true,
