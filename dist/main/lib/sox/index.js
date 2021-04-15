@@ -8,8 +8,8 @@ let soxSupported = false;
 let bin;
 const tmp = path_1.join(os_1.tmpdir(), 'sio');
 try {
-    bin = require('sox-static');
-    soxSupported = true;
+    //bin = require('sox-static');
+    //soxSupported = true;
 }
 catch (err) {
     console.error(err);
