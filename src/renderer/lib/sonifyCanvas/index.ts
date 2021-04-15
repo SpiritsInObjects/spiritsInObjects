@@ -8,7 +8,7 @@ class Sonify {
     private framerate : number = 24;
     private samplerate : number = 48000;
     private samplesPerFrame : number = this.samplerate / this.framerate;
-    private start : number = 0.72;
+    private start : number = 0.81;
     private end  : number = 1.0;
     private height : number;
     private width : number;

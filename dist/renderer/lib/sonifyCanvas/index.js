@@ -13,7 +13,7 @@ class Sonify {
         this.framerate = 24;
         this.samplerate = 48000;
         this.samplesPerFrame = this.samplerate / this.framerate;
-        this.start = 0.72;
+        this.start = 0.81;
         this.end = 1.0;
         this.RED_MULTIPLIER = 0.3;
         this.GREEN_MULTIPLIER = 0.59;

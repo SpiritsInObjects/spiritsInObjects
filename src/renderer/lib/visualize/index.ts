@@ -192,7 +192,11 @@ class Visualize {
 
     private changeOffset () {
         this.offset = this.offsetSelect.value === 'true';
-        this.decodeMidi(this.trackIndex);
+        if (this.type === 'midi') {
+            this.decodeMidi(this.trackIndex);
+        } else {
+            this.decodeAudio();
+        }
     }
 
     public async processMidi () {
@@ -518,6 +522,20 @@ class Visualize {
 
         this.soundtrackFull = soundtrackTypeParts.length > 1;
 
+        if (this.soundtrackFull) {
+            try {
+                this.offsetSelect.classList.remove('hide');
+            } catch (err) {
+                //
+            }
+        } else {
+            try {
+                this.offsetSelect.classList.add('hide');
+            } catch (err) {
+                //
+            }
+        }
+
         this.midiCtx.fillStyle = '#FFFFFF';
         this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
 
@@ -555,6 +573,7 @@ class Visualize {
     private frameAudio (frameNumber : number) {
         const ratio : number = this.audioCanvas.width / this.audioCanvas.height;
         const scaledWidth : number  = this.height * ratio;
+        const offsetFrame : number = frameNumber - 26;
 
         this.so.frame(frameNumber);
 
@@ -562,7 +581,16 @@ class Visualize {
         this.ctx.fillRect(0, 0, this.width, this.height);
 
         if (this.soundtrackFull) {
-            this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width, this.height);
+            if (this.offset) {
+                this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width, this.height);
+                this.ctx.fillRect(0, 0, this.width * this.startSoundtrack, this.height);
+                if (offsetFrame > -1) {
+                    this.so.frame(offsetFrame);
+                    this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width * this.startSoundtrack, this.height);
+                }
+            } else {
+                this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, 0, 0, this.width, this.height);
+            }
         } else {
             this.ctx.drawImage(this.audioCanvas, 0, 0, this.audioCanvas.width, this.audioCanvas.height, this.width - scaledWidth, 0, scaledWidth, this.height);
         }
