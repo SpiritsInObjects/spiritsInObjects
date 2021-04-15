@@ -15,6 +15,7 @@ const wavefile_1 = require("wavefile");
 const os_1 = require("os");
 const crypto_1 = require("crypto");
 const uuid_1 = require("uuid");
+const node_cleanup_1 = __importDefault(require("node-cleanup"));
 const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
@@ -22,6 +23,10 @@ const menu_1 = require("./lib/menu");
 const sox_1 = require("./lib/sox");
 const visualize_1 = require("./lib/visualize");
 const CACHE = {};
+const TMP = {
+    dirs: [],
+    files: []
+};
 let CANCEL = false;
 electron_unhandled_1.default();
 electron_context_menu_1.default();
@@ -116,6 +121,7 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     try {
         tmp = await ffmpeg_1.ffmpeg.exportPath();
         tmpExists = true;
+        TMP.dirs.push(tmp);
     }
     catch (err) {
         console.error(err);
@@ -214,9 +220,10 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     }
     catch (err) {
         console.error(err);
-        console.log('Normalization failed, using original tmp file.');
+        console.log('Normalization failed, using original temporary file.');
     }
     CACHE[hash] = tmpAudio;
+    TMP.files.push(tmpAudio);
     endTime = +new Date();
     mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
 });
@@ -271,6 +278,7 @@ electron_1.ipcMain.on('process_audio', async (evt, args) => {
     catch (err) {
         console.error(err);
     }
+    TMP.files.push(tmpAudio);
     mainWindow.webContents.send('process_audio', { tmpAudio });
 });
 electron_1.ipcMain.on('visualize_start', async (evt, args) => {
@@ -311,7 +319,30 @@ electron_1.ipcMain.on('visualize_end', async (evt, args) => {
     catch (err) {
         console.error(err);
     }
+    TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_end', { success, tmpVideo });
+});
+node_cleanup_1.default(function (exitCode, signal) {
+    console.log(`Cleaning up on exit code ${exitCode}...`);
+    for (let dir of TMP.dirs) {
+        try {
+            fs_extra_1.rmdirSync(dir);
+            console.log(`Removed directory ${dir}`);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+    for (let file of TMP.files) {
+        try {
+            fs_extra_1.unlinkSync(file);
+            console.log(`Removed file ${file}`);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+    console.log(`Exiting spiritsInObjects...`);
 });
 (async () => {
     const menu = menu_1.createMenu();

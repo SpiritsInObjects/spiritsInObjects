@@ -6,12 +6,13 @@ import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
-import { pathExists, unlink, writeFile, copyFile } from 'fs-extra';
+import { pathExists, unlink, writeFile, copyFile, unlinkSync, rmdirSync } from 'fs-extra';
 import getPixels from 'get-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
 import { createHash } from 'crypto';
 import { v4 as uuid } from 'uuid';
+import nodeCleanup from 'node-cleanup';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonifyNode';
@@ -23,6 +24,10 @@ import { sox } from './lib/sox';
 import { Visualize } from './lib/visualize';
 
 const CACHE : any = {};
+const TMP : any = {
+	dirs : [],
+	files : []
+}
 let CANCEL : boolean = false;
 
 unhandled();
@@ -138,6 +143,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	try {
 		tmp = await ffmpeg.exportPath();
 		tmpExists = true;
+		TMP.dirs.push(tmp);
 	} catch (err) {
 		console.error(err);
 	}
@@ -252,10 +258,11 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 		//console.log(`Normalized audio file to ${normalAudio}`);
 	} catch (err) {
 		console.error(err);
-		console.log('Normalization failed, using original tmp file.');
+		console.log('Normalization failed, using original temporary file.');
 	}
 
 	CACHE[hash] = tmpAudio;
+	TMP.files.push(tmpAudio);
 
 	endTime = +new Date();
 	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
@@ -312,6 +319,8 @@ ipcMain.on('process_audio', async (evt : Event, args : any) => {
 		console.error(err);
 	}
 
+	TMP.files.push(tmpAudio);
+
 	mainWindow.webContents.send('process_audio', { tmpAudio });
 });
 
@@ -355,7 +364,30 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 		console.error(err);
 	}
 
+	TMP.files.push(tmpVideo);
+
 	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
+});
+
+nodeCleanup(function (exitCode : any, signal : string) {
+	console.log(`Cleaning up on exit code ${exitCode}...`);
+	for (let dir of TMP.dirs){
+		try {
+			rmdirSync(dir);
+			console.log(`Removed directory ${dir}`);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+	for (let file of TMP.files){
+		try {
+			unlinkSync(file);
+			console.log(`Removed file ${file}`);
+		} catch (err) {
+			console.error(err);
+		}
+	}
+	console.log(`Exiting spiritsInObjects...`)
 });
 
 (async () => {
