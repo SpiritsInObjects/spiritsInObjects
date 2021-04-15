@@ -14,6 +14,7 @@ class Visualize {
     private typesSelect : HTMLSelectElement = document.getElementById('vType') as HTMLSelectElement;
     private wavesSelect : HTMLSelectElement = document.getElementById('vWaves') as HTMLSelectElement;
     private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
+    private offsetSelect : HTMLSelectElement = document.getElementById('vOffset') as HTMLSelectElement;
 
     private canvas : HTMLCanvasElement = document.getElementById('vCanvas') as HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
@@ -39,13 +40,17 @@ class Visualize {
     private startTC : Timecode;
     private endTC : Timecode;
 
+    private startSoundtrack = 0.81;
+    private endSoundtrack = 1.0;
+
     private framerates : number[] = [ 23.976, 24, 25, 29.97, 30, 50, 59.94, 60 ]; 
 
     private type : string = 'midi';
     private style : string = 'simple';
     private waves : string = 'square';
-    private soundtrackType : string = 'dual variable area';
-    private soundtrackFull : boolean = false;
+    private soundtrackType : string = 'variable density full';
+    private soundtrackFull : boolean = true;
+    private offset : boolean = false;
 
     private filePath : string;
     private tmpAudio : string;
@@ -97,6 +102,7 @@ class Visualize {
         this.typesSelect.addEventListener('change', this.changeType.bind(this));
         this.wavesSelect.addEventListener('change', this.changeWaves.bind(this));
         //this.stylesSelect.addEventListener('change', this.changeStyles.bind(this));
+        this.offsetSelect.addEventListener('change', this.changeOffset.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -126,6 +132,7 @@ class Visualize {
             this.tracksSelect.classList.remove('hide');
             this.wavesSelect.classList.remove('hide');
             //this.stylesSelect.classList.remove('hide');
+            this.offsetSelect.classList.remove('hide');
         } catch (err) {
             //
         }
@@ -141,6 +148,7 @@ class Visualize {
             this.tracksSelect.classList.add('hide');
             this.wavesSelect.classList.add('hide');
             //this.wavesSelect.classList.add('hide');
+            this.offsetSelect.classList.add('hide');
         } catch (err) {
             //
         }
@@ -180,6 +188,11 @@ class Visualize {
     private changeType () {
         this.soundtrackType = this.typesSelect.value;
         this.decodeAudio();
+    }
+
+    private changeOffset () {
+        this.offset = this.offsetSelect.value === 'true';
+        this.decodeMidi(this.trackIndex);
     }
 
     public async processMidi () {
@@ -284,6 +297,12 @@ class Visualize {
             }
         }
 
+        if (this.offset) {
+            for (let i = 0; i < 26; i++) {
+                this.frames.push(0);
+            }
+        }
+
         this.midiCtx.fillStyle = '#FFFFFF';
         this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
         this.midiCtx.fillStyle = '#E6E6ED';
@@ -379,12 +398,18 @@ class Visualize {
     public displayFrame (frameNumber : number) {
         const cursor : number = (frameNumber / this.frames.length) * 100.0;
         let lines : number;
+        let offsetLines : number;
 
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
             if (this.type === 'midi') {
                 this.frameNumber = frameNumber;
                 lines = this.frames[frameNumber];
-                this.frameMidi(lines);
+                if (this.offset) {
+                    offsetLines = typeof this.frames[frameNumber - 26] !== 'undefined' ? this.frames[frameNumber - 26] : 0;
+                    this.frameMidi(lines, offsetLines);
+                } else {
+                    this.frameMidi(lines);
+                }
             }
         }
 
@@ -401,11 +426,32 @@ class Visualize {
         return Math.round(Math.sin((y / segment) * Math.PI) * 255.0);
     }
 
-    private frameMidi ( lines : number ) {
+    private frameMidiSquare (thickness : number, position : number, w : number) {
+        this.ctx.lineWidth = thickness;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, position);
+        this.ctx.lineTo(w, position);
+        this.ctx.stroke();
+    }
+
+    private frameMidiSine (brightness : number, y : number, w : number) {
+        this.ctx.strokeStyle = `rgba(${brightness},${brightness},${brightness},1.0)`;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, y);
+        this.ctx.lineTo(w, y);
+        this.ctx.stroke();
+    }
+
+    private frameMidi ( lines : number, offsetLines : number = -1) {
         const segment : number = this.height / lines;
         const thickness : number = Math.floor(segment / 2);
-        let brightness : number;
         let position : number;
+        let brightness : number;
+
+        let offsetSegment : number = offsetLines > -1 ? this.height / offsetLines : null;
+        let offsetThickness : number = offsetLines > -1 ? Math.floor(offsetSegment / 2) : null;
+        let offsetPosition : number;
+        let offsetBrightness : number;
       
         this.ctx.fillStyle = '#000000';
         this.ctx.strokeStyle = 'rgba(255,255,255,1.0)';
@@ -415,21 +461,27 @@ class Visualize {
             if (this.waves === 'square') {
                 for (let i = 0; i < lines; i++) {
                     position = (segment * (i + 0.5));
-                    this.ctx.lineWidth = thickness;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, position);
-                    this.ctx.lineTo(this.width, position);
-                    this.ctx.stroke();
+                    this.frameMidiSquare(thickness, position, this.width);
+                }
+                if (offsetLines > -1) {
+                    this.ctx.fillRect(0, 0, this.width * this.startSoundtrack, this.height);
+                    for (let i = 0; i < offsetLines; i++) {
+                        offsetPosition = (offsetSegment * (i + 0.5));
+                        this.frameMidiSquare(offsetThickness, offsetPosition, this.width * this.startSoundtrack);
+                    }
                 }
             } else if (this.waves === 'sine') {
                 this.ctx.lineWidth = 1;
                 for (let y = 0; y < this.height; y++) {
                     brightness = this.sineWave(y % segment, segment);
-                    this.ctx.strokeStyle = `rgba(${brightness},${brightness},${brightness},1.0)`;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, y);
-                    this.ctx.lineTo(this.width, y);
-                    this.ctx.stroke();
+                    this.frameMidiSine(brightness, y, this.width);
+                }
+                if (offsetLines > -1) {
+                    this.ctx.fillRect(0, 0, this.width * this.startSoundtrack, this.height);
+                    for (let y = 0; y < this.height; y++) {
+                        offsetBrightness = this.sineWave(y % offsetSegment, offsetSegment);
+                        this.frameMidiSine(offsetBrightness, y, this.width * this.startSoundtrack);
+                    }
                 }
             }
         }

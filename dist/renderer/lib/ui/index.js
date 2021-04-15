@@ -38,7 +38,7 @@ class UI {
         this.height = 720;
         this.min = 0;
         this.max = 996;
-        this.start = 0.72;
+        this.start = 0.81;
         this.end = 1.0;
         this.currentPage = 'sonify';
         this.state = state;

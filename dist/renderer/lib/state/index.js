@@ -6,7 +6,7 @@ class State {
     constructor() {
         this.localFile = join(homedir(), '.spiritsInObjects/state.sio');
         this.storage = {
-            start: 0.72,
+            start: 0.81,
             end: 1.0
         };
         this.lock = false;

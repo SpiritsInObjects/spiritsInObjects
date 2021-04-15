@@ -26,7 +26,7 @@ interface StateStorage {
 class State {
     private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' );
     private storage : StateStorage = {
-        start : 0.72,
+        start : 0.81,
         end : 1.0
     } as StateStorage;
     private lock : boolean = false;

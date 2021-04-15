@@ -51,7 +51,7 @@ export default class UI {
     private theatreHeight : number;
     private theatreWidth : number;
 
-    private start : number = 0.72;
+    private start : number = 0.81;
     private end : number = 1.0;
 
     public onSelectionChange : Function;
