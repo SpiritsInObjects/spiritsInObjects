@@ -1,9 +1,16 @@
 #!/bin/bash
 
+set -e
+
 version=$(jq -r  '.version' ./package.json)
 
 mkdir -p ./releases
 mkdir -p ./releases/mac
+
+# remove old build if exists
+rm -rf ./releases/mac/spiritsinobjects-darwin-x64
+
+DEBUG=electron-packager
 
 #--icon=assets/icons/icon.icns
 if [ -f "./.appleIdentity" ]; then 
