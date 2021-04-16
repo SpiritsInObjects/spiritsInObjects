@@ -83,6 +83,7 @@
     "@types/uuid": "^8.3.0",
     "chai": "^4.2.0",
     "electron": "^11.3.0",
+    "electron-builder": "^22.10.5",
     "electron-installer-common": "^0.10.3",
     "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^15.2.0",
