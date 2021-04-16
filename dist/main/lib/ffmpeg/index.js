@@ -211,6 +211,25 @@ class ffmpeg {
         });
         return outputPath;
     }
+    async resample(input, output, sampleRate, channels) {
+        const args = [
+            '-i', input,
+            //mix to mono however many channels provided
+            '-ac', '1',
+            //resample
+            '-ar', `${sampleRate}`,
+            output
+        ];
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
+            await spawnAsync(bin, args);
+        }
+        catch (err) {
+            console.error(`${bin} ${args.join(' ')}`);
+            throw err;
+        }
+        return output;
+    }
 }
 exports.ffmpeg = ffmpeg;
 module.exports.ffmpeg = ffmpeg;

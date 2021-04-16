@@ -111,7 +111,6 @@
     "peaks.js": "^0.24.0",
     "save-pixels": "^2.3.4",
     "smpte-timecode": "^1.2.3",
-    "sox-static": "^1.0.0",
     "spin.js": "^4.1.0",
     "tone": "^14.7.77",
     "uuid": "^3.3.3",

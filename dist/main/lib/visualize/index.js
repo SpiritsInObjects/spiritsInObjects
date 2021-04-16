@@ -11,8 +11,7 @@ const path_1 = require("path");
 const fs_extra_1 = require("fs-extra");
 const ndarray_1 = __importDefault(require("ndarray"));
 class Visualize {
-    constructor(sox, ffmpeg) {
-        this.sox = sox;
+    constructor(ffmpeg) {
         this.ffmpeg = ffmpeg;
     }
     async processAudio(state, info, tmpAudio) {
@@ -30,7 +29,7 @@ class Visualize {
             throw new Error('No audio stream found');
         }
         try {
-            await this.sox.resample(filePath, tmpAudio, samplerate, stream.channels);
+            await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels);
         }
         catch (err) {
             throw err;

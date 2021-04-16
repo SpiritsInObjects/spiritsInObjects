@@ -20,7 +20,6 @@ import { fluidsynth } from './lib/fluidsynth';
 
 //import config from './lib/config';
 import { createMenu } from './lib/menu';
-import { sox } from './lib/sox';
 import { Visualize } from './lib/visualize';
 
 const CACHE : any = {};
@@ -395,5 +394,5 @@ nodeCleanup(function (exitCode : any, signal : string) {
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();
-	visualize = new Visualize(sox, ffmpeg);
+	visualize = new Visualize(ffmpeg);
 })();

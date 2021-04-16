@@ -20,7 +20,6 @@ const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
-const sox_1 = require("./lib/sox");
 const visualize_1 = require("./lib/visualize");
 const CACHE = {};
 const TMP = {
@@ -349,6 +348,6 @@ node_cleanup_1.default(function (exitCode, signal) {
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();
-    visualize = new visualize_1.Visualize(sox_1.sox, ffmpeg_1.ffmpeg);
+    visualize = new visualize_1.Visualize(ffmpeg_1.ffmpeg);
 })();
 //# sourceMappingURL=index.js.map

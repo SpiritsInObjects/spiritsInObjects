@@ -8,12 +8,10 @@ import { mkdir, rmdir, createWriteStream, unlink } from 'fs-extra';
 import ndarray from 'ndarray';
 
 export class Visualize {
-	private sox : any;
 	private ffmpeg : any;
 	private tmp : string;
 
-	constructor (sox : any, ffmpeg : any) {
-		this.sox = sox;
+	constructor (ffmpeg : any) {
 		this.ffmpeg = ffmpeg;
 	}
 
@@ -35,7 +33,7 @@ export class Visualize {
 		}
 
 		try {
-			await this.sox.resample(filePath, tmpAudio, samplerate, stream.channels);
+			await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels);
 		} catch (err) {
 			throw err;
 		}

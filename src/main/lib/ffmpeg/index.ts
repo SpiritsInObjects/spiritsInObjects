@@ -235,6 +235,27 @@ export class ffmpeg {
         return outputPath;
     }
 
+    public async resample (input : string, output : string, sampleRate : number, channels : number) : Promise<string> {
+        const args : string [] = [
+            '-i', input,
+            //mix to mono however many channels provided
+            '-ac', '1',
+            //resample
+            '-ar', `${sampleRate}`,
+            output
+        ];
+
+        try {
+            console.log(`${bin} ${args.join(' ')}`);
+            await spawnAsync(bin, args);
+        } catch (err) {
+            console.error(`${bin} ${args.join(' ')}`);
+            throw err
+        }
+        
+        return output;
+    }
+
     //ffmpeg -i "movie.wav" -itsoffset 1.0833 -i "movie.mp4" -map 1:v -map 0:a -c copy "movie-video-delayed.mp4"
 }
 
