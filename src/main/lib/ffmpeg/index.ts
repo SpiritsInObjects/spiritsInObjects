@@ -231,11 +231,9 @@ export class ffmpeg {
             });
             return child;
         });
-
-        return outputPath;
     }
 
-    public async resample (input : string, output : string, sampleRate : number, channels : number) : Promise<string> {
+    static async resample (input : string, output : string, sampleRate : number, channels : number, onProgress : Function = () => {}) : Promise<string> {
         const args : string [] = [
             '-i', input,
             //mix to mono however many channels provided
@@ -245,15 +243,33 @@ export class ffmpeg {
             output
         ];
 
-        try {
-            console.log(`${bin} ${args.join(' ')}`);
-            await spawnAsync(bin, args);
-        } catch (err) {
-            console.error(`${bin} ${args.join(' ')}`);
-            throw err
-        }
-        
-        return output;
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve : Function, reject : Function) => {
+            const child = spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            child.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(output);
+                } else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            child.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            child.stderr.on('data', (data) => {
+                const line : string = data.toString();
+                const obj : StdErr = this.parseStderr(line);
+                let estimated : any;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return child;
+        });
     }
 
     //ffmpeg -i "movie.wav" -itsoffset 1.0833 -i "movie.mp4" -map 1:v -map 0:a -c copy "movie-video-delayed.mp4"

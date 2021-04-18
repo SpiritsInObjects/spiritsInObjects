@@ -584,7 +584,36 @@ async function visualizeExport () {
 function processAudio () {
     const visualizeState : any = state.get();
     ui.overlay.show(`Preparing audio file ${visualize.displayName}...`);
+    ui.overlay.progress(0, `Determining time left...`);
     ipcRenderer.send('process_audio', { state : visualizeState });
+    avgMs = -1;
+    timeAvg = -1;
+}
+
+function processAudioProgress (frameNumber : number, ms : number) {
+    let timeLeft : number;
+    let timeStr : string;
+
+    if (avgMs !== -1) {
+        avgMs = (avgMs + ms) / 2.0;
+    } else {
+        avgMs = ms;
+    }
+
+    timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    } else {
+        timeAvg = timeLeft;
+    }
+
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
+}
+
+function onProcessAudioProgress (evt : Event, args : any) {
+    processAudioProgress(args.frameNumber, args.ms);
 }
 
 function playSync () {
@@ -654,10 +683,17 @@ function bindListeners () {
         video.oninfo(evt, args);
         sonify = new Sonify(state, video.canvas, audioContext);
     });
+
     ipcRenderer.on('process_audio', async (evt : Event, args : any) => {
-        await visualize.onProcessAudio(evt, args);
+        if (args.success === true) {
+            await visualize.onProcessAudio(evt, args);
+        } else {
+            alert('Error processing audio file.');
+        }
         ui.overlay.hide();
     });
+
+    ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
 }
 
 /**

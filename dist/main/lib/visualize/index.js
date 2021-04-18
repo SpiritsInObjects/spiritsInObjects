@@ -14,7 +14,7 @@ class Visualize {
     constructor(ffmpeg) {
         this.ffmpeg = ffmpeg;
     }
-    async processAudio(state, info, tmpAudio) {
+    async processAudio(state, info, tmpAudio, onProgress) {
         const filePath = state.filePath;
         const fps = typeof state.fps !== 'undefined' ? state.fps : 24;
         const height = state.vHeight;
@@ -29,7 +29,7 @@ class Visualize {
             throw new Error('No audio stream found');
         }
         try {
-            await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels);
+            await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels, onProgress);
         }
         catch (err) {
             throw err;

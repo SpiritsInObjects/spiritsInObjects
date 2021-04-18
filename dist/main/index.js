@@ -264,21 +264,31 @@ electron_1.ipcMain.on('save', async (evt, args) => {
 });
 electron_1.ipcMain.on('process_audio', async (evt, args) => {
     const tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
+    const frameStart = +new Date();
     let info = {};
+    let success = false;
+    function onProgress(obj) {
+        const ms = ((+new Date()) - frameStart) / obj.frame;
+        mainWindow.webContents.send('process_audio_progress', { ms, frameNumber: obj.frame });
+    }
     try {
         info = await ffmpeg_1.ffmpeg.info(args.state.filePath);
+        success = true;
     }
     catch (err) {
         console.error(err);
+        success = false;
     }
     try {
-        await visualize.processAudio(args.state, info, tmpAudio);
+        await visualize.processAudio(args.state, info, tmpAudio, onProgress);
+        success = true;
     }
     catch (err) {
         console.error(err);
+        success = false;
     }
     TMP.files.push(tmpAudio);
-    mainWindow.webContents.send('process_audio', { tmpAudio });
+    mainWindow.webContents.send('process_audio', { tmpAudio, success });
 });
 electron_1.ipcMain.on('visualize_start', async (evt, args) => {
     let success = false;

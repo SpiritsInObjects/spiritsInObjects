@@ -15,7 +15,7 @@ export class Visualize {
 		this.ffmpeg = ffmpeg;
 	}
 
-	public async processAudio (state : any, info : any, tmpAudio : string) {
+	public async processAudio (state : any, info : any, tmpAudio : string, onProgress : Function) {
 		const filePath   : string = state.filePath;
 		const fps        : number = typeof state.fps !== 'undefined' ? state.fps : 24;
 		const height     : number = state.vHeight;
@@ -33,7 +33,7 @@ export class Visualize {
 		}
 
 		try {
-			await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels);
+			await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels, onProgress);
 		} catch (err) {
 			throw err;
 		}

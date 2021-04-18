@@ -7,9 +7,15 @@
     "doc": "docs"
   },
   "build": {
-    "appId": "spiritsinobjects",
+    "appId": "com.sixteenmillimeter.spiritsinobjects",
+    "output" : "releases",
     "mac": {
-      "category": "public.app-category.video"
+      "target" : "dmg",
+      "category": "public.app-category.video",
+      "entitlements" : "./entitlements.plist"
+    },
+    "win" : {
+      "target" : "nsis"
     },
     "files": [
       "dist/contrib/spin.js",
@@ -26,7 +32,6 @@
       "dist/main/lib/config/index.js",
       "dist/main/lib/ffmpeg/index.js",
       "dist/main/lib/sonifyNode/index.js",
-      "dist/main/lib/sox/index.js",
       "dist/renderer/index.js",
       "dist/renderer/lib/sonifyCanvas/index.js",
       "dist/renderer/lib/state/index.js",

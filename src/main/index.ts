@@ -304,23 +304,34 @@ ipcMain.on('save', async (evt : Event, args : any) => {
 
 ipcMain.on('process_audio', async (evt : Event, args : any) => {
 	const tmpAudio : string = pathJoin(tmpdir(), `${uuid()}_tmp_audio.wav`);
+	const frameStart = +new Date();
 	let info : any = {};
+	let success : boolean = false;
 
-	try {
-		info = await ffmpeg.info(args.state.filePath);
-	} catch (err) {
-		console.error(err)
+	function onProgress (obj : any) {
+		const ms : number = ((+new Date()) - frameStart) / obj.frame;
+		mainWindow.webContents.send('process_audio_progress', { ms, frameNumber : obj.frame });
 	}
 
 	try {
-		await visualize.processAudio(args.state, info, tmpAudio);
+		info = await ffmpeg.info(args.state.filePath);
+		success = true;
+	} catch (err) {
+		console.error(err)
+		success = false;
+	}
+
+	try {
+		await visualize.processAudio(args.state, info, tmpAudio, onProgress);
+		success = true;
 	} catch (err) {
 		console.error(err);
+		success = false;
 	}
 
 	TMP.files.push(tmpAudio);
 
-	mainWindow.webContents.send('process_audio', { tmpAudio });
+	mainWindow.webContents.send('process_audio', { tmpAudio, success });
 });
 
 ipcMain.on('visualize_start', async (evt : Event, args : any) => {
