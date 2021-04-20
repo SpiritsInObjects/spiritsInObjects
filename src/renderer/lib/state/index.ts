@@ -149,7 +149,7 @@ class State {
      private validate (key: string, value: any) {
         if (key === 'start') {
             if (isNaN(value)) {
-                this.storage[key] = 0.72;
+                this.storage[key] = 0.81;
             }
         } else if (key === 'end') {
             if (isNaN(value)) {

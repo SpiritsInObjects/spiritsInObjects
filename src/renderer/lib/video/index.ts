@@ -232,13 +232,14 @@ class Video {
         this.height = this.element.videoHeight;
         this.canvas.width = this.width;
         this.canvas.height = this.height;
-
-        this.ui.updateSliders(this.width, this.height);
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
         document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
+        setTimeout((function () {
+            this.ui.updateSliders(this.width, this.height);
+        }).bind(this), 101);
     }
 
     private onloadstartstill () {

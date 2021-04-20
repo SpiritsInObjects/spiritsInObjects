@@ -59,11 +59,13 @@ class UI {
         const scale = this.height / this.theatreHeight;
         const scaledWidth = this.width / scale;
         const start = (this.startSelect.offsetLeft - this.min) / scaledWidth;
-        this.startMoving = false;
-        this.start = start;
-        this.state.set('start', start);
-        if (this.onSelectionChange)
-            this.onSelectionChange();
+        if (this.startMoving) {
+            this.startMoving = false;
+            this.start = start;
+            this.state.set('start', start);
+            if (this.onSelectionChange)
+                this.onSelectionChange();
+        }
     }
     moveStart(evt) {
         let width;
@@ -99,11 +101,13 @@ class UI {
         const scale = this.height / this.theatreHeight;
         const scaledWidth = this.width / scale;
         const end = (this.endSelect.offsetLeft - this.min) / scaledWidth;
-        this.endMoving = false;
-        this.end = end;
-        this.state.set('end', end);
-        if (this.onSelectionChange)
-            this.onSelectionChange();
+        if (this.endMoving) {
+            this.endMoving = false;
+            this.end = end;
+            this.state.set('end', end);
+            if (this.onSelectionChange)
+                this.onSelectionChange();
+        }
     }
     moveEnd(evt) {
         let width;

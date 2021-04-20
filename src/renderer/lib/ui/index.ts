@@ -85,11 +85,13 @@ export default class UI {
         const scaledWidth : number = this.width / scale;
         const start : number = (this.startSelect.offsetLeft - this.min) / scaledWidth;
 
-        this.startMoving = false;
+        if (this.startMoving) {
+            this.startMoving = false;
 
-        this.start = start;
-        this.state.set('start', start);
-        if (this.onSelectionChange) this.onSelectionChange();
+            this.start = start;
+            this.state.set('start', start);
+            if (this.onSelectionChange) this.onSelectionChange();
+        }
     }
 
     private moveStart (evt : MouseEvent) {
@@ -134,12 +136,13 @@ export default class UI {
         const scale : number = this.height / this.theatreHeight;
         const scaledWidth : number = this.width / scale;
         const end : number = (this.endSelect.offsetLeft - this.min) / scaledWidth;
-
-        this.endMoving = false;
+        if (this.endMoving) {
+            this.endMoving = false;
         
-        this.end = end;
-        this.state.set('end', end);
-        if (this.onSelectionChange) this.onSelectionChange();
+            this.end = end;
+            this.state.set('end', end);
+            if (this.onSelectionChange) this.onSelectionChange();
+        }
     }
 
     private moveEnd (evt : MouseEvent) {
