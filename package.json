@@ -8,14 +8,14 @@
   },
   "build": {
     "appId": "com.sixteenmillimeter.spiritsinobjects",
-    "output" : "releases",
+    "output": "releases",
     "mac": {
-      "target" : "dmg",
+      "target": "dmg",
       "category": "public.app-category.video",
-      "entitlements" : "./entitlements.plist"
+      "entitlements": "./entitlements.plist"
     },
-    "win" : {
-      "target" : "nsis"
+    "win": {
+      "target": "nsis"
     },
     "files": [
       "dist/contrib/spin.js",
