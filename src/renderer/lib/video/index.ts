@@ -38,6 +38,10 @@ class Video {
 
     private framerates : number[] = [ 23.976, 24, 25, 29.97, 30, 50, 59.94, 60 ]; 
 
+    private previewCodecs : string[] = [ 'prores', 'hevc' ];
+    private preview : boolean = false;
+    private previewPath : string;
+
     public width : number;
     public height : number;
     public framerate : number = 24;
@@ -193,7 +197,7 @@ class Video {
      * 
      * @param {string} filePath Path to video file
      */
-    public async file (filePath : string, type : string) {
+    public file (filePath : string, type : string) {
         if (type === 'video') {
             this.source = document.createElement('source');
             this.source.setAttribute('src', filePath);
@@ -224,6 +228,25 @@ class Video {
             } catch (err) {
                 console.error(err);
             }
+        }
+    }
+
+    public previewFile (filePath : string) {
+        this.preview = true;
+        this.previewPath = filePath;
+        this.source = document.createElement('source');
+        this.source.setAttribute('src', this.previewPath);
+        this.element.innerHTML = '';
+        this.element.appendChild(this.source);
+        this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
+        this.element.load();
+        this.current.value = '0';
+
+        this.still.classList.add('hide');
+        try {
+            this.element.classList.remove('hide');
+        } catch (err) {
+            console.error(err);
         }
     }
 
@@ -269,10 +292,11 @@ class Video {
         return fps;
     }
 
-    public oninfo (evt : Event, args : any) {
+    public oninfo (evt : Event, args : any) : boolean {
         let fpsRaw : string;
         let videoStream : any;
         let secondsRaw : string;
+        let preview : boolean  = false;
 
         if (args.type === 'video') {
             videoStream = args.streams.find((stream : any) => {
@@ -281,11 +305,17 @@ class Video {
                 }
                 return false;
             });
+
             if (typeof videoStream.duration === 'undefined') {
                 if (typeof args.format !== 'undefined' && typeof args.format.duration !== 'undefined') {
                     videoStream.duration = args.format.duration;
                 }
             }
+
+            if (this.previewCodecs.indexOf(videoStream.codec_name) !== -1) {
+                preview = true;
+            }
+
             fpsRaw = videoStream.r_frame_rate;
             secondsRaw = videoStream.duration;
             this.framerate = this.parseFps(fpsRaw);
@@ -296,8 +326,6 @@ class Video {
             this.frames = args.frames;
         }
       
-
-
         this.width = videoStream.width;
         this.height = videoStream.height;
         this.samplerate = this.height * this.framerate;
@@ -314,6 +342,8 @@ class Video {
 
         this.sonifyFrameBtn.disabled  = false;
         this.sonifyVideoBtn.disabled  = false;
+
+        return preview;
     }
 
     private displayInfo () {
@@ -380,7 +410,7 @@ class Video {
     public set (filePath : string, type : string) : string {
         const displayName : string = basename(filePath);
         console.log(`Selected file ${displayName}`);
-            
+        this.preview = false;
         this.file(filePath, type);
         this.displayName = displayName;
         return displayName;

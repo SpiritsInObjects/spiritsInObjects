@@ -29,7 +29,7 @@ class Visualize {
             throw new Error('No audio stream found');
         }
         try {
-            await this.ffmpeg.resample(filePath, tmpAudio, samplerate, stream.channels, onProgress);
+            await this.ffmpeg.resampleAudio(filePath, tmpAudio, samplerate, stream.channels, onProgress);
         }
         catch (err) {
             throw err;

@@ -32,6 +32,8 @@ class Video {
         this.startTimecode = document.getElementById('startTimecode');
         this.endTimecode = document.getElementById('endTimecode');
         this.framerates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
+        this.previewCodecs = ['prores', 'hevc'];
+        this.preview = false;
         this.framerate = 24;
         this.frames = 0;
         this.samplerate = 48000;
@@ -157,7 +159,7 @@ class Video {
      *
      * @param {string} filePath Path to video file
      */
-    async file(filePath, type) {
+    file(filePath, type) {
         if (type === 'video') {
             this.source = document.createElement('source');
             this.source.setAttribute('src', filePath);
@@ -187,6 +189,24 @@ class Video {
             catch (err) {
                 console.error(err);
             }
+        }
+    }
+    previewFile(filePath) {
+        this.preview = true;
+        this.previewPath = filePath;
+        this.source = document.createElement('source');
+        this.source.setAttribute('src', this.previewPath);
+        this.element.innerHTML = '';
+        this.element.appendChild(this.source);
+        this.element.addEventListener('loadeddata', this.onloadstart.bind(this));
+        this.element.load();
+        this.current.value = '0';
+        this.still.classList.add('hide');
+        try {
+            this.element.classList.remove('hide');
+        }
+        catch (err) {
+            console.error(err);
         }
     }
     onloadstart() {
@@ -231,6 +251,7 @@ class Video {
         let fpsRaw;
         let videoStream;
         let secondsRaw;
+        let preview = false;
         if (args.type === 'video') {
             videoStream = args.streams.find((stream) => {
                 if (stream.codec_type === 'video') {
@@ -242,6 +263,9 @@ class Video {
                 if (typeof args.format !== 'undefined' && typeof args.format.duration !== 'undefined') {
                     videoStream.duration = args.format.duration;
                 }
+            }
+            if (this.previewCodecs.indexOf(videoStream.codec_name) !== -1) {
+                preview = true;
             }
             fpsRaw = videoStream.r_frame_rate;
             secondsRaw = videoStream.duration;
@@ -266,6 +290,7 @@ class Video {
         this.displayInfo();
         this.sonifyFrameBtn.disabled = false;
         this.sonifyVideoBtn.disabled = false;
+        return preview;
     }
     displayInfo() {
         const start = this.state.get('start');
@@ -325,6 +350,7 @@ class Video {
     set(filePath, type) {
         const displayName = basename(filePath);
         console.log(`Selected file ${displayName}`);
+        this.preview = false;
         this.file(filePath, type);
         this.displayName = displayName;
         return displayName;

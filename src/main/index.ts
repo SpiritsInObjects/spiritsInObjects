@@ -291,6 +291,45 @@ ipcMain.on('info', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('info', res);
 });
 
+ipcMain.on('preview', async (evt : Event, args : any) => {
+	const filePath : string = args.filePath;
+	const pathHash : string = hashStr(filePath);
+	const tmpVideo : string = pathJoin(tmpdir(), `${pathHash}_tmp_video.mkv`);
+	const frameStart : number = +new Date();
+	let tmpExists : boolean = false;
+	let info : any = {};
+	let success : boolean = false;
+
+	function onProgress (obj : any) {
+		const ms : number = ((+new Date()) - frameStart) / obj.frame;
+		mainWindow.webContents.send('preview_progress', { ms, frameNumber : obj.frame });
+	}
+
+	try {
+		tmpExists = await pathExists(tmpVideo);
+	} catch (err) {
+		console.error(err);
+	}
+
+	if (tmpExists) {
+		success = true;
+		mainWindow.webContents.send('preview', { tmpVideo, success });
+		return;
+	}
+
+	try {
+		await ffmpeg.exportPreview(args.filePath, tmpVideo, onProgress);
+		success = true;
+	} catch (err) {
+		console.error(err);
+		success = false;
+	}
+
+	TMP.files.push(tmpVideo);
+
+	mainWindow.webContents.send('preview', { tmpVideo, success });
+});
+
 ipcMain.on('save', async (evt : Event, args : any) => {
 	if (args.savePath && !args.savePath.canceled) {
 		try {

@@ -210,7 +210,7 @@ class ffmpeg {
             return child;
         });
     }
-    static async resample(input, output, sampleRate, channels, onProgress = () => { }) {
+    static async resampleAudio(input, output, sampleRate, channels, onProgress = () => { }) {
         const args = [
             '-i', input,
             //mix to mono however many channels provided
@@ -227,6 +227,45 @@ class ffmpeg {
             child.on('exit', (code) => {
                 if (code === 0) {
                     return resolve(output);
+                }
+                else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            child.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            child.stderr.on('data', (data) => {
+                const line = data.toString();
+                const obj = this.parseStderr(line);
+                let estimated;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return child;
+        });
+    }
+    static async exportPreview(inputPath, outputPath, onProgress = () => { }) {
+        const args = [
+            '-i', inputPath,
+            '-c:v', 'libx264',
+            '-preset', 'fast',
+            '-crf', '18',
+            '-y',
+            outputPath
+        ];
+        let res;
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve, reject) => {
+            const child = child_process_1.spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            child.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(tmp);
                 }
                 else {
                     console.error(`Process exited with code: ${code}`);

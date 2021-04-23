@@ -270,6 +270,63 @@ class Files {
     }
 }
 const audioCtx = new window.AudioContext();
+function onInfo(evt, args) {
+    let preview = video.oninfo(evt, args);
+    if (!preview) {
+        sonify = new Sonify(state, video.canvas, audioContext);
+    }
+    else {
+        previewStart();
+    }
+}
+function previewProgress(frameNumber, ms) {
+    let timeLeft;
+    let timeStr;
+    if (avgMs !== -1) {
+        avgMs = (avgMs + ms) / 2.0;
+    }
+    else {
+        avgMs = ms;
+    }
+    timeLeft = (video.frames - frameNumber) * avgMs;
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    }
+    else {
+        timeAvg = timeLeft;
+    }
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / video.frames, `~${timeStr}`);
+}
+function onPreviewProgress(evt, args) {
+    previewProgress(args.frameNumber, args.ms);
+}
+async function previewStart() {
+    const filePath = state.get('filePath');
+    const displayName = video.displayName;
+    let proceed = false;
+    try {
+        proceed = await confirm(`To view the video ${displayName} a proxy must be rendered. Do you wish to proceed?`);
+    }
+    catch (err) {
+        console.log(err);
+    }
+    if (!proceed) {
+        return false;
+    }
+    timeAvg = -1;
+    avgMs = -1;
+    ui.overlay.show(`Rendering proxy of ${displayName}...`);
+    ui.overlay.progress(0, `Determining time left...`);
+    ipcRenderer.send('preview', { filePath });
+}
+function onPreview(evt, args) {
+    video.previewFile(args.tmpVideo);
+    setTimeout(() => {
+        sonify = new Sonify(state, video.canvas, audioContext);
+        ui.overlay.hide();
+    }, 100);
+}
 async function sonifyStart() {
     const sonifyState = state.get();
     const displayName = video.displayName;
@@ -586,10 +643,9 @@ function bindListeners() {
     ipcRenderer.on('sonify_progress', onSonifyProgress);
     ipcRenderer.on('cancel', onCancel);
     ipcRenderer.on('visualize_progress', onVisualizeProgress);
-    ipcRenderer.on('info', (evt, args) => {
-        video.oninfo(evt, args);
-        sonify = new Sonify(state, video.canvas, audioContext);
-    });
+    ipcRenderer.on('info', onInfo);
+    ipcRenderer.on('preview_progress', onPreviewProgress);
+    ipcRenderer.on('preview', onPreview);
     ipcRenderer.on('process_audio', async (evt, args) => {
         if (args.success === true) {
             await visualize.onProcessAudio(evt, args);
