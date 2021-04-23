@@ -31,6 +31,8 @@ class UI {
     constructor(state) {
         this.startSelect = document.getElementById('startSelect');
         this.endSelect = document.getElementById('endSelect');
+        this.startDisplay = this.startSelect.querySelector('.after');
+        this.endDisplay = this.endSelect.querySelector('.after');
         this.theatre = document.getElementById('theatre');
         this.endMoving = false;
         this.startMoving = false;
@@ -54,6 +56,7 @@ class UI {
     }
     beginMoveStart(evt) {
         this.startMoving = true;
+        this.startSelect.classList.add('active');
     }
     endMoveStart(evt) {
         const scale = this.height / this.theatreHeight;
@@ -61,6 +64,12 @@ class UI {
         const start = (this.startSelect.offsetLeft - this.min) / scaledWidth;
         if (this.startMoving) {
             this.startMoving = false;
+            try {
+                this.startSelect.classList.remove('active');
+            }
+            catch (err) {
+                //
+            }
             this.start = start;
             this.state.set('start', start);
             if (this.onSelectionChange)
@@ -89,6 +98,7 @@ class UI {
             }
             ratio = newLeftX / width;
             this.startSelect.style.left = `${ratio * 100}%`;
+            this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
             percent = Math.round(((this.startSelect.offsetLeft - this.min) / scaledWidth) * 100) + '%';
@@ -96,6 +106,7 @@ class UI {
     }
     beginMoveEnd(evt) {
         this.endMoving = true;
+        this.endSelect.classList.add('active');
     }
     endMoveEnd(evt) {
         const scale = this.height / this.theatreHeight;
@@ -103,6 +114,12 @@ class UI {
         const end = (this.endSelect.offsetLeft - this.min) / scaledWidth;
         if (this.endMoving) {
             this.endMoving = false;
+            try {
+                this.endSelect.classList.remove('active');
+            }
+            catch (err) {
+                //
+            }
             this.end = end;
             this.state.set('end', end);
             if (this.onSelectionChange)
@@ -131,6 +148,7 @@ class UI {
             }
             ratio = newLeftX / width;
             this.endSelect.style.left = `${ratio * 100}%`;
+            this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
             percent = Math.round(((this.endSelect.offsetLeft - this.min) / scaledWidth) * 100) + '%';

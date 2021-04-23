@@ -37,6 +37,8 @@ export default class UI {
 
     private startSelect : HTMLElement = document.getElementById('startSelect');
     private endSelect : HTMLElement = document.getElementById('endSelect');
+    private startDisplay : HTMLElement = this.startSelect.querySelector('.after');
+    private endDisplay : HTMLElement = this.endSelect.querySelector('.after');
     private theatre : HTMLElement = document.getElementById('theatre');
 
     private endMoving : boolean = false;
@@ -78,6 +80,7 @@ export default class UI {
 
     private beginMoveStart (evt: MouseEvent) {
         this.startMoving = true;
+        this.startSelect.classList.add('active');
     }
 
     private endMoveStart (evt: MouseEvent) {
@@ -87,6 +90,11 @@ export default class UI {
 
         if (this.startMoving) {
             this.startMoving = false;
+            try {
+                this.startSelect.classList.remove('active');
+            } catch (err) {
+                //
+            }
 
             this.start = start;
             this.state.set('start', start);
@@ -121,6 +129,7 @@ export default class UI {
 
             ratio = newLeftX / width;
             this.startSelect.style.left = `${ratio * 100}%`;
+            this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
 
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
@@ -130,6 +139,7 @@ export default class UI {
 
     private beginMoveEnd (evt: MouseEvent) {
         this.endMoving = true;
+        this.endSelect.classList.add('active');
     }
 
     private endMoveEnd (evt: MouseEvent) {
@@ -138,6 +148,11 @@ export default class UI {
         const end : number = (this.endSelect.offsetLeft - this.min) / scaledWidth;
         if (this.endMoving) {
             this.endMoving = false;
+            try {
+                this.endSelect.classList.remove('active');
+            } catch (err) {
+                //
+            }
         
             this.end = end;
             this.state.set('end', end);
@@ -172,6 +187,7 @@ export default class UI {
 
             ratio = newLeftX / width;
             this.endSelect.style.left = `${ratio * 100}%`;
+            this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
 
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
