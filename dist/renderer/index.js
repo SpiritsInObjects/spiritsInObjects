@@ -142,15 +142,7 @@ class Files {
     async determineProcess(filePath) {
         let valid = true;
         let type = 'video';
-        let stats;
         let ext;
-        /*
-        try {
-            stats = await lstat(filePath);
-        } catch (err) {
-            console.error(err);
-            return false;
-        }*/
         ext = path_1.extname(filePath.toLowerCase());
         //console.log(ext)
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
@@ -186,7 +178,6 @@ class Files {
         state.set('filePath', filePath);
         state.set('type', type);
         elem.value = displayName;
-        sonifyStart();
     }
     async setVisualize(filePath, type) {
         const elem = vFileSourceProxy;

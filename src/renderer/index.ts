@@ -166,16 +166,7 @@ class Files {
     public async determineProcess (filePath : string) {
         let valid : boolean = true;
         let type : string = 'video';
-        let stats : any;
         let ext : string;
-
-        /*
-        try {
-            stats = await lstat(filePath);
-        } catch (err) {
-            console.error(err);
-            return false;
-        }*/
 
         ext = extname(filePath.toLowerCase());
         //console.log(ext)
@@ -216,8 +207,6 @@ class Files {
         state.set('type', type );
 
         elem.value = displayName;
-
-        sonifyStart();
     }
 
     public async setVisualize (filePath : string, type : string) {
