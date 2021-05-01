@@ -376,7 +376,7 @@ ipcMain.on('process_audio', async (evt : Event, args : any) => {
 ipcMain.on('visualize_start', async (evt : Event, args : any) => {
 	let success : boolean = false;
 	try {
-		await visualize.startExport();
+		await visualize.startExport(args.format);
 		success = true;
 	} catch (err) {
 		console.error(err);
@@ -418,11 +418,11 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 
-nodeCleanup(function (exitCode : any, signal : string) {
+nodeCleanup((exitCode : any, signal : string) => {
 	console.log(`Cleaning up on exit code ${exitCode}...`);
 	for (let dir of TMP.dirs){
 		try {
-			rmdirSync(dir);
+			rmdirSync(dir, { recursive: true });
 			console.log(`Removed directory ${dir}`);
 		} catch (err) {
 			console.error(err);

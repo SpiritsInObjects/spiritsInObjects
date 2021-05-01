@@ -59,8 +59,9 @@ class Visualize {
             save_pixels_1.default(nd, 'PNG').pipe(stream);
         });
     }
-    async startExport() {
+    async startExport(format) {
         this.tmp = path_1.join(os_1.tmpdir(), uuid_1.v4());
+        this.format = format;
         try {
             await fs_extra_1.mkdir(this.tmp);
         }
@@ -71,9 +72,17 @@ class Visualize {
     }
     async endExport(onProgress) {
         const inputPath = path_1.join(this.tmp, `%8d.png`);
-        const tmpVideo = `${this.tmp}.mp4`;
+        let tmpVideo;
+        let ext;
+        if (this.format === 'prores3') {
+            ext = 'mov';
+        }
+        else if (this.format === 'h264') {
+            ext = 'mp4';
+        }
+        tmpVideo = `${this.tmp}.${ext}`;
         try {
-            await this.ffmpeg.exportVideo(inputPath, tmpVideo, onProgress);
+            await this.ffmpeg.exportVideo(inputPath, tmpVideo, this.format, onProgress);
         }
         catch (err) {
             throw err;

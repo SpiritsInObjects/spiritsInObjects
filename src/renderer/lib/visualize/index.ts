@@ -51,6 +51,7 @@ class Visualize {
     private soundtrackType : string = 'variable density full';
     private soundtrackFull : boolean = true;
     private offset : boolean = false;
+    public format : string = 'prores3';
 
     private filePath : string;
     private tmpAudio : string;

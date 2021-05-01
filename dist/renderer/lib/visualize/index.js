@@ -28,6 +28,7 @@ class Visualize {
         this.soundtrackType = 'variable density full';
         this.soundtrackFull = true;
         this.offset = false;
+        this.format = 'prores3';
         this.fps = 24;
         this.frameLength = 1000 / this.fps;
         this.frame_h = 7.62;

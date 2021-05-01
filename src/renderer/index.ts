@@ -1,6 +1,6 @@
 'use strict';
 
-import { basename, extname, join } from 'path';
+import { basename, extname, join, dirname } from 'path';
 import { homedir } from 'os';
 import { lstat, readdir } from 'fs-extra';
 
@@ -13,6 +13,11 @@ const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.m
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions : string[] = ['.mid', '.midi'];
 const audioExtensions : string[] = ['.mp3', '.aiff', '.aif',  '.wav', '.wave'];
+const videoFormatMap : any = {
+    'prores3' : '.mov',
+    'h264' : '.mp4'
+};
+let lastDir : string = '';
 
 let startMoving : boolean = false;
 let endMoving : boolean = false;
@@ -136,7 +141,7 @@ class Files {
         const options : any = {
             title: `Select video, image or audio file`,
             properties: [`openFile`],
-            defaultPath: 'c:/',
+            defaultPath: lastDir === '' ? homedir() : lastDir,
             filters: [
                 {
                     name: 'All Files',
@@ -169,7 +174,7 @@ class Files {
         let ext : string;
 
         ext = extname(filePath.toLowerCase());
-        //console.log(ext)
+
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
             valid = true;
         }
@@ -193,7 +198,9 @@ class Files {
         } else if (type === 'audio' || type === 'midi') {
             ui.page('visualize');
             this.setVisualize(filePath, type);
-        }        
+        }  
+
+        lastDir = dirname(filePath);      
     }
 
     public async setSonify (filePath : string, type : string ) {
@@ -225,7 +232,7 @@ class Files {
 
     public async saveAudio (filePath : string) {
         const options : any = {
-            defaultPath: homedir()
+            defaultPath: lastDir === '' ? homedir() : lastDir,
         };
         let savePath : any;
 
@@ -237,6 +244,7 @@ class Files {
 
         if (savePath) {
             savePath.filePath = await this.validatePathAudio(savePath.filePath);
+            lastDir = dirname(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
@@ -266,7 +274,7 @@ class Files {
 
     public async saveVideo (filePath : string) {
         const options : any = {
-            defaultPath: homedir()
+            defaultPath: lastDir === '' ? homedir() : lastDir
         };
         let savePath : any;
 
@@ -278,12 +286,13 @@ class Files {
 
         if (savePath) {
             savePath.filePath = await this.validatePathVideo(savePath.filePath);
+            lastDir = dirname(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
 
     public async validatePathVideo (savePath : string) {
-        const saveExt : string = '.mp4';
+        const saveExt : string = videoFormatMap[visualize.format];
         const ext : string = extname(savePath);
         let proceed : boolean = false;
         let i : number;
@@ -291,11 +300,13 @@ class Files {
         if (ext === '') {
             savePath += saveExt;
         } else if (ext.toLowerCase() !== saveExt) {
+
             try {
-                proceed = await confirm(`The exported video is an MP4 wrapper but has the extension "${ext}". Keep extension and continue?`);
+                proceed = await confirm(`The exported video is in a ${saveExt} wrapper but has the extension "${ext}". Keep extension and continue?`);
             } catch (err) {
                 console.error(err);
             }
+
             if (!proceed) {
                 i = savePath.lastIndexOf(ext);
                 if (i >= 0 && i + ext.length >= savePath.length) {
@@ -380,17 +391,6 @@ function onPreview (evt : Event, args : any){
 async function sonifyStart () {
     const sonifyState : any = state.get();
     const displayName : string = video.displayName;
-    let proceed : boolean = false;
-
-    try {
-        proceed = await confirm(`Sonify ${displayName}? This may take a while.`);
-    } catch (err) {
-        console.log(err);
-    }
-
-    if (!proceed) {
-        return false;
-    }
 
     timeAvg = -1;
     avgMs = -1;
@@ -520,7 +520,7 @@ function sonifyVisualizeFrame () {
     }, 42);
 }
 
-async function visualizeExportStart () {
+async function visualizeExportStart (format : string) {
     return new Promise((resolve, reject) => {
         ipcRenderer.once('visualize_start', (evt : Event, args : any) => {
             if (typeof args.success !== 'undefined' && args.success === true) {
@@ -528,7 +528,7 @@ async function visualizeExportStart () {
             }
             return reject('Failed to start');
         });
-        ipcRenderer.send('visualize_start', {});
+        ipcRenderer.send('visualize_start', { format });
     });
 }
 
@@ -586,6 +586,7 @@ async function visualizeExportEnd () : Promise<string> {
 async function visualizeExport () {
     const width : number = visualize.width;
     const height : number = visualize.height;
+    const format : string = visualize.format;
     let frameData : any;
     let tmpVideo : string;
 
@@ -597,7 +598,7 @@ async function visualizeExport () {
         timeAvg = -1;
 
         try {
-            await visualizeExportStart();
+            await visualizeExportStart(format);
         } catch (err) {
             console.error(err);
             return false;

@@ -327,7 +327,7 @@ electron_1.ipcMain.on('process_audio', async (evt, args) => {
 electron_1.ipcMain.on('visualize_start', async (evt, args) => {
     let success = false;
     try {
-        await visualize.startExport();
+        await visualize.startExport(args.format);
         success = true;
     }
     catch (err) {
@@ -365,11 +365,11 @@ electron_1.ipcMain.on('visualize_end', async (evt, args) => {
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
-node_cleanup_1.default(function (exitCode, signal) {
+node_cleanup_1.default((exitCode, signal) => {
     console.log(`Cleaning up on exit code ${exitCode}...`);
     for (let dir of TMP.dirs) {
         try {
-            fs_extra_1.rmdirSync(dir);
+            fs_extra_1.rmdirSync(dir, { recursive: true });
             console.log(`Removed directory ${dir}`);
         }
         catch (err) {

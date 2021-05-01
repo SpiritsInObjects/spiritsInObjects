@@ -5,6 +5,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdir, unlink } from 'fs-extra';
 import { createHash } from 'crypto';
+import { spawnAsync } from '../spawnAsync';
 
 const bin : string = require('ffmpeg-static');
 const ffprobe : string = require('ffprobe-static').path;
@@ -19,30 +20,6 @@ interface StdErr {
     remaining? : number;
     progress? : number;
     estimated? : number;
-}
-
-async function spawnAsync (bin : string, args : string[]) {
-	return new Promise((resolve : Function, reject : Function) => {
-        const child = spawn(bin, args);
-        let stdout = '';
-        let stderr = '';
-        child.on('exit', (code) => {
-            if (code === 0) {
-                return resolve({ stdout, stderr });
-            } else {
-                console.error(`Process exited with code: ${code}`);
-                console.error(stderr);
-                return reject(stderr);
-            }
-        });
-        child.stdout.on('data', (data) => {
-            stdout += data;
-        });
-        child.stderr.on('data', (data) => {
-            stderr += data;
-        });
-        return child;
-	});
 }
 
 export class ffmpeg {
@@ -191,18 +168,32 @@ export class ffmpeg {
         return output;
     }
 
-    static async exportVideo (inputPath : string, outputPath : string, onProgress : Function = () => {}) : Promise<string> {
+    static async exportVideo (inputPath : string, outputPath : string, format : string = 'prores3', onProgress : Function = () => {}) : Promise<string> {
         const args : string[] = [
             '-f', 'image2',
             '-i',  inputPath,
-            '-r', '24',
-            '-c:v', 'libx264',
-            '-preset', 'slow',
-            '-crf', '5',
-            '-y',
-             outputPath
+            '-r', '24'
         ];
-        let res : any;
+
+        if (format === 'prores3') {
+            args.push('-c:v');
+            args.push('prores_ks');
+            
+            args.push('-profile:v');
+            args.push('3');
+        } else if (format === 'h264') {
+            args.push('-c:v');
+            args.push('libx264');
+
+            args.push('-preset');
+            args.push('slow');
+
+            args.push('-crf');
+            args.push('5');
+        }
+        
+        args.push('-y');
+        args.push(outputPath);
 
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {

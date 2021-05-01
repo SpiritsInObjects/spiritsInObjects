@@ -1,6 +1,6 @@
 {
   "name": "spiritsinobjects",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Application for image sonification and sequencing",
   "main": "dist/main/index.js",
   "directories": {
@@ -17,6 +17,10 @@
     "win": {
       "target": "nsis"
     },
+    "linux": {
+      "target": "deb"
+    },
+    "deb": {},
     "files": [
       "dist/contrib/spin.js",
       "dist/contrib/spin.css",
@@ -79,7 +83,7 @@
   "homepage": "https://github.com/sixteenmillimeter/spiritsInObjects#readme",
   "devDependencies": {
     "@types/electron": "^1.6.10",
-    "@types/fs-extra": "^9.0.6",
+    "@types/fs-extra": "^9.0.11",
     "@types/jquery": "^3.5.5",
     "@types/ndarray": "^1.0.8",
     "@types/node": "^14.14.23",

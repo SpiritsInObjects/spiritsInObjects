@@ -6,33 +6,10 @@ const os_1 = require("os");
 const path_1 = require("path");
 const fs_extra_1 = require("fs-extra");
 const crypto_1 = require("crypto");
+const spawnAsync_1 = require("../spawnAsync");
 const bin = require('ffmpeg-static');
 const ffprobe = require('ffprobe-static').path;
 let tmp;
-async function spawnAsync(bin, args) {
-    return new Promise((resolve, reject) => {
-        const child = child_process_1.spawn(bin, args);
-        let stdout = '';
-        let stderr = '';
-        child.on('exit', (code) => {
-            if (code === 0) {
-                return resolve({ stdout, stderr });
-            }
-            else {
-                console.error(`Process exited with code: ${code}`);
-                console.error(stderr);
-                return reject(stderr);
-            }
-        });
-        child.stdout.on('data', (data) => {
-            stdout += data;
-        });
-        child.stderr.on('data', (data) => {
-            stderr += data;
-        });
-        return child;
-    });
-}
 class ffmpeg {
     static async info(filePath) {
         const args = [
@@ -44,7 +21,7 @@ class ffmpeg {
         ];
         let res;
         try {
-            res = await spawnAsync(ffprobe, args);
+            res = await spawnAsync_1.spawnAsync(ffprobe, args);
         }
         catch (err) {
             console.error(err);
@@ -162,25 +139,35 @@ class ffmpeg {
         ];
         let res;
         try {
-            res = await spawnAsync(bin, args);
+            res = await spawnAsync_1.spawnAsync(bin, args);
         }
         catch (err) {
             throw err;
         }
         return output;
     }
-    static async exportVideo(inputPath, outputPath, onProgress = () => { }) {
+    static async exportVideo(inputPath, outputPath, format = 'prores3', onProgress = () => { }) {
         const args = [
             '-f', 'image2',
             '-i', inputPath,
-            '-r', '24',
-            '-c:v', 'libx264',
-            '-preset', 'slow',
-            '-crf', '5',
-            '-y',
-            outputPath
+            '-r', '24'
         ];
-        let res;
+        if (format === 'prores3') {
+            args.push('-c:v');
+            args.push('prores_ks');
+            args.push('-profile:v');
+            args.push('3');
+        }
+        else if (format === 'h264') {
+            args.push('-c:v');
+            args.push('libx264');
+            args.push('-preset');
+            args.push('slow');
+            args.push('-crf');
+            args.push('5');
+        }
+        args.push('-y');
+        args.push(outputPath);
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
             const child = child_process_1.spawn(bin, args);

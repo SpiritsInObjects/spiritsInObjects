@@ -10,6 +10,7 @@ import ndarray from 'ndarray';
 export class Visualize {
 	private ffmpeg : any;
 	private tmp : string;
+	private format : string;
 
 	constructor (ffmpeg : any) {
 		this.ffmpeg = ffmpeg;
@@ -67,8 +68,9 @@ export class Visualize {
 		});
 	}
 
-	public async startExport () {
+	public async startExport (format : string) {
 		this.tmp = pathJoin(tmpdir(), uuid());
+		this.format = format;
 		try {
 			await mkdir(this.tmp);
 		} catch (err) {
@@ -79,10 +81,19 @@ export class Visualize {
 
 	public async endExport (onProgress : Function) {
 		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
-		const tmpVideo : string = `${this.tmp}.mp4`;
+		let tmpVideo : string;
+		let ext : string;
+		
+		if (this.format === 'prores3') {
+			ext = 'mov';
+		} else if (this.format === 'h264') {
+			ext = 'mp4';
+		}
+
+		tmpVideo = `${this.tmp}.${ext}`;
 
 		try {
-			await this.ffmpeg.exportVideo(inputPath, tmpVideo, onProgress);
+			await this.ffmpeg.exportVideo(inputPath, tmpVideo, this.format, onProgress);
 		} catch (err) {
 			throw err;
 		}
