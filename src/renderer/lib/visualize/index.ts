@@ -15,6 +15,7 @@ class Visualize {
     private wavesSelect : HTMLSelectElement = document.getElementById('vWaves') as HTMLSelectElement;
     private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
     private offsetSelect : HTMLSelectElement = document.getElementById('vOffset') as HTMLSelectElement;
+    private formatSelect : HTMLSelectElement = document.getElementById('vFormat') as HTMLSelectElement;
 
     private canvas : HTMLCanvasElement = document.getElementById('vCanvas') as HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
@@ -44,6 +45,12 @@ class Visualize {
     private endSoundtrack = 1.0;
 
     private framerates : number[] = [ 23.976, 24, 25, 29.97, 30, 50, 59.94, 60 ]; 
+    private formats : any = {
+        "1080" : { width: 1920, height: 1080 },
+        "1152" : { width: 2048, height: 1152 },
+        "1440" : { width: 2560, height: 1440 },
+        "2160" : { width: 3840, height: 2160 }
+    }
 
     private type : string = 'midi';
     private style : string = 'simple';
@@ -104,6 +111,7 @@ class Visualize {
         this.wavesSelect.addEventListener('change', this.changeWaves.bind(this));
         //this.stylesSelect.addEventListener('change', this.changeStyles.bind(this));
         this.offsetSelect.addEventListener('change', this.changeOffset.bind(this));
+        this.formatSelect.addEventListener('change', this.changeFormat.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -198,6 +206,13 @@ class Visualize {
         } else {
             this.decodeAudio();
         }
+    }
+
+    private changeFormat () {
+        const format : string = this.formatSelect.value;
+        const width : number = this.formats[format].width;
+        const height : number = this.formats[format].height;
+        this.setFormat(width, height);
     }
 
     public async processMidi () {

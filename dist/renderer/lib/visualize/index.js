@@ -8,6 +8,7 @@ class Visualize {
         this.wavesSelect = document.getElementById('vWaves');
         this.stylesSelect = document.getElementById('vStyle');
         this.offsetSelect = document.getElementById('vOffset');
+        this.formatSelect = document.getElementById('vFormat');
         this.canvas = document.getElementById('vCanvas');
         this.display = document.getElementById('vCanvasDisplay');
         this.audioCanvas = document.getElementById('aCanvas');
@@ -22,6 +23,12 @@ class Visualize {
         this.startSoundtrack = 0.81;
         this.endSoundtrack = 1.0;
         this.framerates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
+        this.formats = {
+            "1080": { width: 1920, height: 1080 },
+            "1152": { width: 2048, height: 1152 },
+            "1440": { width: 2560, height: 1440 },
+            "2160": { width: 3840, height: 2160 }
+        };
         this.type = 'midi';
         this.style = 'simple';
         this.waves = 'square';
@@ -62,6 +69,7 @@ class Visualize {
         this.wavesSelect.addEventListener('change', this.changeWaves.bind(this));
         //this.stylesSelect.addEventListener('change', this.changeStyles.bind(this));
         this.offsetSelect.addEventListener('change', this.changeOffset.bind(this));
+        this.formatSelect.addEventListener('change', this.changeFormat.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -150,6 +158,12 @@ class Visualize {
         else {
             this.decodeAudio();
         }
+    }
+    changeFormat() {
+        const format = this.formatSelect.value;
+        const width = this.formats[format].width;
+        const height = this.formats[format].height;
+        this.setFormat(width, height);
     }
     async processMidi() {
         let midi;
