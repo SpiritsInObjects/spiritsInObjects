@@ -38,6 +38,7 @@ let sonifyCancelBtn;
 let visualizeBtn;
 let sonifyVisualizeBtn;
 let visualizeExportBtn;
+let timelineBtn;
 async function confirm(message) {
     const config = {
         buttons: ['Yes', 'No'],
@@ -626,11 +627,13 @@ function bindListeners() {
     visualizeBtn = document.getElementById('visualizeBtn');
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn');
     visualizeExportBtn = document.getElementById('visualizeExportBtn');
+    timelineBtn = document.getElementById('timelineBtn');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
+    timelineBtn.addEventListener('click', function () { ui.page('timeline'); }, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);

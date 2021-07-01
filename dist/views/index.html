@@ -16,6 +16,10 @@
                 <button id="visualizeBtn" class="pageBtn"></button>
                 <label>Visualize</label>
             </div>
+            <div class="wrapper">
+                <button id="timelineBtn" class="pageBtn"></button>
+                <label>Timeline</label>
+            </div>
         </div>
         <div id="sonify" class="page show">
             <div id="timecodes">
@@ -66,7 +70,7 @@
             <audio id="sonifyPeaksAudio"></audio>
             <div class="optionWrapper">
                 <div class="options">
-                    <textarea id="fileSourceProxy" placeholder="File(s)" title="Select a video or image sequence" readonly></textarea>
+                    <input type="text" id="fileSourceProxy" placeholder="Video or still image" title="Select a video or image sequence" readonly></input>
                     
                     <select id="videoSource" class="hide" required title="Select a camera video source" disabled>
                         <option disabled selected value="">Camera</option>
@@ -150,6 +154,9 @@
                     <option value="true">Offset 26 frames</option>
                 </select>
             </div>
+        </div>
+        <div id="timeline" class="page">
+            
         </div>
         <div id="overlay">
             <div id="overlayMsg"></div>

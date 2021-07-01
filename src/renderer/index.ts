@@ -47,6 +47,7 @@ let sonifyCancelBtn : HTMLElement;
 let visualizeBtn : HTMLElement;
 let sonifyVisualizeBtn : HTMLButtonElement;
 let visualizeExportBtn : HTMLButtonElement;
+let timelineBtn : HTMLElement;
 
 async function confirm (message : string) {
     const config = {
@@ -715,12 +716,14 @@ function bindListeners () {
     visualizeBtn = document.getElementById('visualizeBtn');
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn') as HTMLButtonElement;
     visualizeExportBtn = document.getElementById('visualizeExportBtn') as HTMLButtonElement;
+    timelineBtn = document.getElementById('timelineBtn');
 
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
+    timelineBtn.addEventListener('click', function () { ui.page('timeline'); }, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
