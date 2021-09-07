@@ -8,6 +8,7 @@
 
 @videoWidth: 996px;
 @videoHeight: 560px;
+@binWidth:  320px;
 
 @inputBg: #cbcccf;
 
@@ -159,6 +160,7 @@ body{
 #currentFrame,
 #vCurrentFrame{
 	text-align: center;
+	margin-left: 320px;
 }
 
 #sonify,
@@ -218,6 +220,12 @@ body{
 	box-shadow: 0px 0px 4px rgba(0, 0, 20, 0.3);
 }
 
+#vPreview{
+	background : #000;
+	width: @videoWidth;
+	height: @videoHeight;
+}
+
 #video {
     height: @videoHeight;
 	width: auto;
@@ -238,7 +246,8 @@ body{
 	position: absolute;
 	margin: -10000px -10000px;
 }
-#vCanvas{
+#vCanvas,
+#tCanvas{
 	background: #000;
 	position: absolute;
 	margin: -10000px -10000px;
@@ -296,7 +305,7 @@ body{
 	margin-left: -37px;
 }
 
-#timeline{
+#vTimeline{
 	margin-top: 15px;
 	height: 80px;
 	background: rgba(0, 0, 0, 0.1);
@@ -319,6 +328,10 @@ body{
 	&.show{
 		display: block;
 	}
+}
+
+.optionWrapper{
+	height: 165px;
 }
 
 .options {
@@ -400,9 +413,8 @@ textarea,
 
 #vFormat{
 	display: block;
-    position: absolute;
-    left: 448px;
-    margin-top: 4px;
+	float: right;
+    margin-right: 151px;
 }
 
 #nextFrame,
@@ -575,4 +587,49 @@ textarea,
 
 .hide{
 	display: none !important;
+}
+
+#timelineScreen{
+	.tWrapper{
+		width:  @videoWidth;
+		height: @videoHeight;
+	}
+}
+
+@tTheatreHeight: ( (@videoWidth - @binWidth) / 16) * 9;
+
+#tBin{
+	height: 450px;
+	width:  @binWidth;
+	float:  left;
+	background:  #999;
+	overflow: scroll;
+}
+#tTheatre{
+	height: 450px;
+	width:  @videoWidth - @binWidth;
+	float:  right;
+	overflow: hidden;
+}
+
+#tCanvasDisplay,
+#tPreview{
+	height: @tTheatreHeight;
+	width:  @videoWidth - @binWidth;
+}
+
+#tPreview{
+	width:  @videoWidth - @binWidth;
+	height: @tTheatreHeight;
+	background:  #000;
+	position: relative;
+}
+
+#tElement{
+	.frame{
+		width: 24px;
+		height: 24px;
+		float: left;
+		border: 1px solid #000;
+	}
 }

@@ -9,21 +9,22 @@
     <body ondragenter="dnd.enter(event);" ondragover="dnd.over(event);" ondrop="dnd.drop(event);">
         <div id="menu">
             <div class="wrapper">
-                <button id="sonifyBtn" class="pageBtn active"></button>
+                <button id="timelineBtn" class="pageBtn active"></button>
+                <label>Timeline</label>
+            </div>
+            <div class="wrapper">
+                <button id="sonifyBtn" class="pageBtn"></button>
                 <label>Sonify</label>
             </div>
             <div class="wrapper">
                 <button id="visualizeBtn" class="pageBtn"></button>
                 <label>Visualize</label>
             </div>
-            <div class="wrapper">
-                <button id="timelineBtn" class="pageBtn"></button>
-                <label>Timeline</label>
-            </div>
         </div>
-        <div id="sonify" class="page show">
+        <div id="sonify" class="page">
             <div id="timecodes">
                 <input type="text" id="startTimecode" value="00:00:00;00" />
+                <input type="number" id="currentFrame" alt="Current Frame" value="0" />
                 <input type="text" id="endTimecode" value="00:00:00;00" />
             </div>
             <div id="theatre">
@@ -51,7 +52,6 @@
                 <div class="bg"></div>
                 <div>
                     <button id="prevFrame"><img src="../image/navigate_before.svg" alt="Previous Frame"></button>
-                    <input type="number" id="currentFrame" alt="Current Frame" value="0" />
                     <button id="nextFrame"><img src="../image/navigate_next.svg" alt="Next Frame"></button>
                 </div>
                 <div id="sonifyControl">
@@ -94,21 +94,23 @@
         <div id="visualize" class="page">
             <div id="vTimecodes">
                 <input type="text" id="vStartTimecode" value="00:00:00;00" />
+                <input type="number" id="vCurrentFrame" alt="Current Frame" value="0" />
+                <input type="text" id="vEndTimecode" value="00:00:00;00" />
                 <select id="vFormat">
                     <option value="1080" selected>1920x1080</option>
                     <option value="1152">2048x1152 (2K)</option>
                     <option value="1440">2560x1440 (WQHD)</option>
                     <option value="2160">3840x2160 (4K)</option>
                 </select>
-                <input type="text" id="vEndTimecode" value="00:00:00;00" />
             </div>
             <div id="vTheatre">
                 <canvas id="vCanvas"></canvas>
                 <canvas id="aCanvas"></canvas>
                 <canvas id="vCanvasDisplay"></canvas>
+                <video id="vPreview" class="hide"></video>
             </div>
             <div id="visualizeTimeline">
-                <div class="timeline">
+                <div class="vTimeline">
                     <canvas id="midiTimeline"></canvas>
                     <div class="cursor"></div>
                 </div>
@@ -117,7 +119,6 @@
                 <div class="bg"></div>
                 <div>
                     <button id="vPrevFrame"><img src="../image/navigate_before.svg" alt="Previous Frame"></button>
-                    <input type="number" id="vCurrentFrame" alt="Current Frame" value="0" />
                     <button id="vNextFrame"><img src="../image/navigate_next.svg" alt="Next Frame"></button>
                 </div>
                 <div id="vSonifyControl">
@@ -127,7 +128,7 @@
                     </div>
                 </div>
             </div>
-            <div class="optionsWrapper">
+            <div class="optionWrapper">
                 <input type="text" id="vFileSourceProxy" placeholder="File" title="Select a midi or wav file" readonly />
                 <button id="vClear" class="hide">Clear</button>
                 <select id="vTracks" class="hide">
@@ -155,8 +156,36 @@
                 </select>
             </div>
         </div>
-        <div id="timeline" class="page">
-            
+        <div id="timeline" class="page show">
+            <div id="tTimecodes">
+                <input type="text" id="tStartTimecode" value="00:00:00;00" />
+                <input type="text" id="tEndTimecode" value="00:00:00;00" />
+            </div>
+            <div class="tWrapper">
+                <div id="tBin">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>File</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="tTheatre">
+                    <div id="tPreview">
+                        <div id="tCanvas"></div>
+                        <div id="tCanvasDisplay"></div>
+                        <div id="tPreview" class="hide"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="tElement">
+                <div id="tWrapper"></div>
+                <button id="tCreate">New Timeline</button>
+                <button id="tAdd" class="hide">+ Frame</button>
+            </div>
         </div>
         <div id="overlay">
             <div id="overlayMsg"></div>
