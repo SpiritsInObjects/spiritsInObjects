@@ -3,6 +3,7 @@
 const { Midi } = require('@tonejs/midi');
 const { Frequency } = require('tone');
 
+/** class representing visualization features */
 class Visualize {
     private state : State;
     public sonify : Sonify;
@@ -32,6 +33,8 @@ class Visualize {
     public prev : HTMLButtonElement = document.getElementById('vPrevFrame') as HTMLButtonElement;
     public next : HTMLButtonElement = document.getElementById('vNextFrame') as HTMLButtonElement;
     private current : HTMLInputElement = document.getElementById('vCurrentFrame') as HTMLInputElement;
+
+    private preview : HTMLVideoElement = document.getElementById('vPreview') as HTMLVideoElement;
 
     private cursor : HTMLElement = document.querySelector('#visualizeTimeline .cursor');
     private scrubbing : boolean = false;

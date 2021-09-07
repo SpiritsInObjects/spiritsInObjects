@@ -1,6 +1,7 @@
 'use strict';
 const { Midi } = require('@tonejs/midi');
 const { Frequency } = require('tone');
+/** class representing visualization features */
 class Visualize {
     constructor(state, audioContext) {
         this.tracksSelect = document.getElementById('vTracks');
@@ -16,6 +17,7 @@ class Visualize {
         this.prev = document.getElementById('vPrevFrame');
         this.next = document.getElementById('vNextFrame');
         this.current = document.getElementById('vCurrentFrame');
+        this.preview = document.getElementById('vPreview');
         this.cursor = document.querySelector('#visualizeTimeline .cursor');
         this.scrubbing = false;
         this.startTimecode = document.getElementById('vStartTimecode');
