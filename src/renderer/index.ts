@@ -29,6 +29,7 @@ let camera : Camera;
 let sonify : Sonify;
 let visualize : Visualize;
 let ui : any;
+let timeline : Timeline;
 
 let avgMs : number = -1;
 let timeAvg : number = -1;
@@ -781,6 +782,7 @@ function bindListeners () {
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
     visualize = new Visualize(state, audioContext);
+    timeline = new Timeline();
 
     bindListeners();
 

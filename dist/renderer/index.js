@@ -23,6 +23,7 @@ let camera;
 let sonify;
 let visualize;
 let ui;
+let timeline;
 let avgMs = -1;
 let timeAvg = -1;
 let dnd;
@@ -679,6 +680,7 @@ function bindListeners() {
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
     visualize = new Visualize(state, audioContext);
+    timeline = new Timeline();
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map
