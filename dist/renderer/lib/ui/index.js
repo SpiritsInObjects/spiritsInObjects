@@ -42,7 +42,7 @@ class UI {
         this.max = 996;
         this.start = 0.81;
         this.end = 1.0;
-        this.currentPage = 'sonify';
+        this.currentPage = 'timeline';
         this.state = state;
         this.overlay = new Overlay();
         this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
