@@ -1,3 +1,4 @@
+'use strict';
 class Camera {
     constructor(video) {
         this.video = video;

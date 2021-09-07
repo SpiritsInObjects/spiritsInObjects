@@ -1,3 +1,5 @@
+'use strict';
+
 interface DeviceInfo {
     deviceId : string;
     label : string;
