@@ -58,7 +58,8 @@ const BrowserOptions = {
     webPreferences: {
         webSecurity: false,
         nodeIntegration: true,
-        enableRemoteModule: true
+        enableRemoteModule: true,
+        contextIsolation: false
     }
 };
 const createMainWindow = async () => {
