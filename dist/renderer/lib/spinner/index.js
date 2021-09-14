@@ -23,7 +23,7 @@ function showSpinner(id) {
     };
     const target = document.getElementById(id);
     if (typeof Spinners[id] === 'undefined') {
-        //@ts-ignore just fuck it
+        //@ts-ignore
         Spinners[id] = new Spinner(SpinnerOptions);
     }
     Spinners[id].spin(target);

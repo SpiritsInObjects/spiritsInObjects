@@ -25,7 +25,7 @@ function showSpinner (id : string) {
     };
     const target : HTMLElement = document.getElementById(id);
     if (typeof Spinners[id] === 'undefined') {
-        //@ts-ignore just fuck it
+        //@ts-ignore
         Spinners[id] = new Spinner(SpinnerOptions) as any;
     }
     Spinners[id].spin(target);
