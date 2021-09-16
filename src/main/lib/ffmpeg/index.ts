@@ -11,24 +11,6 @@ const bin : string = require('ffmpeg-static');
 const ffprobe : string = require('ffprobe-static').path;
 let tmp : string;
 
-interface StdErr {
-    frame : number;
-    fps : number;
-    time : string;
-    speed : number;
-    size : string;
-    remaining? : number;
-    progress? : number;
-    estimated? : number;
-}
-
-interface PreviewOptions{
-    width : number;
-    height : number;
-    audio? : string;
-    forceScale? : boolean;
-}
-
 export class ffmpeg {
     static async info (filePath : string) : Promise<any> {
         const args : string[] = [
@@ -270,16 +252,32 @@ export class ffmpeg {
         });
     }
 
+    /**
+     * Render a proxy of a video using settings optimized for fast rendering times.
+     * Optionally forc video into the scale provided by the options.width and
+     * option.height settings. Optionally add an audio file as the sondtrack of the 
+     * preview video.
+     * 
+     * @param {string} inputPath
+     * @param {string} outputPath
+     * @param {object} options Preview Options
+     **/
+
     static async exportPreview (inputPath : string, outputPath : string, options : PreviewOptions, onProgress : Function = () => {}) : Promise<string> {
         const width : number = options.width;
         const height : number = options.height;
-        console.dir(width);
-        console.dir(height);
         let args : string[] = [
-            '-i',  inputPath,
-            '-c:v', 'libx264',
-            '-preset', 'fast'
+            '-i',  inputPath
         ];
+
+        if (typeof options.audio !== 'undefined') {
+            args = args.concat([
+                '-i', options.audio, 
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:a', 'aac'
+            ]);
+        }
 
         if (options.forceScale) {
             args = args.concat([
@@ -288,6 +286,8 @@ export class ffmpeg {
         }
 
         args = args.concat([
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
             '-crf', '22',
             '-y',
              outputPath

@@ -4,11 +4,6 @@ import { join } from 'path';
 import { mkdir, unlink } from 'fs-extra';
 import { spawnAsync } from '../spawnAsync';
 
-interface ProcessOutput {
-	stdout? : string;
-	stderr? : string;
-}
-
 class Fluidsynth {
 	public installed : boolean = false;
 	private bin : string = 'fluidsynth';
