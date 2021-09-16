@@ -235,15 +235,26 @@ class ffmpeg {
             return child;
         });
     }
-    static async exportPreview(inputPath, outputPath, onProgress = () => { }) {
-        const args = [
+    static async exportPreview(inputPath, outputPath, options, onProgress = () => { }) {
+        const width = options.width;
+        const height = options.height;
+        console.dir(width);
+        console.dir(height);
+        let args = [
             '-i', inputPath,
             '-c:v', 'libx264',
-            '-preset', 'fast',
-            '-crf', '18',
+            '-preset', 'fast'
+        ];
+        if (options.forceScale) {
+            args = args.concat([
+                '-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
+            ]);
+        }
+        args = args.concat([
+            '-crf', '22',
             '-y',
             outputPath
-        ];
+        ]);
         let res;
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {

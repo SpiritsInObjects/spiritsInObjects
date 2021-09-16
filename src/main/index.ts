@@ -6,7 +6,7 @@ import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
 import contextMenu from 'electron-context-menu';
-import { pathExists, unlink, writeFile, copyFile, unlinkSync, rmdirSync } from 'fs-extra';
+import { existsSync, pathExists, unlink, writeFile, copyFile, unlinkSync, rmdirSync } from 'fs-extra';
 import getPixels from 'get-pixels';
 import { WaveFile } from 'wavefile';
 import { tmpdir } from 'os';
@@ -21,6 +21,7 @@ import { fluidsynth } from './lib/fluidsynth';
 //import config from './lib/config';
 import { createMenu } from './lib/menu';
 import { Visualize } from './lib/visualize';
+import { Timeline } from './lib/timeline';
 
 const CACHE : any = {};
 const TMP : any = {
@@ -55,6 +56,7 @@ function hashStr (str : string) : string {
 
 let mainWindow : any;
 let visualize : Visualize;
+let timeline : Timeline;
 
 const BrowserOptions = {
 	title: app.name,
@@ -297,6 +299,8 @@ ipcMain.on('preview', async (evt : Event, args : any) => {
 	const pathHash : string = hashStr(filePath);
 	const tmpVideo : string = pathJoin(tmpdir(), `${pathHash}_tmp_video.mkv`);
 	const frameStart : number = +new Date();
+	const width : number = args.width;
+	const height : number = args.height;
 	let tmpExists : boolean = false;
 	let info : any = {};
 	let success : boolean = false;
@@ -319,7 +323,7 @@ ipcMain.on('preview', async (evt : Event, args : any) => {
 	}
 
 	try {
-		await ffmpeg.exportPreview(args.filePath, tmpVideo, onProgress);
+		await ffmpeg.exportPreview(args.filePath, tmpVideo, { width, height }, onProgress);
 		success = true;
 	} catch (err) {
 		console.error(err);
@@ -420,6 +424,7 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 });
 
 nodeCleanup((exitCode : any, signal : string) => {
+	let exists : boolean = false;
 	console.log(`Cleaning up on exit code ${exitCode}...`);
 	for (let dir of TMP.dirs){
 		try {
@@ -431,10 +436,17 @@ nodeCleanup((exitCode : any, signal : string) => {
 	}
 	for (let file of TMP.files){
 		try {
-			unlinkSync(file);
-			console.log(`Removed file ${file}`);
+			exists = existsSync(file);
 		} catch (err) {
 			console.error(err);
+		}
+		if (exists) {
+			try {
+				unlinkSync(file);
+				console.log(`Removed ${file}`);
+			} catch (err) {
+				console.error(err);
+			}
 		}
 	}
 	console.log(`Exiting spiritsInObjects...`)
@@ -446,4 +458,5 @@ nodeCleanup((exitCode : any, signal : string) => {
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();
 	visualize = new Visualize(ffmpeg);
+	timeline = new Timeline(ffmpeg);
 })();

@@ -45,12 +45,13 @@ class UI {
         this.currentPage = 'timeline';
         this.state = state;
         this.overlay = new Overlay();
-        this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
+        /*this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
         this.endSelect.addEventListener('mousedown', this.beginMoveEnd.bind(this), false);
+
         document.addEventListener('mousemove', this.moveStart.bind(this), false);
         document.addEventListener('mousemove', this.moveEnd.bind(this), false);
         document.addEventListener('mouseup', this.endMoveStart.bind(this), false);
-        document.addEventListener('mouseup', this.endMoveEnd.bind(this), false);
+        document.addEventListener('mouseup', this.endMoveEnd.bind(this), false);*/
         this.theatreHeight = this.theatre.offsetHeight;
         this.theatreWidth = this.theatre.offsetWidth;
     }
@@ -97,8 +98,7 @@ class UI {
                 newLeftX = maxX;
             }
             ratio = newLeftX / width;
-            this.startSelect.style.left = `${ratio * 100}%`;
-            this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+            this.setStartSelect(ratio);
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
             percent = Math.round(((this.startSelect.offsetLeft - this.min) / scaledWidth) * 100) + '%';
@@ -147,8 +147,7 @@ class UI {
                 newLeftX = this.max;
             }
             ratio = newLeftX / width;
-            this.endSelect.style.left = `${ratio * 100}%`;
-            this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+            this.setEndSelect(ratio);
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
             percent = Math.round(((this.endSelect.offsetLeft - this.min) / scaledWidth) * 100) + '%';
@@ -158,6 +157,8 @@ class UI {
         let ratio;
         let scale;
         let scaledWidth;
+        this.theatreHeight = this.theatre.offsetHeight;
+        this.theatreWidth = this.theatre.offsetWidth;
         this.start = this.state.get('start');
         this.end = this.state.get('end');
         this.width = width;
@@ -170,12 +171,12 @@ class UI {
         if (ratio < 0) {
             ratio = 0;
         }
-        this.startSelect.style.left = `${ratio * 100}%`;
+        this.setStartSelect(ratio);
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
         if (ratio > 1) {
             ratio = 1;
         }
-        this.endSelect.style.left = `${ratio * 100}%`;
+        this.setEndSelect(ratio);
     }
     removeClass(selector, className) {
         document.querySelectorAll(selector).forEach((page) => {
@@ -197,6 +198,14 @@ class UI {
             this.state.set('page', name);
         }
         this.currentPage = name;
+    }
+    setStartSelect(ratio) {
+        this.startSelect.style.left = `${ratio * 100}%`;
+        this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+    }
+    setEndSelect(ratio) {
+        this.endSelect.style.left = `${ratio * 100}%`;
+        this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
     }
 }
 exports.default = UI;

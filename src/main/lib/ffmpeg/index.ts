@@ -22,6 +22,13 @@ interface StdErr {
     estimated? : number;
 }
 
+interface PreviewOptions{
+    width : number;
+    height : number;
+    audio? : string;
+    forceScale? : boolean;
+}
+
 export class ffmpeg {
     static async info (filePath : string) : Promise<any> {
         const args : string[] = [
@@ -263,15 +270,28 @@ export class ffmpeg {
         });
     }
 
-    static async exportPreview (inputPath : string, outputPath : string, onProgress : Function = () => {}) : Promise<string> {
-        const args : string[] = [
+    static async exportPreview (inputPath : string, outputPath : string, options : PreviewOptions, onProgress : Function = () => {}) : Promise<string> {
+        const width : number = options.width;
+        const height : number = options.height;
+        console.dir(width);
+        console.dir(height);
+        let args : string[] = [
             '-i',  inputPath,
             '-c:v', 'libx264',
-            '-preset', 'fast',
-            '-crf', '18',
+            '-preset', 'fast'
+        ];
+
+        if (options.forceScale) {
+            args = args.concat([
+                '-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
+            ]);
+        }
+
+        args = args.concat([
+            '-crf', '22',
             '-y',
              outputPath
-        ];
+        ])
         let res : any;
 
         console.log(`${bin} ${args.join(' ')}`);

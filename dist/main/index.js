@@ -21,6 +21,7 @@ const sonifyNode_1 = require("./lib/sonifyNode");
 //import config from './lib/config';
 const menu_1 = require("./lib/menu");
 const visualize_1 = require("./lib/visualize");
+const timeline_1 = require("./lib/timeline");
 const CACHE = {};
 const TMP = {
     dirs: [],
@@ -48,6 +49,7 @@ function hashStr(str) {
 }
 let mainWindow;
 let visualize;
+let timeline;
 const BrowserOptions = {
     title: electron_1.app.name,
     show: false,
@@ -257,6 +259,8 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
     const pathHash = hashStr(filePath);
     const tmpVideo = path_1.join(os_1.tmpdir(), `${pathHash}_tmp_video.mkv`);
     const frameStart = +new Date();
+    const width = args.width;
+    const height = args.height;
     let tmpExists = false;
     let info = {};
     let success = false;
@@ -276,7 +280,7 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
         return;
     }
     try {
-        await ffmpeg_1.ffmpeg.exportPreview(args.filePath, tmpVideo, onProgress);
+        await ffmpeg_1.ffmpeg.exportPreview(args.filePath, tmpVideo, { width, height }, onProgress);
         success = true;
     }
     catch (err) {
@@ -367,6 +371,7 @@ electron_1.ipcMain.on('visualize_end', async (evt, args) => {
     mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 node_cleanup_1.default((exitCode, signal) => {
+    let exists = false;
     console.log(`Cleaning up on exit code ${exitCode}...`);
     for (let dir of TMP.dirs) {
         try {
@@ -379,11 +384,19 @@ node_cleanup_1.default((exitCode, signal) => {
     }
     for (let file of TMP.files) {
         try {
-            fs_extra_1.unlinkSync(file);
-            console.log(`Removed file ${file}`);
+            exists = fs_extra_1.existsSync(file);
         }
         catch (err) {
             console.error(err);
+        }
+        if (exists) {
+            try {
+                fs_extra_1.unlinkSync(file);
+                console.log(`Removed ${file}`);
+            }
+            catch (err) {
+                console.error(err);
+            }
         }
     }
     console.log(`Exiting spiritsInObjects...`);
@@ -394,5 +407,6 @@ node_cleanup_1.default((exitCode, signal) => {
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();
     visualize = new visualize_1.Visualize(ffmpeg_1.ffmpeg);
+    timeline = new timeline_1.Timeline(ffmpeg_1.ffmpeg);
 })();
 //# sourceMappingURL=index.js.map

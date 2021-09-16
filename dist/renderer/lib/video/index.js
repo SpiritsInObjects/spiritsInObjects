@@ -247,7 +247,7 @@ class Video {
         }
         return fps;
     }
-    oninfo(evt, args) {
+    onInfo(evt, args) {
         let fpsRaw;
         let videoStream;
         let secondsRaw;

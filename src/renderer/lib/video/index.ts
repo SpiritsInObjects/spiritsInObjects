@@ -292,7 +292,7 @@ class Video {
         return fps;
     }
 
-    public oninfo (evt : Event, args : any) : boolean {
+    public onInfo (evt : Event, args : any) : boolean {
         let fpsRaw : string;
         let videoStream : any;
         let secondsRaw : string;

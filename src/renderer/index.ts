@@ -28,8 +28,8 @@ let video : Video;
 let camera : Camera;
 let sonify : Sonify;
 let visualize : Visualize;
-let ui : any;
 let timeline : Timeline;
+let ui : any;
 
 let avgMs : number = -1;
 let timeAvg : number = -1;
@@ -115,8 +115,12 @@ class DragDrop {
             } catch (err) {
                 console.error(err);
             }
-            f.determineProcess(paths[0]);
 
+            if (ui.currentPage === 'timeline') {
+                timeline.addToBin(paths);
+            } else {
+                f.determineProcess(paths[0]);
+            }
         }
         this.leave(evt);
     }
@@ -325,11 +329,15 @@ class Files {
 const audioCtx : AudioContext = new window.AudioContext();
 
 function onInfo  (evt : Event, args : any) {
-    let preview : boolean = video.oninfo(evt, args);
+    let preview : boolean = video.onInfo(evt, args);
+    const width : number = 996;
+    const height : number = 560;
+
     if (!preview) {
         sonify = new Sonify(state, video.canvas, audioContext);
     } else {
-        previewStart()
+        //generate preview for sonify, if needed
+        previewStart(width, height);
     }
 }
 
@@ -359,7 +367,7 @@ function onPreviewProgress (evt : Event, args : any) {
     previewProgress(args.frameNumber, args.ms);
 }
 
-async function previewStart () {
+async function previewStart (width: number, height: number) {
     const filePath : any = state.get('filePath');
     const displayName : string = video.displayName;
     let proceed : boolean = false;
@@ -379,7 +387,8 @@ async function previewStart () {
 
     ui.overlay.show(`Rendering proxy of ${displayName}...`);
     ui.overlay.progress(0, `Determining time left...`);
-    ipcRenderer.send('preview', { filePath });
+
+    ipcRenderer.send('preview', { filePath, width : video.width, height : video.height });
 }
 
 function onPreview (evt : Event, args : any){

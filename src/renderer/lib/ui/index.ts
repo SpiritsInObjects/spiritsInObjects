@@ -66,13 +66,13 @@ export default class UI {
 
         this.overlay = new Overlay();
 
-        this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
+        /*this.startSelect.addEventListener('mousedown', this.beginMoveStart.bind(this), false);
         this.endSelect.addEventListener('mousedown', this.beginMoveEnd.bind(this), false);
 
         document.addEventListener('mousemove', this.moveStart.bind(this), false);
         document.addEventListener('mousemove', this.moveEnd.bind(this), false);
         document.addEventListener('mouseup', this.endMoveStart.bind(this), false);
-        document.addEventListener('mouseup', this.endMoveEnd.bind(this), false);
+        document.addEventListener('mouseup', this.endMoveEnd.bind(this), false);*/
 
         this.theatreHeight = this.theatre.offsetHeight;
         this.theatreWidth = this.theatre.offsetWidth;
@@ -128,8 +128,7 @@ export default class UI {
             }
 
             ratio = newLeftX / width;
-            this.startSelect.style.left = `${ratio * 100}%`;
-            this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+            this.setStartSelect(ratio);
 
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
@@ -186,8 +185,7 @@ export default class UI {
             }
 
             ratio = newLeftX / width;
-            this.endSelect.style.left = `${ratio * 100}%`;
-            this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+            this.setEndSelect(ratio);
 
             scale = this.height / this.theatreHeight;
             scaledWidth = this.width / scale;
@@ -199,6 +197,9 @@ export default class UI {
         let ratio : number;
         let scale : number;
         let scaledWidth : number;
+
+        this.theatreHeight = this.theatre.offsetHeight;
+        this.theatreWidth = this.theatre.offsetWidth;
         
         this.start = this.state.get('start');
         this.end = this.state.get('end');
@@ -212,18 +213,17 @@ export default class UI {
         this.min = Math.round((this.theatreWidth - scaledWidth) / 2);
         this.max = this.min + Math.round(scaledWidth);
 
-
         ratio = (this.min + (scaledWidth * this.start)) / this.theatreWidth;
         if (ratio < 0) {
             ratio = 0;
         }
-        this.startSelect.style.left = `${ratio * 100}%`;
+        this.setStartSelect(ratio);
 
         ratio = (this.min + (scaledWidth * this.end)) / this.theatreWidth;
         if (ratio > 1) {
             ratio = 1;
         }
-        this.endSelect.style.left = `${ratio * 100}%`;
+        this.setEndSelect(ratio);
     }
 
     public removeClass (selector : string, className : string) {
@@ -249,5 +249,15 @@ export default class UI {
         }
         
         this.currentPage = name;
+    }
+
+    public setStartSelect (ratio : number) {
+        this.startSelect.style.left = `${ratio * 100}%`;
+        this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
+    }
+
+    public setEndSelect (ratio : number) {
+        this.endSelect.style.left = `${ratio * 100}%`;
+        this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
     }
 }
