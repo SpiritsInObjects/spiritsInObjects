@@ -164,7 +164,8 @@ body{
 }
 
 #sonify,
-#visualize {
+#visualize,
+#timeline{
 	display: none;
 	&.show{
 		display: block;
@@ -474,7 +475,7 @@ textarea,
 		opacity: 0.8;
 	}
 	> div:not(.bg){
-		width: 220px;
+		width: 125px;
 		margin: 0 auto;
 		*:last-child{
 			float: none;
@@ -604,6 +605,30 @@ textarea,
 	float:  left;
 	background:  #999;
 	overflow: scroll;
+	table{
+		width: 100%;
+		thead{
+			th{
+				text-align: center;
+				&:first-child{
+					width: 10%;
+				}
+				&:last-child{
+					width: 90%;
+				}
+			}
+		}
+		tbody{
+			tr{
+				td{
+					cursor: pointer;
+					&:first-child{
+						text-align: center;
+					}
+				}
+			}
+		}
+	}
 }
 #tTheatre{
 	height: 450px;

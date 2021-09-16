@@ -143,11 +143,13 @@ body {
   margin-left: 320px;
 }
 #sonify,
-#visualize {
+#visualize,
+#timeline {
   display: none;
 }
 #sonify.show,
-#visualize.show {
+#visualize.show,
+#timeline.show {
   display: block;
 }
 #sonifyControl,
@@ -444,7 +446,7 @@ textarea,
 }
 #videoControl > div:not(.bg),
 #visualizeControl > div:not(.bg) {
-  width: 220px;
+  width: 125px;
   margin: 0 auto;
 }
 #videoControl > div:not(.bg) *:last-child,
@@ -556,6 +558,24 @@ textarea,
   float: left;
   background: #999;
   overflow: scroll;
+}
+#tBin table {
+  width: 100%;
+}
+#tBin table thead th {
+  text-align: center;
+}
+#tBin table thead th:first-child {
+  width: 10%;
+}
+#tBin table thead th:last-child {
+  width: 90%;
+}
+#tBin table tbody tr td {
+  cursor: pointer;
+}
+#tBin table tbody tr td:first-child {
+  text-align: center;
 }
 #tTheatre {
   height: 450px;
