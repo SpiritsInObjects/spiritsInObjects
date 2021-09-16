@@ -1,7 +1,6 @@
 'use strict';
 
-import { StatsBase } from "fs-extra";
-
+/* class representation features of UI overlay element */
 class Overlay {
     private elem : HTMLElement = document.getElementById('overlay');
     private msg : HTMLElement = document.getElementById('overlayMsg');
@@ -10,12 +9,20 @@ class Overlay {
     constructor () {
 
     }
+
+    /**
+     * Show the overlay with an optional message to display
+     * 
+     * @param {string} msg Message to display
+     **/
     public show (msg : string = '') {
         showSpinner('overlaySpinner');
         this.msg.innerText = msg;
         this.elem.classList.add('show');
     }
-    
+    /**
+     * Hide the overlay element
+     **/
     public hide () {
         try {
             this.elem.classList.remove('show');
@@ -26,12 +33,19 @@ class Overlay {
         hideSpinner('overlaySpinner');
     }
 
+    /**
+     * Update the progress bar
+     * 
+     * @param {float} percent Percentage of progress bar to fill
+     * @param {string} msg Message to display
+     **/
     public progress (percent : number, msg : string) {
         this.progressMsg.innerText = msg;
         this.progressBar.style.width = `${percent * 100}%`;
     }
 }
 
+/* class representing select UI features that fall outside the scope of other classes */
 export default class UI {
     private state : State;
 
@@ -61,6 +75,11 @@ export default class UI {
 
     public currentPage : string = 'timeline';
 
+    /**
+     * Construct the UI class
+     * 
+     * @param {object} state The shared State object
+     **/
     constructor (state : State) {
         this.state = state;
 
@@ -78,11 +97,21 @@ export default class UI {
         this.theatreWidth = this.theatre.offsetWidth;
     }
 
+    /**
+     * Callback of the mousedown event on the start element
+     * 
+     * @param {object} evt MouseEvent of mousedown action
+     **/
     private beginMoveStart (evt: MouseEvent) {
         this.startMoving = true;
         this.startSelect.classList.add('active');
     }
 
+    /**
+     * Callback of the mouseup event on the document element (for start element)
+     * 
+     * @param {object} evt MouseEvent of mouseup action
+     **/
     private endMoveStart (evt: MouseEvent) {
         const scale : number = this.height / this.theatreHeight;
         const scaledWidth : number = this.width / scale;
@@ -102,6 +131,11 @@ export default class UI {
         }
     }
 
+    /**
+     * Callback of the mousemove event on the document element (for start element)
+     * 
+     * @param {object} evt MouseEvent of mousemove action
+     **/
     private moveStart (evt : MouseEvent) {
         let width : number;
         let leftX : number;
@@ -136,11 +170,21 @@ export default class UI {
         }
     }
 
+    /**
+     * Callback of the mousedown event on the end element
+     * 
+     * @param {object} evt MouseEvent of mousedown action
+     **/
     private beginMoveEnd (evt: MouseEvent) {
         this.endMoving = true;
         this.endSelect.classList.add('active');
     }
 
+    /**
+     * Callback of the mouseup event on the document element (for end element)
+     * 
+     * @param {object} evt MouseEvent of mouseup action
+     **/
     private endMoveEnd (evt: MouseEvent) {
         const scale : number = this.height / this.theatreHeight;
         const scaledWidth : number = this.width / scale;
@@ -159,6 +203,11 @@ export default class UI {
         }
     }
 
+    /**
+     * Callback of the mousemove event on the document element (for end element)
+     * 
+     * @param {object} evt MouseEvent of mousemove action
+     **/
     private moveEnd (evt : MouseEvent) {
         let width : number;
         let leftX : number;
@@ -193,6 +242,13 @@ export default class UI {
         }
     }
 
+    /**
+     * Reposition slider elements on theatre based on the scaled
+     * size of the original video
+     * 
+     * @param {integer} width Actual width of video (to scale)
+     * @param {integer} height Actual height of video (to scale)
+     **/
     public updateSliders (width : number, height : number) {
         let ratio : number;
         let scale : number;
@@ -226,6 +282,13 @@ export default class UI {
         this.setEndSelect(ratio);
     }
 
+    /**
+     * Remove class from all elements matching selector if it exists on
+     * the element.
+     * 
+     * @param {string} selector CSS selector of elements to match
+     * @param {string} className Class to remove
+     **/
     public removeClass (selector : string, className : string) {
         document.querySelectorAll(selector).forEach((page : HTMLElement) => {
             if (page.classList.contains(className)) {
@@ -234,6 +297,13 @@ export default class UI {
         });
     }
 
+    /**
+     * Switch to a specific "page" or screen or workspace within the app
+     * and save the state in this.currentPage to allow behavior of app
+     * to change when a particular page is detected.
+     * 
+     * @param {string} name Name of page
+     **/
     public page (name : string) {
         const btnElement : HTMLElement = document.querySelector(`#${name}Btn`);
         const targetElement : HTMLElement = document.querySelector(`#${name}`);
@@ -251,11 +321,23 @@ export default class UI {
         this.currentPage = name;
     }
 
+    /**
+     * Move the start slider to position and add text to
+     * display element
+     * 
+     * @param {float} ratio Ratio of theatre element to move start slider to
+     **/
     public setStartSelect (ratio : number) {
         this.startSelect.style.left = `${ratio * 100}%`;
         this.startDisplay.innerText = `${Math.floor(ratio * 100)}%`;
     }
 
+    /**
+     * Move the end slider to position and add text to
+     * display element
+     * 
+     * @param {float} ratio Ratio of theatre element to move end slider to
+     **/
     public setEndSelect (ratio : number) {
         this.endSelect.style.left = `${ratio * 100}%`;
         this.endDisplay.innerText = `${Math.floor(ratio * 100)}%`;
