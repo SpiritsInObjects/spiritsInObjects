@@ -137,7 +137,7 @@ class Timeline {
         const options = {
             title: 'New timeline',
             label: 'Number of frames:',
-            value: '0',
+            value: '255',
             customStylesheet: 'dist/css/style.css',
             inputAttrs: {
                 type: 'number'
@@ -192,14 +192,20 @@ class Timeline {
     layout(len) {
         const container = document.getElementById('tWrapper');
         let frame;
+        let between;
         container.innerHTML = '';
         this.timeline = [];
         for (let i = 0; i < len; i++) {
             this.timeline.push(null);
             frame = document.createElement('div');
             frame.classList.add('frame');
+            frame.setAttribute('draggable', 'true');
             frame.setAttribute('x', String(i));
+            between = document.createElement('div');
+            between.classList.add('btw');
+            between.setAttribute('x', String(i));
             container.appendChild(frame);
+            container.appendChild(between);
         }
     }
     addFrame() {
