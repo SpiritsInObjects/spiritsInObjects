@@ -385,7 +385,9 @@ textarea,
 #nextFrame,
 #prevFrame,
 #vNextFrame,
-#vPrevFrame {
+#vPrevFrame,
+#sync,
+#vSync {
   -webkit-appearance: none;
   outline: none;
   width: 36px;
@@ -399,7 +401,9 @@ textarea,
 #nextFrame img,
 #prevFrame img,
 #vNextFrame img,
-#vPrevFrame img {
+#vPrevFrame img,
+#sync img,
+#vSync img {
   width: 24px;
   height: auto;
 }
@@ -407,10 +411,14 @@ textarea,
 #prevFrame:active,
 #vNextFrame:active,
 #vPrevFrame:active,
+#sync:active,
+#vSync:active,
 #nextFrame.active,
 #prevFrame.active,
 #vNextFrame.active,
-#vPrevFrame.active {
+#vPrevFrame.active,
+#sync.active,
+#vSync.active {
   box-shadow: 1px 2px 2px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.4);
   background: rgba(89, 99, 151);
   background: radial-gradient(circle, #596397 0%, #dee0e6 100%);
@@ -422,6 +430,28 @@ textarea,
 #prevFrame img,
 #vPrevFrame img {
   margin-left: -4px;
+}
+#sync[disabled],
+#vSync[disabled] {
+  cursor: not-allowed;
+}
+#sync[disabled] img,
+#vSync[disabled] img {
+  opacity: 0.5;
+}
+#sync.rendering,
+#vSync.rendering {
+  cursor: progress;
+}
+#sync.rendering img,
+#vSync.rendering img {
+  display: none;
+}
+#sync.rendering #syncSpinner,
+#vSync.rendering #syncSpinner,
+#sync.rendering #vSyncSpinner,
+#vSync.rendering #vSyncSpinner {
+  display: block;
 }
 #videoControl,
 #visualizeControl {
@@ -539,11 +569,18 @@ textarea,
   line-height: 405px;
   top: 0;
 }
-#sonifyCancel {
+#cancel {
   margin: 0 auto;
   display: block;
   color: white;
-  border-color: white;
+  appearance: none;
+  background: transparent;
+  outline: none;
+  border-radius: 4px;
+  box-shadow: none;
+  border: 2px solid #fff;
+  text-transform: uppercase;
+  padding: 5px 20px;
 }
 .hide {
   display: none !important;
@@ -560,16 +597,10 @@ textarea,
   overflow: scroll;
 }
 #tBin table {
-  width: 100%;
+  width: max-content;
 }
 #tBin table thead th {
   text-align: center;
-}
-#tBin table thead th:first-child {
-  width: 10%;
-}
-#tBin table thead th:last-child {
-  width: 90%;
 }
 #tBin table tbody tr td {
   cursor: pointer;
@@ -595,8 +626,23 @@ textarea,
   position: relative;
 }
 #tElement .frame {
-  width: 24px;
+  width: 30px;
   height: 24px;
+  border-radius: 2px;
   float: left;
   border: 1px solid #000;
+  cursor: pointer;
+  margin-bottom: 2px;
+}
+#tElement .frame:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+#tElement .btw {
+  width: 2px;
+  height: 26px;
+  margin-top: -1px;
+  float: left;
+}
+#tElement .btw.dragover {
+  background: yellow;
 }
