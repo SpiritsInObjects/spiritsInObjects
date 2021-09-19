@@ -29,6 +29,7 @@ const TMP : any = {
 	files : []
 }
 let CANCEL : boolean = false;
+let CHILD : any = null;
 
 unhandled();
 contextMenu();
@@ -54,73 +55,7 @@ function hashStr (str : string) : string {
 	return createHash('sha1').update(str).digest('hex');
 }
 
-let mainWindow : any;
-let visualize : Visualize;
-let timeline : Timeline;
-
-const BrowserOptions = {
-	title: app.name,
-	show: false,
-	width: 1000,
-	height: 1000,
-	resizable: false,
-	backgroundColor: '#a7abb4',
-	webPreferences : {
-		webSecurity : false,
-		nodeIntegration: true,
-		enableRemoteModule: true,
-		contextIsolation : false
-	}
-};
-
-const createMainWindow = async () => {
-	const win = new BrowserWindow(BrowserOptions);
-
-	win.on('ready-to-show', () => {
-		win.show();
-	});
-
-	win.on('closed', () => {
-		mainWindow = undefined;
-		app.quit();
-	});
-
-	//for linux
-	win.setResizable(false);
-
-	await win.loadFile(pathJoin(__dirname, '../views/index.html'));
-
-	return win;
-};
-
-// Prevent multiple instances of the app
-if (!app.requestSingleInstanceLock()) {
-	app.quit();
-}
-
-app.on('second-instance', () => {
-	if (mainWindow) {
-		if (mainWindow.isMinimized()) {
-			mainWindow.restore();
-		}
-
-		mainWindow.show();
-	}
-});
-
-app.on('window-all-closed', () => {
-	if (!is.macos) {
-		app.quit();
-	}
-});
-
-app.on('activate', async () => {
-	if (!mainWindow) {
-		mainWindow = await createMainWindow();
-	}
-});
-
-ipcMain.on('sonify', async (evt : Event, args : any) => {
+async function sonify (args : any)  {
 	const startTime : number = +new Date();
 
 	let wav = new WaveFile();
@@ -204,7 +139,7 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 
 		if (!tmpExists) {
 			console.warn(`Frame ${filePath} does not exist`);
-			continue
+			continue;
 		}
 
 		try {
@@ -267,11 +202,96 @@ ipcMain.on('sonify', async (evt : Event, args : any) => {
 	TMP.files.push(tmpAudio);
 
 	endTime = +new Date();
-	mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
+	if (args.save) {
+		mainWindow.webContents.send('sonify_complete', { time : endTime - startTime, tmpAudio }); // : normalAudio 
+	} else {
+		console.log(`Sonification complete: ${endTime - startTime}ms`);
+	}
+
+	return tmpAudio;
+}
+
+let mainWindow : any;
+let visualize : Visualize;
+let timeline : Timeline;
+
+const BrowserOptions = {
+	title: app.name,
+	show: false,
+	width: 1000,
+	height: 1000,
+	resizable: false,
+	backgroundColor: '#a7abb4',
+	webPreferences : {
+		webSecurity : false,
+		nodeIntegration: true,
+		enableRemoteModule: true,
+		contextIsolation : false
+	}
+};
+
+const createMainWindow = async () => {
+	const win = new BrowserWindow(BrowserOptions);
+
+	win.on('ready-to-show', () => {
+		win.show();
+	});
+
+	win.on('closed', () => {
+		mainWindow = undefined;
+		app.quit();
+	});
+
+	//for linux
+	win.setResizable(false);
+
+	await win.loadFile(pathJoin(__dirname, '../views/index.html'));
+
+	return win;
+};
+
+// Prevent multiple instances of the app
+if (!app.requestSingleInstanceLock()) {
+	app.quit();
+}
+
+app.on('second-instance', () => {
+	if (mainWindow) {
+		if (mainWindow.isMinimized()) {
+			mainWindow.restore();
+		}
+
+		mainWindow.show();
+	}
+});
+
+app.on('window-all-closed', () => {
+	if (!is.macos) {
+		app.quit();
+	}
+});
+
+app.on('activate', async () => {
+	if (!mainWindow) {
+		mainWindow = await createMainWindow();
+	}
+});
+
+ipcMain.on('sonify', async (evt : Event, args : any) => {
+	return sonify(args);
 });
 
 ipcMain.on('cancel', async (evt : Event, args : any) => {
+	let cancelled : boolean = false;
 	CANCEL = true;
+	try {
+		cancelled = await ffmpeg.cancel();
+	} catch (err) {
+		console.error(err);
+	}
+	if ( cancelled ) {
+		mainWindow.webContents.send('cancel', { });
+	}
 });
 
 ipcMain.on('info', async (evt : Event, args : any) => {

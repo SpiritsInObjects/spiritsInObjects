@@ -28,6 +28,7 @@ const TMP = {
     files: []
 };
 let CANCEL = false;
+let CHILD = null;
 electron_unhandled_1.default();
 electron_context_menu_1.default();
 if (electron_util_1.is.development) {
@@ -47,60 +48,7 @@ async function pixels(filePath) {
 function hashStr(str) {
     return crypto_1.createHash('sha1').update(str).digest('hex');
 }
-let mainWindow;
-let visualize;
-let timeline;
-const BrowserOptions = {
-    title: electron_1.app.name,
-    show: false,
-    width: 1000,
-    height: 1000,
-    resizable: false,
-    backgroundColor: '#a7abb4',
-    webPreferences: {
-        webSecurity: false,
-        nodeIntegration: true,
-        enableRemoteModule: true,
-        contextIsolation: false
-    }
-};
-const createMainWindow = async () => {
-    const win = new electron_1.BrowserWindow(BrowserOptions);
-    win.on('ready-to-show', () => {
-        win.show();
-    });
-    win.on('closed', () => {
-        mainWindow = undefined;
-        electron_1.app.quit();
-    });
-    //for linux
-    win.setResizable(false);
-    await win.loadFile(path_1.join(__dirname, '../views/index.html'));
-    return win;
-};
-// Prevent multiple instances of the app
-if (!electron_1.app.requestSingleInstanceLock()) {
-    electron_1.app.quit();
-}
-electron_1.app.on('second-instance', () => {
-    if (mainWindow) {
-        if (mainWindow.isMinimized()) {
-            mainWindow.restore();
-        }
-        mainWindow.show();
-    }
-});
-electron_1.app.on('window-all-closed', () => {
-    if (!electron_util_1.is.macos) {
-        electron_1.app.quit();
-    }
-});
-electron_1.app.on('activate', async () => {
-    if (!mainWindow) {
-        mainWindow = await createMainWindow();
-    }
-});
-electron_1.ipcMain.on('sonify', async (evt, args) => {
+async function sonify(args) {
     const startTime = +new Date();
     let wav = new wavefile_1.WaveFile();
     let tmp;
@@ -227,10 +175,82 @@ electron_1.ipcMain.on('sonify', async (evt, args) => {
     CACHE[hash] = tmpAudio;
     TMP.files.push(tmpAudio);
     endTime = +new Date();
-    mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
+    if (args.save) {
+        mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
+    }
+    else {
+        console.log(`Sonification complete: ${endTime - startTime}ms`);
+    }
+    return tmpAudio;
+}
+let mainWindow;
+let visualize;
+let timeline;
+const BrowserOptions = {
+    title: electron_1.app.name,
+    show: false,
+    width: 1000,
+    height: 1000,
+    resizable: false,
+    backgroundColor: '#a7abb4',
+    webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false
+    }
+};
+const createMainWindow = async () => {
+    const win = new electron_1.BrowserWindow(BrowserOptions);
+    win.on('ready-to-show', () => {
+        win.show();
+    });
+    win.on('closed', () => {
+        mainWindow = undefined;
+        electron_1.app.quit();
+    });
+    //for linux
+    win.setResizable(false);
+    await win.loadFile(path_1.join(__dirname, '../views/index.html'));
+    return win;
+};
+// Prevent multiple instances of the app
+if (!electron_1.app.requestSingleInstanceLock()) {
+    electron_1.app.quit();
+}
+electron_1.app.on('second-instance', () => {
+    if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+            mainWindow.restore();
+        }
+        mainWindow.show();
+    }
+});
+electron_1.app.on('window-all-closed', () => {
+    if (!electron_util_1.is.macos) {
+        electron_1.app.quit();
+    }
+});
+electron_1.app.on('activate', async () => {
+    if (!mainWindow) {
+        mainWindow = await createMainWindow();
+    }
+});
+electron_1.ipcMain.on('sonify', async (evt, args) => {
+    return sonify(args);
 });
 electron_1.ipcMain.on('cancel', async (evt, args) => {
+    let cancelled = false;
     CANCEL = true;
+    try {
+        cancelled = await ffmpeg_1.ffmpeg.cancel();
+    }
+    catch (err) {
+        console.error(err);
+    }
+    if (cancelled) {
+        mainWindow.webContents.send('cancel', {});
+    }
 });
 electron_1.ipcMain.on('info', async (evt, args) => {
     let res = {};

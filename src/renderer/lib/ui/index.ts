@@ -4,6 +4,7 @@
 class Overlay {
     private elem : HTMLElement = document.getElementById('overlay');
     private msg : HTMLElement = document.getElementById('overlayMsg');
+    private cancel : HTMLElement = document.getElementById('cancel');
     private progressBar : HTMLElement = document.getElementById('overlayProgressBar');
     private progressMsg : HTMLElement = document.getElementById('overlayProgressMsg');
     constructor () {
@@ -15,10 +16,23 @@ class Overlay {
      * 
      * @param {string} msg Message to display
      **/
-    public show (msg : string = '') {
+    public show (msg : string = '', cancel : boolean = false) {
         showSpinner('overlaySpinner');
         this.msg.innerText = msg;
         this.elem.classList.add('show');
+        if (cancel) {
+            try {
+                this.cancel.classList.remove('hide');
+            } catch (err) {
+
+            }
+        } else {
+            try {
+                this.cancel.classList.add('hide');
+            } catch (err) {
+
+            }
+        }
     }
     /**
      * Hide the overlay element

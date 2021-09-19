@@ -5,11 +5,14 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdir, unlink } from 'fs-extra';
 import { createHash } from 'crypto';
-import { spawnAsync } from '../spawnAsync';
+import { spawnAsync, killSubprocess } from '../spawnAsync';
 
 const bin : string = require('ffmpeg-static');
 const ffprobe : string = require('ffprobe-static').path;
 let tmp : string;
+
+
+let subprocess : any = null;
 
 export class ffmpeg {
     static async info (filePath : string) : Promise<any> {
@@ -93,10 +96,10 @@ export class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
-            const child = spawn(bin, args);
+            subprocess = spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code : number) => {
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -105,10 +108,10 @@ export class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data : string) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data : string) => {
                 const line : string = data.toString();
                 const obj : StdErr = this.parseStderr(line);
                 let estimated : any;
@@ -116,7 +119,7 @@ export class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
 
@@ -186,10 +189,10 @@ export class ffmpeg {
 
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
-            const child = spawn(bin, args);
+            subprocess = spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code : number) => {
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -198,10 +201,10 @@ export class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data : string) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data : string) => {
                 const line : string = data.toString();
                 const obj : StdErr = this.parseStderr(line);
                 let estimated : any;
@@ -209,7 +212,7 @@ export class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
 
@@ -225,10 +228,10 @@ export class ffmpeg {
 
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
-            const child = spawn(bin, args);
+            subprocess = spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code : number) => {
                 if (code === 0) {
                     return resolve(output);
                 } else {
@@ -237,10 +240,10 @@ export class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data : string) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data : string) => {
                 const line : string = data.toString();
                 const obj : StdErr = this.parseStderr(line);
                 let estimated : any;
@@ -248,7 +251,7 @@ export class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
 
@@ -296,10 +299,10 @@ export class ffmpeg {
 
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
-            const child = spawn(bin, args);
+            subprocess = spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code : number) => {
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -308,10 +311,10 @@ export class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data : string) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data : string) => {
                 const line : string = data.toString();
                 const obj : StdErr = this.parseStderr(line);
                 let estimated : any;
@@ -319,8 +322,27 @@ export class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
+    }
+
+    /**
+     * Kill the subprocess that is currently running in spawn mode.
+     * 
+     **/
+
+    static async cancel () {
+        let cancelled : boolean = false;
+        if (subprocess && typeof subprocess['kill'] !== 'undefined') {
+            try {
+                await killSubprocess(subprocess);
+                subprocess = null;
+                cancelled = true;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        return cancelled;
     }
 
     //ffmpeg -i "movie.wav" -itsoffset 1.0833 -i "movie.mp4" -map 1:v -map 0:a -c copy "movie-video-delayed.mp4"

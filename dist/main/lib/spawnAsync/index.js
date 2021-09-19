@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.spawnAsync = void 0;
+exports.killSubprocess = exports.spawnAsync = void 0;
 const child_process_1 = require("child_process");
 async function spawnAsync(bin, args) {
     return new Promise((resolve, reject) => {
@@ -27,5 +27,15 @@ async function spawnAsync(bin, args) {
     });
 }
 exports.spawnAsync = spawnAsync;
+async function killSubprocess(sub) {
+    return new Promise((resolve, reject) => {
+        sub.on('close', () => {
+            return resolve(null);
+        });
+        return sub.kill();
+    });
+}
+exports.killSubprocess = killSubprocess;
 module.exports.spawnAsync = spawnAsync;
+module.exports.killSubprocess = killSubprocess;
 //# sourceMappingURL=index.js.map

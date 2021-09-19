@@ -10,6 +10,7 @@ const spawnAsync_1 = require("../spawnAsync");
 const bin = require('ffmpeg-static');
 const ffprobe = require('ffprobe-static').path;
 let tmp;
+let subprocess = null;
 class ffmpeg {
     static async info(filePath) {
         const args = [
@@ -86,10 +87,10 @@ class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            const child = child_process_1.spawn(bin, args);
+            subprocess = child_process_1.spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code) => {
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -99,10 +100,10 @@ class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
                 let estimated;
@@ -110,7 +111,7 @@ class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
     static exportFramePath(hash, frameNum) {
@@ -170,10 +171,10 @@ class ffmpeg {
         args.push(outputPath);
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            const child = child_process_1.spawn(bin, args);
+            subprocess = child_process_1.spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code) => {
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -183,10 +184,10 @@ class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
                 let estimated;
@@ -194,7 +195,7 @@ class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
     static async resampleAudio(input, output, sampleRate, channels, onProgress = () => { }) {
@@ -208,10 +209,10 @@ class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            const child = child_process_1.spawn(bin, args);
+            subprocess = child_process_1.spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code) => {
                 if (code === 0) {
                     return resolve(output);
                 }
@@ -221,10 +222,10 @@ class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
                 let estimated;
@@ -232,25 +233,41 @@ class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
     }
+    /**
+     * Render a proxy of a video using settings optimized for fast rendering times.
+     * Optionally forc video into the scale provided by the options.width and
+     * option.height settings. Optionally add an audio file as the sondtrack of the
+     * preview video.
+     *
+     * @param {string} inputPath
+     * @param {string} outputPath
+     * @param {object} options Preview Options
+     **/
     static async exportPreview(inputPath, outputPath, options, onProgress = () => { }) {
         const width = options.width;
         const height = options.height;
-        console.dir(width);
-        console.dir(height);
         let args = [
-            '-i', inputPath,
-            '-c:v', 'libx264',
-            '-preset', 'fast'
+            '-i', inputPath
         ];
+        if (typeof options.audio !== 'undefined') {
+            args = args.concat([
+                '-i', options.audio,
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:a', 'aac'
+            ]);
+        }
         if (options.forceScale) {
             args = args.concat([
                 '-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
             ]);
         }
         args = args.concat([
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
             '-crf', '22',
             '-y',
             outputPath
@@ -258,10 +275,10 @@ class ffmpeg {
         let res;
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            const child = child_process_1.spawn(bin, args);
+            subprocess = child_process_1.spawn(bin, args);
             let stdout = '';
             let stderr = '';
-            child.on('exit', (code) => {
+            subprocess.on('exit', (code) => {
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -271,10 +288,10 @@ class ffmpeg {
                     return reject(stderr);
                 }
             });
-            child.stdout.on('data', (data) => {
+            subprocess.stdout.on('data', (data) => {
                 stdout += data;
             });
-            child.stderr.on('data', (data) => {
+            subprocess.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
                 let estimated;
@@ -282,8 +299,26 @@ class ffmpeg {
                     onProgress(obj);
                 }
             });
-            return child;
+            return subprocess;
         });
+    }
+    /**
+     * Kill the subprocess that is currently running in spawn mode.
+     *
+     **/
+    static async cancel() {
+        let cancelled = false;
+        if (subprocess && typeof subprocess['kill'] !== 'undefined') {
+            try {
+                await spawnAsync_1.killSubprocess(subprocess);
+                subprocess = null;
+                cancelled = true;
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
+        return cancelled;
     }
 }
 exports.ffmpeg = ffmpeg;

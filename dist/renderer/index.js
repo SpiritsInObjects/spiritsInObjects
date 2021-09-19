@@ -28,6 +28,7 @@ let avgMs = -1;
 let timeAvg = -1;
 let dnd;
 let f;
+let CANCEL = false;
 /* ELEMENTS */
 let dropArea;
 let fileSourceProxy;
@@ -35,7 +36,7 @@ let vFileSourceProxy;
 let sonifyFrameBtn;
 let sonifyVideo;
 let sonifyBtn;
-let sonifyCancelBtn;
+let cancelBtn;
 let visualizeBtn;
 let sonifyVisualizeBtn;
 let visualizeExportBtn;
@@ -347,17 +348,21 @@ function onPreview(evt, args) {
 async function sonifyStart() {
     const sonifyState = state.get();
     const displayName = video.displayName;
+    const args = {
+        state: sonifyState,
+        save: true
+    };
     timeAvg = -1;
     avgMs = -1;
-    ui.overlay.show(`Exporting frames from ${displayName}...`);
+    ui.overlay.show(`Exporting frames from ${displayName}...`, true);
     ui.overlay.progress(0, `Determining time left...`);
-    ipcRenderer.send('sonify', { state: sonifyState });
+    ipcRenderer.send('sonify', args);
 }
 async function onStartSonify() {
-    ui.overlay.show(`Sonifying ${video.displayName}...`);
+    ui.overlay.show(`Sonifying ${video.displayName}...`, true);
     ui.overlay.progress(0, `Determining time left...`);
 }
-async function sonifyCancel() {
+async function confirmCancel() {
     let proceed = false;
     try {
         proceed = await confirm(`Are you sure you want to cancel?`);
@@ -368,7 +373,7 @@ async function sonifyCancel() {
     if (!proceed) {
         return false;
     }
-    ipcRenderer.send('cancel', {});
+    cancel();
 }
 function onSonifyProgress(evt, args) {
     let timeLeft;
@@ -395,10 +400,16 @@ function onSonifyComplete(evt, args) {
     ui.overlay.hide();
     f.saveAudio(args.tmpAudio);
 }
+function cancel() {
+    CANCEL = true;
+    ipcRenderer.send('cancel', {});
+}
 function onCancel(evt, args) {
+    console.log('Cancellation confirmed');
     avgMs = -1;
     timeAvg = -1;
     ui.overlay.hide();
+    CANCEL = false;
 }
 function sonifyFrame() {
     const source = audioContext.createBufferSource();
@@ -518,8 +529,9 @@ async function visualizeExport() {
     const format = visualize.format;
     let frameData;
     let tmpVideo;
+    CANCEL = false;
     if (visualize.frames.length > 0) {
-        ui.overlay.show(`Exporting frames of ${visualize.displayName}...`);
+        ui.overlay.show(`Exporting frames of ${visualize.displayName}...`, true);
         ui.overlay.progress(0, `Determining time left...`);
         avgMs = -1;
         timeAvg = -1;
@@ -540,10 +552,15 @@ async function visualizeExport() {
                 ui.overlay.hide();
                 return false;
             }
+            if (CANCEL) {
+                CANCEL = false;
+                ui.overlay.hide();
+                return false;
+            }
         }
         avgMs = -1;
         timeAvg = -1;
-        ui.overlay.show(`Exporting video of ${visualize.displayName}...`);
+        ui.overlay.show(`Exporting video of ${visualize.displayName}...`, true);
         ui.overlay.progress(0, `Determining time left...`);
         try {
             tmpVideo = await visualizeExportEnd();
@@ -632,13 +649,12 @@ function bindListeners() {
     sonifyFrameBtn = document.getElementById('sonifyFrame');
     sonifyVideo = document.getElementById('sonifyVideo');
     sonifyBtn = document.getElementById('sonifyBtn');
-    sonifyCancelBtn = document.getElementById('sonifyCancel');
     visualizeBtn = document.getElementById('visualizeBtn');
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn');
     visualizeExportBtn = document.getElementById('visualizeExportBtn');
     timelineBtn = document.getElementById('timelineBtn');
+    cancelBtn = document.getElementById('cancel');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
-    sonifyCancelBtn.addEventListener('click', sonifyCancel, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
@@ -648,6 +664,7 @@ function bindListeners() {
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
+    cancelBtn.addEventListener('click', confirmCancel, false);
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_sonify', onStartSonify);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
