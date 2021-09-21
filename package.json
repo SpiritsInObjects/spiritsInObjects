@@ -1,6 +1,6 @@
 {
   "name": "spiritsinobjects",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "description": "Application for image sonification and sequencing",
   "main": "dist/main/index.js",
   "directories": {
@@ -41,7 +41,7 @@
       "dist/renderer/lib/state/index.js",
       "dist/renderer/lib/camera/index.js",
       "dist/renderer/lib/ui/index.js",
-      "dist/renderer/lib/video/index.js",      
+      "dist/renderer/lib/video/index.js",
       "dist/renderer/lib/spinner/index.js",
       "dist/renderer/lib/timeline/index.js",
       "dist/views/index.html"
