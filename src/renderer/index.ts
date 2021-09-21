@@ -51,6 +51,31 @@ let visualizeBtn : HTMLElement;
 let sonifyVisualizeBtn : HTMLButtonElement;
 let visualizeExportBtn : HTMLButtonElement;
 let timelineBtn : HTMLElement;
+let timelineExportBtn : HTMLButtonElement;
+
+
+/**
+ * Bind an event to an element whether or not it exists yet.
+ * 
+ * @param {string} selector Query selector of the element
+ * @param {string}
+ **/
+function bindGlobal (selector : string, event : string, handler : Function) {
+    const rootElement : HTMLElement = document.querySelector('body');
+    rootElement.addEventListener(event, function (evt : Event) {
+            let targetElement : any = evt.target;
+            while (targetElement != null) {
+                if (targetElement.matches(selector)) {
+                    handler(evt);
+                    return;
+                }
+                targetElement = targetElement.parentElement;
+            }
+        },
+        true
+    );
+}
+
 
 async function confirm (message : string) {
     const config = {
@@ -558,6 +583,7 @@ async function visualizeExportStart (format : string) {
 }
 
 function visualizeExportProgress (frameNumber : number, ms : number) {
+    const total : number = visualize.frames.length;
     let timeLeft : number;
     let timeStr : string;
 
@@ -567,7 +593,7 @@ function visualizeExportProgress (frameNumber : number, ms : number) {
         avgMs = ms;
     }
 
-    timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+    timeLeft = (total - frameNumber) * avgMs;
 
     if (timeAvg !== -1) {
         timeAvg = (timeAvg + timeLeft) / 2.0;
@@ -576,7 +602,7 @@ function visualizeExportProgress (frameNumber : number, ms : number) {
     }
 
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
-    ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
+    ui.overlay.progress(frameNumber / total, `~${timeStr}`);
 }
 
 async function visualizeExportFrame (frameNumber : number, data : any, width : number, height : number) {
@@ -705,8 +731,53 @@ function onProcessAudioProgress (evt : Event, args : any) {
 }
 
 function playSync () {
-    video.play();
+    //video.play();
     //audio.play();
+}
+
+function timelineExport () {
+    let tl : string[] = timeline.export();
+    if (tl.length > 0) {
+        ui.overlay.show(`Exporting ${tl.length} frame Timeline...`);
+        ui.overlay.progress(0, `Determining time left...`);
+        avgMs = -1;
+        timeAvg = -1;
+        ipcRenderer.send('timeline_export', { timeline : tl });
+    }
+}
+
+function onTimelineExportProgress (evt : Event, args : any) {
+    timelineExportProgress(args.ms, args.frameNumber);
+}
+
+function timelineExportProgress (ms : number, frameNumber : number) {
+    const total : number = timeline.timeline.length;
+    let timeLeft : number;
+    let timeStr : string;
+
+    if (avgMs !== -1) {
+        avgMs = (avgMs + ms) / 2.0;
+    } else {
+        avgMs = ms;
+    }
+
+    timeLeft = (total - frameNumber) * avgMs;
+
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    } else {
+        timeAvg = timeLeft;
+    }
+
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / total, `~${timeStr}`);
+}
+
+function onTimelineExportComplete (evt : Event, args : any) {
+    ui.overlay.hide();
+    if (args.success) {
+        f.saveVideo(args.tmpVideo);
+    }
 }
 
 function keyDown (evt : KeyboardEvent) {
@@ -732,8 +803,15 @@ function keyDown (evt : KeyboardEvent) {
         } else if (evt.code === 'KeyF') {
             sonifyVisualizeFrame();
         } 
+    } else if (ui.currentPage === 'timeline') {
+        //timeline key commands handled by Timeline class
+        return false;
     }
     console.log(evt.code);
+}
+
+function onBin (bi : any, image : any) {
+    ipcRenderer.send('bin', { bi, image } );
 }
 
 function bindListeners () {
@@ -748,6 +826,7 @@ function bindListeners () {
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn') as HTMLButtonElement;
     visualizeExportBtn = document.getElementById('visualizeExportBtn') as HTMLButtonElement;
     timelineBtn = document.getElementById('timelineBtn');
+    timelineExportBtn = document.getElementById('tExport') as HTMLButtonElement;
 
     cancelBtn = document.getElementById('cancel');
 
@@ -756,6 +835,7 @@ function bindListeners () {
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
     timelineBtn.addEventListener('click', function () { ui.page('timeline'); }, false);
+    timelineExportBtn.addEventListener('click', timelineExport, false);
 
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
@@ -787,6 +867,9 @@ function bindListeners () {
     });
 
     ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
+
+    ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
+    ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
 }
 
 /**
@@ -815,7 +898,7 @@ function bindListeners () {
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
     visualize = new Visualize(state, audioContext);
-    timeline = new Timeline();
+    timeline = new Timeline(ui, onBin);
 
     bindListeners();
 

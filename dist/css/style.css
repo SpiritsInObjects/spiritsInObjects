@@ -9,6 +9,20 @@ body {
   background: #a7abb4;
   overflow: hidden;
 }
+video::webkit-media-controls {
+  display: none !important;
+}
+.clearfix {
+  overflow: hidden;
+}
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+.noselect {
+  user-select: none;
+}
 #menu {
   box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
   margin: 0;
@@ -97,7 +111,6 @@ body {
 }
 #sonifyTimeline .cursor,
 #visualizeTimeline .cursor {
-  cursor: e-resize;
   position: absolute;
   z-index: 100;
   width: 1px;
@@ -366,15 +379,19 @@ textarea,
   padding: 10px;
 }
 #timecodes,
-#vTimecodes {
+#vTimecodes,
+#tTimecodes {
   height: 26px;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.4);
 }
 #startTimecode,
-#vStartTimecode {
+#vStartTimecode,
+#tStartTimecode {
   float: left;
 }
 #endTimecode,
-#vEndTimecode {
+#vEndTimecode,
+#tEndTimecode {
   float: right;
 }
 #vFormat {
@@ -382,12 +399,22 @@ textarea,
   float: right;
   margin-right: 151px;
 }
+.buttons {
+  padding-top: 5px;
+}
+.tButtons {
+  width: max-content;
+  margin: 5px auto 0;
+}
 #nextFrame,
 #prevFrame,
 #vNextFrame,
 #vPrevFrame,
+#tNextFrame,
+#tPrevFrame,
 #sync,
-#vSync {
+#vSync,
+#tSync {
   -webkit-appearance: none;
   outline: none;
   width: 36px;
@@ -402,8 +429,11 @@ textarea,
 #prevFrame img,
 #vNextFrame img,
 #vPrevFrame img,
+#tNextFrame img,
+#tPrevFrame img,
 #sync img,
-#vSync img {
+#vSync img,
+#tSync img {
   width: 24px;
   height: auto;
 }
@@ -411,57 +441,73 @@ textarea,
 #prevFrame:active,
 #vNextFrame:active,
 #vPrevFrame:active,
+#tNextFrame:active,
+#tPrevFrame:active,
 #sync:active,
 #vSync:active,
+#tSync:active,
 #nextFrame.active,
 #prevFrame.active,
 #vNextFrame.active,
 #vPrevFrame.active,
+#tNextFrame.active,
+#tPrevFrame.active,
 #sync.active,
-#vSync.active {
+#vSync.active,
+#tSync.active {
   box-shadow: 1px 2px 2px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.4);
   background: rgba(89, 99, 151);
   background: radial-gradient(circle, #596397 0%, #dee0e6 100%);
 }
 #nextFrame img,
-#vNextFrame img {
+#vNextFrame img,
+#tNextFrame img {
   margin-left: -3px;
 }
 #prevFrame img,
-#vPrevFrame img {
+#vPrevFrame img,
+#tPrevFrame img {
   margin-left: -4px;
 }
 #sync[disabled],
-#vSync[disabled] {
+#vSync[disabled],
+#tSync[disabled] {
   cursor: not-allowed;
 }
 #sync[disabled] img,
-#vSync[disabled] img {
+#vSync[disabled] img,
+#tSync[disabled] img {
   opacity: 0.5;
 }
 #sync.rendering,
-#vSync.rendering {
+#vSync.rendering,
+#tSync.rendering {
   cursor: progress;
 }
 #sync.rendering img,
-#vSync.rendering img {
+#vSync.rendering img,
+#tSync.rendering img {
   display: none;
 }
 #sync.rendering #syncSpinner,
 #vSync.rendering #syncSpinner,
+#tSync.rendering #syncSpinner,
 #sync.rendering #vSyncSpinner,
-#vSync.rendering #vSyncSpinner {
+#vSync.rendering #vSyncSpinner,
+#tSync.rendering #vSyncSpinner {
   display: block;
 }
 #videoControl,
-#visualizeControl {
+#visualizeControl,
+#tControl {
   background: #d6d6d6;
   position: relative;
   z-index: 1;
   height: 50px;
 }
 #videoControl .bg,
-#visualizeControl .bg {
+#visualizeControl .bg,
+#tControl .bg {
   position: absolute;
   z-index: -1;
   height: 50px;
@@ -475,13 +521,19 @@ textarea,
   opacity: 0.8;
 }
 #videoControl > div:not(.bg),
-#visualizeControl > div:not(.bg) {
+#visualizeControl > div:not(.bg),
+#tControl > div:not(.bg) {
   width: 125px;
   margin: 0 auto;
 }
 #videoControl > div:not(.bg) *:last-child,
-#visualizeControl > div:not(.bg) *:last-child {
+#visualizeControl > div:not(.bg) *:last-child,
+#tControl > div:not(.bg) *:last-child {
   float: none;
+}
+#tControl .tVideoControls {
+  width: 640px !important;
+  float: right;
 }
 #overlay {
   display: none;
@@ -590,14 +642,14 @@ textarea,
   height: 560px;
 }
 #tBin {
-  height: 450px;
+  height: 380px;
   width: 320px;
   float: left;
-  background: #999;
   overflow: scroll;
 }
 #tBin table {
   width: max-content;
+  min-width: 100%;
 }
 #tBin table thead th {
   text-align: center;
@@ -608,16 +660,20 @@ textarea,
 #tBin table tbody tr td:first-child {
   text-align: center;
 }
+#tBin table tbody tr.selected {
+  background: rgba(255, 255, 255, 0.5);
+}
 #tTheatre {
-  height: 450px;
+  height: 380px;
   width: 676px;
   float: right;
   overflow: hidden;
 }
-#tCanvasDisplay,
-#tPreview {
+#tCanvasDisplay {
   height: 380.25px;
-  width: 676px;
+  width: auto;
+  margin: 0 auto;
+  display: block;
 }
 #tPreview {
   width: 676px;
@@ -628,14 +684,20 @@ textarea,
 #tElement .frame {
   width: 30px;
   height: 24px;
-  border-radius: 2px;
   float: left;
   border: 1px solid #000;
   cursor: pointer;
   margin-bottom: 2px;
+  text-align: center;
+  font-family: monospace;
+  line-height: 24px;
+  font-weight: 600;
 }
 #tElement .frame:hover {
   background: rgba(255, 255, 255, 0.5);
+}
+#tElement .frame.selected {
+  background: rgba(255, 255, 0, 0.5);
 }
 #tElement .btw {
   width: 2px;
@@ -645,4 +707,29 @@ textarea,
 }
 #tElement .btw.dragover {
   background: yellow;
+}
+#tAdd,
+#tRemove {
+  width: 30px;
+  height: 24px;
+  float: left;
+  background: rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-weight: bold;
+  line-height: 24px;
+  padding: 0;
+  appearance: none;
+  outline: none;
+  border: 1px solid #000;
+  margin-right: 2px;
+}
+#tAdd:hover,
+#tRemove:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+#tRemove {
+  line-height: 14px;
+}
+#tExport {
+  float: right !important;
 }

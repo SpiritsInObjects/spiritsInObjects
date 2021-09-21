@@ -10,7 +10,7 @@
         <div id="menu">
             <div class="wrapper">
                 <button id="timelineBtn" class="pageBtn active"></button>
-                <label>Timeline</label>
+                <label>Composer</label>
             </div>
             <div class="wrapper">
                 <button id="sonifyBtn" class="pageBtn"></button>
@@ -28,7 +28,7 @@
                 <input type="text" id="endTimecode" value="00:00:00;00" />
             </div>
             <div id="theatre">
-                <video id="video"></video>
+                <video playsinline id="video"></video>
                 <img id="still" class="hide" />
                 <canvas id="canvas"></canvas>
                 <div id="startSelect" style="left: 81%;">
@@ -50,7 +50,7 @@
             </div>-->
             <div id="videoControl">
                 <div class="bg"></div>
-                <div>
+                <div class="buttons">
                     <button id="prevFrame"><img src="../image/navigate_before.svg" title="Previous Frame"></button>
                     <button id="sync" title="Preview sync" disabled>
                         <div id="syncSpinner"></div>
@@ -109,7 +109,7 @@
                 <canvas id="vCanvas"></canvas>
                 <canvas id="aCanvas"></canvas>
                 <canvas id="vCanvasDisplay"></canvas>
-                <video id="vPreview" class="hide"></video>
+                <video id="vPreview" class="hide" playsinline></video>
             </div>
             <div id="visualizeTimeline">
                 <div class="vTimeline">
@@ -119,7 +119,7 @@
             </div>
             <div id="visualizeControl">
                 <div class="bg"></div>
-                <div>
+                <div class="buttons">
                     <button id="vPrevFrame"><img src="../image/navigate_before.svg" title="Previous Frame"></button>
                     <button id="vSync" title="Preview sync" disabled>
                         <div id="vSyncSpinner"></div>
@@ -163,13 +163,13 @@
             </div>
         </div>
         <div id="timeline" class="page show">
-            <div id="tTimecodes">
+            <div id="tTimecodes" class="clearfix">
                 <input type="text" id="tStartTimecode" value="00:00:00;00" />
                 <input type="text" id="tEndTimecode" value="00:00:00;00" />
             </div>
-            <div class="tWrapper">
+            <div class="tWrapper clearfix">
                 <div id="tBin">
-                    <table>
+                    <table class="noselect">
                         <thead>
                             <tr>
                                 <th>Key</th>
@@ -181,16 +181,37 @@
                 </div>
                 <div id="tTheatre">
                     <div id="tPreview">
-                        <div id="tCanvas"></div>
-                        <div id="tCanvasDisplay"></div>
-                        <div id="tPreview" class="hide"></div>
+                        <canvas id="tCanvas"></canvas>
+                        <img id="tCanvasDisplay" class="hide" src="#" />
+                        <video id="tPreview" class="hide"></video>
                     </div>
                 </div>
             </div>
-            <div id="tElement">
-                <div id="tWrapper"></div>
+            <div id="tControl">
+                <div class="bg"></div>
+                <button id="tAddBin">Import to Bin</button>
+                <button id="tAddTimeline">Add to Timeline</button>
                 <button id="tCreate">New Timeline</button>
-                <button id="tAdd" class="hide">+ Frame</button>
+                <div class="tVideoControls">
+                    <button id="tExport">Export Timeline</button>
+                    <div class="tButtons">
+                        <button id="tPrevFrame"><img src="../image/navigate_before.svg" title="Previous Frame"></button>
+                        <button id="tSync" title="Preview sync" disabled>
+                            <div id="tSyncSpinner"></div>
+                            <img src="../image/sync.svg" />
+                        </button>
+                        <button id="tNextFrame"><img src="../image/navigate_next.svg" title="Next Frame" ></button>
+                    </div>
+
+                </div>
+            </div>
+            <div id="tElement">
+                <div id="tWrapper" class="clearfix"></div>
+                <div class="clearfix">
+                    <button id="tRemove" class="hide">-</button>
+                    <button id="tAdd" class="hide">+</button>
+                </div>
+
             </div>
         </div>
         <div id="overlay">

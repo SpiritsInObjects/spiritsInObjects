@@ -3,7 +3,7 @@
 import { spawn } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { mkdir, unlink } from 'fs-extra';
+import { mkdir, unlink, rmdirSync, writeFile } from 'fs-extra';
 import { createHash } from 'crypto';
 import { spawnAsync, killSubprocess } from '../spawnAsync';
 
@@ -68,15 +68,15 @@ export class ffmpeg {
         tmp = join(tmpdir(), 'sio');
 
         try {
-            await unlink(tmp);
+            await rmdirSync(tmp, { recursive : true });
         } catch (err) {
-            //
+            console.error(err);
         }
 
         try {
             await mkdir(tmp);
         } catch (err) {
-            //
+            console.error(err);
         }
         return tmp;
     }
@@ -160,32 +160,39 @@ export class ffmpeg {
         return output;
     }
 
-    static async exportVideo (inputPath : string, outputPath : string, format : string = 'prores3', onProgress : Function = () => {}) : Promise<string> {
-        const args : string[] = [
+    static async exportVideo (inputPath : string, outputPath : string, audio : string = null, format : string = 'prores3', onProgress : Function = () => {}) : Promise<string> {
+        let args : string[] = [
             '-f', 'image2',
-            '-i',  inputPath,
-            '-r', '24'
+            '-i',  inputPath
         ];
 
+        if (audio != null) {
+            args = args.concat([
+                '-i', audio, 
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:a', 'aac',
+                '-shortest'
+            ]);
+        }
+
         if (format === 'prores3') {
-            args.push('-c:v');
-            args.push('prores_ks');
-            
-            args.push('-profile:v');
-            args.push('3');
+            args = args.concat([
+                '-c:v', 'prores_ks',
+                '-profile:v', '3'
+            ]);
         } else if (format === 'h264') {
-            args.push('-c:v');
-            args.push('libx264');
-
-            args.push('-preset');
-            args.push('slow');
-
-            args.push('-crf');
-            args.push('5');
+            args = args.concat([
+                '-c:v', 'libx264',
+                '-preset','slow',
+                '-crf', '5'
+            ]);
         }
         
-        args.push('-y');
-        args.push(outputPath);
+        args = args.concat([
+            '-r', '24',
+            '-y', outputPath
+        ]);
 
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
@@ -255,6 +262,79 @@ export class ffmpeg {
         });
     }
 
+    static async concatAudio (audioTimeline : string[], tmpAudio : string, onProgress : Function = ()=>{}) : Promise<boolean> {
+        let fileList : string[];
+        let tmpList : string = join(tmpdir(), 'sioaudiofilelist.txt');
+
+        fileList = audioTimeline.map( (file : string) => {
+            return `file '${file}'`;
+        });
+
+        try {
+            await writeFile(tmpList, fileList.join('\n'), 'utf8');
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        try {
+            await ffmpeg.concatAudioExec(tmpList, tmpAudio, onProgress);
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        try {
+            await unlink(tmpList);
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        return true;
+    }
+
+    static async concatAudioExec (fileList : string, output : string, onProgress : Function) {
+        const args : string [] = [
+            '-y',
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', fileList,
+            '-vn',
+            '-ac', '1',
+            output
+        ];
+
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve : Function, reject : Function) => {
+            subprocess = spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            subprocess.on('exit', (code : number) => {
+                if (code === 0) {
+                    return resolve(output);
+                } else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            subprocess.stdout.on('data', (data : string) => {
+                stdout += data;
+            });
+            subprocess.stderr.on('data', (data : string) => {
+                const line : string = data.toString();
+                const obj : StdErr = this.parseStderr(line);
+                let estimated : any;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return subprocess;
+        });
+    }
+
+
     /**
      * Render a proxy of a video using settings optimized for fast rendering times.
      * Optionally forc video into the scale provided by the options.width and
@@ -278,7 +358,8 @@ export class ffmpeg {
                 '-i', options.audio, 
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac'
+                '-c:a', 'aac',
+                '-shortest'
             ]);
         }
 

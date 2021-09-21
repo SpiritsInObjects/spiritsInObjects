@@ -9,11 +9,34 @@ const path_1 = require("path");
 const fs_extra_1 = require("fs-extra");
 const save_pixels_1 = __importDefault(require("save-pixels"));
 const ndarray_1 = __importDefault(require("ndarray"));
+const wavefile_1 = require("wavefile");
+const uuid_1 = require("uuid");
 class Timeline {
     constructor(ffmpeg) {
         this.tmpDir = path_1.join(os_1.tmpdir(), 'siotimeline');
         this.binDir = path_1.join(os_1.tmpdir(), 'siobin');
+        this.cancelled = false;
         this.ffmpeg = ffmpeg;
+        this.initDirs();
+    }
+    async initDirs() {
+        let dirs = [this.tmpDir, this.binDir];
+        for (let dir of dirs) {
+            try {
+                await this.makeTmp(dir);
+            }
+            catch (err) {
+                console.error(err);
+                return false;
+            }
+            try {
+                await this.emptyTmp(dir);
+            }
+            catch (err) {
+                console.error(err);
+                return false;
+            }
+        }
     }
     async makeTmp(dir) {
         try {
@@ -49,7 +72,7 @@ class Timeline {
             const stream = fs_extra_1.createWriteStream(framePath);
             stream.on('finish', function () {
                 stream.close(() => {
-                    resolve(true);
+                    resolve(framePath);
                 });
             });
             stream.on('error', async (err) => {
@@ -71,43 +94,107 @@ class Timeline {
         }
         catch (err) {
             console.error(err);
-            return false;
         }
+        return framePath;
     }
-    async images(bin, timeline) {
+    async exportAudio(id, samples) {
+        const audioPath = path_1.join(this.binDir, `${id}.wav`);
+        const wav = new wavefile_1.WaveFile();
+        wav.fromScratch(1, samples.length * 24, '32f', samples);
+        try {
+            await fs_extra_1.writeFile(audioPath, wav.toBuffer());
+        }
+        catch (err) {
+            console.error(err);
+        }
+        return audioPath;
+    }
+    async images(timeline) {
         let frameNumber = 0;
         let paddedNum;
+        let binPath;
         let framePath;
         let ext = 'png';
-        let dirs = [this.tmpDir];
-        for (let dir of dirs) {
-            try {
-                await this.makeTmp(dir);
-            }
-            catch (err) {
-                console.error(err);
-                return false;
-            }
-            try {
-                await this.emptyTmp(dir);
-            }
-            catch (err) {
-                console.error(err);
-                return false;
-            }
-        }
         for (let frame of timeline) {
+            if (frame == null) {
+                frame = 'blank';
+            }
             paddedNum = `${frameNumber}`.padStart(8, '0');
             framePath = path_1.join(this.tmpDir, `${paddedNum}.${ext}`);
+            binPath = path_1.join(this.binDir, `${frame}.${ext}`);
             try {
-                await fs_extra_1.copy(bin[frame], framePath);
+                await fs_extra_1.copy(binPath, framePath);
             }
             catch (err) {
                 console.error(err);
                 return false;
             }
             frameNumber++;
+            if (this.cancelled) {
+                this.cancelled = false;
+                return false;
+            }
         }
+        return true;
+    }
+    async audio(timeline) {
+        let frameNumber = 0;
+        let paddedNum;
+        let binPath;
+        let framePath;
+        let ext = 'wav';
+        let fileList = [];
+        for (let frame of timeline) {
+            if (frame == null) {
+                frame = 'silence';
+            }
+            paddedNum = `${frameNumber}`.padStart(8, '0');
+            framePath = path_1.join(this.tmpDir, `${paddedNum}.${ext}`);
+            binPath = path_1.join(this.binDir, `${frame}.${ext}`);
+            try {
+                await fs_extra_1.copy(binPath, framePath);
+            }
+            catch (err) {
+                console.error(err);
+                return;
+            }
+            fileList.push(framePath);
+            frameNumber++;
+            if (this.cancelled) {
+                this.cancelled = false;
+                return;
+            }
+        }
+        return fileList;
+    }
+    async export(timeline, tmpVideo, onProgress) {
+        let id = uuid_1.v4();
+        let success = false;
+        let tmpAudio = path_1.join(this.tmpDir, `${id}.wav`);
+        let framesPath = path_1.join(this.tmpDir, `%08d.png`);
+        let audioList;
+        try {
+            await this.emptyTmp(this.tmpDir);
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        success = await this.images(timeline);
+        if (!success)
+            return success;
+        audioList = await this.audio(timeline);
+        if (!audioList) {
+            success = false;
+            return success;
+        }
+        await this.ffmpeg.concatAudio(audioList, tmpAudio, onProgress);
+        await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
+        await fs_extra_1.unlink(tmpAudio);
+        return success;
+    }
+    cancel() {
+        this.cancelled = true;
     }
 }
 exports.Timeline = Timeline;

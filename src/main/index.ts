@@ -443,6 +443,52 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
 
+ipcMain.on('bin', async (evt : Event, args : any) => {
+	const { bi, image } : any = args;
+	const ms = +new Date();
+	let tmpAudio : string;
+	let tmpImage : string;
+
+	if (bi.id !== 'blank') {
+		tmpAudio = await timeline.exportAudio(bi.id, bi.samples);
+		TMP.files.push(tmpAudio);
+	}
+
+	if (bi.id !== 'silence') {
+		if (image) {
+			tmpImage = await timeline.exportFrame(bi.id, image.data, image.width, image.height);
+		} else {
+			tmpImage = await timeline.copyFrame(bi.id, bi.file);
+		}
+		TMP.files.push(tmpImage);
+	}
+
+	mainWindow.webContents.send('bin_complete', { id : bi.id, ms : (+new Date()) - ms });
+});
+
+ipcMain.on('timeline_export', async (evt : Event, args : any) => {
+	const frameStart = +new Date();
+	const id : string = uuid();
+	let success : boolean = false;
+	let tmpVideo : string = pathJoin(tmpdir(), `timeline_${id}.mov`);
+
+	function onProgress (obj : any) {
+		const ms : number = ((+new Date()) - frameStart) / obj.frame;
+		mainWindow.webContents.send('timeline_export_progress', { ms, frameNumber : obj.frame });
+	}
+
+	try {
+		success = await timeline.export(args.timeline, tmpVideo, onProgress);
+	} catch (err) {
+		console.error(err);
+		return mainWindow.webContents.send('timeline_export_complete', { success })
+	}
+
+	TMP.files.push(tmpVideo);
+
+	mainWindow.webContents.send('timeline_export_complete', { success, tmpVideo })
+});
+
 nodeCleanup((exitCode : any, signal : string) => {
 	let exists : boolean = false;
 	console.log(`Cleaning up on exit code ${exitCode}...`);
@@ -479,4 +525,7 @@ nodeCleanup((exitCode : any, signal : string) => {
 	mainWindow = await createMainWindow();
 	visualize = new Visualize(ffmpeg);
 	timeline = new Timeline(ffmpeg);
+
+	TMP.dirs.push(timeline.tmpDir);
+	TMP.dirs.push(timeline.binDir);
 })();

@@ -25,6 +25,25 @@ body{
 	overflow: hidden;
 }
 
+video{
+	&::webkit-media-controls{
+		display: none !important;
+	}
+}
+
+.clearfix{
+	overflow: hidden;
+	&::after {
+		content: "";
+		clear: both;
+		display: table;
+	}
+}
+
+.noselect {
+    user-select: none;
+}
+
 #menu{
 	box-shadow:0 1px 1px rgba(100, 100, 100, 0.1);
 	margin: 0;
@@ -114,7 +133,7 @@ body{
 		border-bottom: 1px solid #e6e6ed;
 	}
 	.cursor{
-		cursor: e-resize;
+		//cursor: e-resize;
 		position: absolute;
 		z-index: 100;
 		width: 1px;
@@ -399,16 +418,21 @@ textarea,
 }
 
 #timecodes,
-#vTimecodes{
+#vTimecodes,
+#tTimecodes{
 	height: 26px;
+	box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.4);
 }
 
 #startTimecode,
-#vStartTimecode{
+#vStartTimecode,
+#tStartTimecode{
 	float: left;
 }
+
 #endTimecode,
-#vEndTimecode{
+#vEndTimecode,
+#tEndTimecode{
 	float: right;
 }
 
@@ -418,12 +442,24 @@ textarea,
     margin-right: 151px;
 }
 
+.buttons{
+	padding-top: 5px;
+}
+
+.tButtons{
+	width: max-content;
+	margin: 5px auto 0;
+}
+
 #nextFrame,
 #prevFrame,
 #vNextFrame,
 #vPrevFrame,
+#tNextFrame,
+#tPrevFrame,
 #sync,
-#vSync{
+#vSync,
+#tSync{
 	-webkit-appearance: none;
 	outline: none;
     width: 36px;
@@ -445,20 +481,23 @@ textarea,
 	}
 }
 #nextFrame,
-#vNextFrame{
+#vNextFrame,
+#tNextFrame{
 	img{
 		margin-left: -3px;
 	}
 }
 #prevFrame,
-#vPrevFrame{
+#vPrevFrame,
+#tPrevFrame{
 	img{
 		margin-left: -4px;
 	}
 }
 
 #sync,
-#vSync{
+#vSync,
+#tSync{
 	&[disabled]{
 		cursor: not-allowed;
 		img{
@@ -478,7 +517,8 @@ textarea,
 }
 
 #videoControl,
-#visualizeControl{
+#visualizeControl,
+#tControl{
 	background: #d6d6d6;
 	position: relative;
 	z-index: 1;
@@ -502,6 +542,13 @@ textarea,
 		*:last-child{
 			float: none;
 		}
+	}
+}
+
+#tControl{
+	.tVideoControls{
+		width: 640px !important;
+		float: right;
 	}
 }
 
@@ -629,13 +676,13 @@ textarea,
 @tTheatreHeight: ( (@videoWidth - @binWidth) / 16) * 9;
 
 #tBin{
-	height: 450px;
+	height: 380px;
 	width:  @binWidth;
 	float:  left;
-	background:  #999;
 	overflow: scroll;
 	table{
 		width: max-content;
+		min-width: 100%;
 		thead{
 			th{
 				text-align: center;
@@ -649,21 +696,25 @@ textarea,
 						text-align: center;
 					}
 				}
+				&.selected{
+					background: rgba(255, 255, 255, 0.5);
+				}
 			}
 		}
 	}
 }
 #tTheatre{
-	height: 450px;
+	height: 380px;
 	width:  @videoWidth - @binWidth;
 	float:  right;
 	overflow: hidden;
 }
 
-#tCanvasDisplay,
-#tPreview{
+#tCanvasDisplay{
 	height: @tTheatreHeight;
-	width:  @videoWidth - @binWidth;
+	width: auto;
+	margin: 0 auto;
+	display: block;
 }
 
 #tPreview{
@@ -677,13 +728,19 @@ textarea,
 	.frame{
 		width: 30px;
 		height: 24px;
-		border-radius: 2px;
 		float: left;
 		border: 1px solid #000;
 		cursor: pointer;
 		margin-bottom: 2px;
+		text-align: center;
+		font-family: monospace;
+		line-height: 24px;
+		font-weight: 600;
 		&:hover{
 			background: rgba(255, 255, 255, 0.5);
+		}
+		&.selected{
+			background: rgba(255, 255, 0, 0.5);
 		}
 	}
 	.btw{
@@ -695,4 +752,31 @@ textarea,
 			background: yellow;
 		}
 	}
+}
+
+#tAdd,
+#tRemove{
+	width: 30px;
+	height: 24px;
+	float: left;
+	background: rgba(0, 0, 0, 0.1);
+	text-align: center;
+	font-weight: bold;
+	line-height: 24px;
+    padding: 0;
+    appearance: none;
+    outline: none;
+    border: 1px solid #000;
+    margin-right: 2px;
+	&:hover{
+		background: rgba(255, 255, 255, 0.3);
+	}
+}
+
+#tRemove{
+	line-height: 14px;
+}
+
+#tExport{
+	float: right !important;
 }

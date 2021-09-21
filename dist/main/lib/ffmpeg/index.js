@@ -60,16 +60,16 @@ class ffmpeg {
     static async exportPath() {
         tmp = path_1.join(os_1.tmpdir(), 'sio');
         try {
-            await fs_extra_1.unlink(tmp);
+            await fs_extra_1.rmdirSync(tmp, { recursive: true });
         }
         catch (err) {
-            //
+            console.error(err);
         }
         try {
             await fs_extra_1.mkdir(tmp);
         }
         catch (err) {
-            //
+            console.error(err);
         }
         return tmp;
     }
@@ -147,28 +147,37 @@ class ffmpeg {
         }
         return output;
     }
-    static async exportVideo(inputPath, outputPath, format = 'prores3', onProgress = () => { }) {
-        const args = [
+    static async exportVideo(inputPath, outputPath, audio = null, format = 'prores3', onProgress = () => { }) {
+        let args = [
             '-f', 'image2',
-            '-i', inputPath,
-            '-r', '24'
+            '-i', inputPath
         ];
+        if (audio != null) {
+            args = args.concat([
+                '-i', audio,
+                '-map', '0:v',
+                '-map', '1:a',
+                '-c:a', 'aac',
+                '-shortest'
+            ]);
+        }
         if (format === 'prores3') {
-            args.push('-c:v');
-            args.push('prores_ks');
-            args.push('-profile:v');
-            args.push('3');
+            args = args.concat([
+                '-c:v', 'prores_ks',
+                '-profile:v', '3'
+            ]);
         }
         else if (format === 'h264') {
-            args.push('-c:v');
-            args.push('libx264');
-            args.push('-preset');
-            args.push('slow');
-            args.push('-crf');
-            args.push('5');
+            args = args.concat([
+                '-c:v', 'libx264',
+                '-preset', 'slow',
+                '-crf', '5'
+            ]);
         }
-        args.push('-y');
-        args.push(outputPath);
+        args = args.concat([
+            '-r', '24',
+            '-y', outputPath
+        ]);
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
             subprocess = child_process_1.spawn(bin, args);
@@ -236,6 +245,74 @@ class ffmpeg {
             return subprocess;
         });
     }
+    static async concatAudio(audioTimeline, tmpAudio, onProgress = () => { }) {
+        let fileList;
+        let tmpList = path_1.join(os_1.tmpdir(), 'sioaudiofilelist.txt');
+        fileList = audioTimeline.map((file) => {
+            return `file '${file}'`;
+        });
+        try {
+            await fs_extra_1.writeFile(tmpList, fileList.join('\n'), 'utf8');
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        try {
+            await ffmpeg.concatAudioExec(tmpList, tmpAudio, onProgress);
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        try {
+            await fs_extra_1.unlink(tmpList);
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        return true;
+    }
+    static async concatAudioExec(fileList, output, onProgress) {
+        const args = [
+            '-y',
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', fileList,
+            '-vn',
+            '-ac', '1',
+            output
+        ];
+        console.log(`${bin} ${args.join(' ')}`);
+        return new Promise((resolve, reject) => {
+            subprocess = child_process_1.spawn(bin, args);
+            let stdout = '';
+            let stderr = '';
+            subprocess.on('exit', (code) => {
+                if (code === 0) {
+                    return resolve(output);
+                }
+                else {
+                    console.error(`Process exited with code: ${code}`);
+                    console.error(stderr);
+                    return reject(stderr);
+                }
+            });
+            subprocess.stdout.on('data', (data) => {
+                stdout += data;
+            });
+            subprocess.stderr.on('data', (data) => {
+                const line = data.toString();
+                const obj = this.parseStderr(line);
+                let estimated;
+                if (obj.frame) {
+                    onProgress(obj);
+                }
+            });
+            return subprocess;
+        });
+    }
     /**
      * Render a proxy of a video using settings optimized for fast rendering times.
      * Optionally forc video into the scale provided by the options.width and
@@ -257,7 +334,8 @@ class ffmpeg {
                 '-i', options.audio,
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac'
+                '-c:a', 'aac',
+                '-shortest'
             ]);
         }
         if (options.forceScale) {

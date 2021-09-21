@@ -41,6 +41,26 @@ let visualizeBtn;
 let sonifyVisualizeBtn;
 let visualizeExportBtn;
 let timelineBtn;
+let timelineExportBtn;
+/**
+ * Bind an event to an element whether or not it exists yet.
+ *
+ * @param {string} selector Query selector of the element
+ * @param {string}
+ **/
+function bindGlobal(selector, event, handler) {
+    const rootElement = document.querySelector('body');
+    rootElement.addEventListener(event, function (evt) {
+        let targetElement = evt.target;
+        while (targetElement != null) {
+            if (targetElement.matches(selector)) {
+                handler(evt);
+                return;
+            }
+            targetElement = targetElement.parentElement;
+        }
+    }, true);
+}
 async function confirm(message) {
     const config = {
         buttons: ['Yes', 'No'],
@@ -479,6 +499,7 @@ async function visualizeExportStart(format) {
     });
 }
 function visualizeExportProgress(frameNumber, ms) {
+    const total = visualize.frames.length;
     let timeLeft;
     let timeStr;
     if (avgMs !== -1) {
@@ -487,7 +508,7 @@ function visualizeExportProgress(frameNumber, ms) {
     else {
         avgMs = ms;
     }
-    timeLeft = (visualize.frames.length - frameNumber) * avgMs;
+    timeLeft = (total - frameNumber) * avgMs;
     if (timeAvg !== -1) {
         timeAvg = (timeAvg + timeLeft) / 2.0;
     }
@@ -495,7 +516,7 @@ function visualizeExportProgress(frameNumber, ms) {
         timeAvg = timeLeft;
     }
     timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
-    ui.overlay.progress(frameNumber / visualize.frames.length, `~${timeStr}`);
+    ui.overlay.progress(frameNumber / total, `~${timeStr}`);
 }
 async function visualizeExportFrame(frameNumber, data, width, height) {
     return new Promise((resolve, reject) => {
@@ -607,8 +628,47 @@ function onProcessAudioProgress(evt, args) {
     processAudioProgress(args.frameNumber, args.ms);
 }
 function playSync() {
-    video.play();
+    //video.play();
     //audio.play();
+}
+function timelineExport() {
+    let tl = timeline.export();
+    if (tl.length > 0) {
+        ui.overlay.show(`Exporting ${tl.length} frame Timeline...`);
+        ui.overlay.progress(0, `Determining time left...`);
+        avgMs = -1;
+        timeAvg = -1;
+        ipcRenderer.send('timeline_export', { timeline: tl });
+    }
+}
+function onTimelineExportProgress(evt, args) {
+    timelineExportProgress(args.ms, args.frameNumber);
+}
+function timelineExportProgress(ms, frameNumber) {
+    const total = timeline.timeline.length;
+    let timeLeft;
+    let timeStr;
+    if (avgMs !== -1) {
+        avgMs = (avgMs + ms) / 2.0;
+    }
+    else {
+        avgMs = ms;
+    }
+    timeLeft = (total - frameNumber) * avgMs;
+    if (timeAvg !== -1) {
+        timeAvg = (timeAvg + timeLeft) / 2.0;
+    }
+    else {
+        timeAvg = timeLeft;
+    }
+    timeStr = humanizeDuration(Math.round(timeAvg / 1000) * 1000);
+    ui.overlay.progress(frameNumber / total, `~${timeStr}`);
+}
+function onTimelineExportComplete(evt, args) {
+    ui.overlay.hide();
+    if (args.success) {
+        f.saveVideo(args.tmpVideo);
+    }
 }
 function keyDown(evt) {
     if (ui.currentPage === 'sonify') {
@@ -640,7 +700,14 @@ function keyDown(evt) {
             sonifyVisualizeFrame();
         }
     }
+    else if (ui.currentPage === 'timeline') {
+        //timeline key commands handled by Timeline class
+        return false;
+    }
     console.log(evt.code);
+}
+function onBin(bi, image) {
+    ipcRenderer.send('bin', { bi, image });
 }
 function bindListeners() {
     dropArea = document.getElementById('dragOverlay');
@@ -653,12 +720,14 @@ function bindListeners() {
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn');
     visualizeExportBtn = document.getElementById('visualizeExportBtn');
     timelineBtn = document.getElementById('timelineBtn');
+    timelineExportBtn = document.getElementById('tExport');
     cancelBtn = document.getElementById('cancel');
     sonifyBtn.addEventListener('click', function () { ui.page('sonify'); }, false);
     visualizeBtn.addEventListener('click', function () { ui.page('visualize'); }, false);
     sonifyVisualizeBtn.addEventListener('click', sonifyVisualizeFrame, false);
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
     timelineBtn.addEventListener('click', function () { ui.page('timeline'); }, false);
+    timelineExportBtn.addEventListener('click', timelineExport, false);
     fileSourceProxy.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
@@ -683,6 +752,8 @@ function bindListeners() {
         ui.overlay.hide();
     });
     ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
+    ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
+    ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
 }
 /**
  * VISUALIZE
@@ -705,7 +776,7 @@ function bindListeners() {
     camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
     visualize = new Visualize(state, audioContext);
-    timeline = new Timeline();
+    timeline = new Timeline(ui, onBin);
     bindListeners();
 })();
 //# sourceMappingURL=index.js.map

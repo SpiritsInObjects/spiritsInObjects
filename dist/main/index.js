@@ -390,6 +390,45 @@ electron_1.ipcMain.on('visualize_end', async (evt, args) => {
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_end', { success, tmpVideo });
 });
+electron_1.ipcMain.on('bin', async (evt, args) => {
+    const { bi, image } = args;
+    const ms = +new Date();
+    let tmpAudio;
+    let tmpImage;
+    if (bi.id !== 'blank') {
+        tmpAudio = await timeline.exportAudio(bi.id, bi.samples);
+        TMP.files.push(tmpAudio);
+    }
+    if (bi.id !== 'silence') {
+        if (image) {
+            tmpImage = await timeline.exportFrame(bi.id, image.data, image.width, image.height);
+        }
+        else {
+            tmpImage = await timeline.copyFrame(bi.id, bi.file);
+        }
+        TMP.files.push(tmpImage);
+    }
+    mainWindow.webContents.send('bin_complete', { id: bi.id, ms: (+new Date()) - ms });
+});
+electron_1.ipcMain.on('timeline_export', async (evt, args) => {
+    const frameStart = +new Date();
+    const id = uuid_1.v4();
+    let success = false;
+    let tmpVideo = path_1.join(os_1.tmpdir(), `timeline_${id}.mov`);
+    function onProgress(obj) {
+        const ms = ((+new Date()) - frameStart) / obj.frame;
+        mainWindow.webContents.send('timeline_export_progress', { ms, frameNumber: obj.frame });
+    }
+    try {
+        success = await timeline.export(args.timeline, tmpVideo, onProgress);
+    }
+    catch (err) {
+        console.error(err);
+        return mainWindow.webContents.send('timeline_export_complete', { success });
+    }
+    TMP.files.push(tmpVideo);
+    mainWindow.webContents.send('timeline_export_complete', { success, tmpVideo });
+});
 node_cleanup_1.default((exitCode, signal) => {
     let exists = false;
     console.log(`Cleaning up on exit code ${exitCode}...`);
@@ -428,5 +467,7 @@ node_cleanup_1.default((exitCode, signal) => {
     mainWindow = await createMainWindow();
     visualize = new visualize_1.Visualize(ffmpeg_1.ffmpeg);
     timeline = new timeline_1.Timeline(ffmpeg_1.ffmpeg);
+    TMP.dirs.push(timeline.tmpDir);
+    TMP.dirs.push(timeline.binDir);
 })();
 //# sourceMappingURL=index.js.map

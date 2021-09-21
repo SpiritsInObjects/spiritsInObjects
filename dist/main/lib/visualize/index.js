@@ -82,7 +82,7 @@ class Visualize {
         }
         tmpVideo = `${this.tmp}.${ext}`;
         try {
-            await this.ffmpeg.exportVideo(inputPath, tmpVideo, this.format, onProgress);
+            await this.ffmpeg.exportVideo(inputPath, tmpVideo, null, this.format, onProgress);
         }
         catch (err) {
             throw err;
