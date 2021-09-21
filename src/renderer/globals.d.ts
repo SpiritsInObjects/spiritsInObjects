@@ -22,6 +22,6 @@ interface BinImage {
 	file : string;
 	name : string;
 	index : number;
-	ref : string;
+	key : string;
 	samples : any;
 }

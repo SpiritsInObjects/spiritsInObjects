@@ -175,6 +175,16 @@ class Timeline {
         if (this.ui.currentPage !== 'timeline') {
             return false;
         }
+        //console.log(evt.code);
+        if (evt.code === 'Backspace') {
+            return this.deleteFrame();
+        }
+        else if (evt.code === 'ArrowRight') {
+            return this.nextFrame();
+        }
+        else if (evt.code === 'ArrowLeft') {
+            return this.prevFrame();
+        }
         key = this.codeToKey(evt.code, evt.shiftKey);
         if (key) {
             this.playFrame(key);
@@ -256,7 +266,7 @@ class Timeline {
     }
     async addToBin(files) {
         let bi;
-        let ref;
+        let key;
         let index;
         let image = null;
         let count = 0;
@@ -271,14 +281,14 @@ class Timeline {
                 continue;
             }
             index = this.bin.length;
-            ref = typeof this.keys[index] !== 'undefined' ? this.keys[index] : null;
+            key = typeof this.keys[index] !== 'undefined' ? this.keys[index] : null;
             bi = {
                 id: uuid(),
                 file,
                 //@ts-ignore
                 name: basename(file),
                 index,
-                ref,
+                key,
                 samples: null
             };
             try {
@@ -316,7 +326,7 @@ class Timeline {
     }
     getByKey(key) {
         let match = this.bin.find((item) => {
-            if (item.ref === key) {
+            if (item.key === key) {
                 return true;
             }
             return false;
@@ -351,8 +361,8 @@ class Timeline {
             row = document.createElement('tr');
             key = document.createElement('td');
             name = document.createElement('td');
-            if (file.ref) {
-                key.innerText = file.ref;
+            if (file.key) {
+                key.innerText = file.key;
             }
             row.setAttribute('id', file.id);
             name.innerText = file.name;
@@ -441,7 +451,7 @@ class Timeline {
             }
             if (this.timeline[i] != null) {
                 bi = this.getById(this.timeline[i].id);
-                frame.innerText = bi.ref;
+                frame.innerText = bi.key;
             }
             between = document.createElement('div');
             between.classList.add('btw');
@@ -543,10 +553,18 @@ class Timeline {
         }
         //console.log(`${this.selected} = ${bi.id}`)
     }
-    assignFrame(id, x) {
-        this.timeline[x] = {
-            id
-        };
+    assignFrame(id, x, count = 1) {
+        for (let i = 0; i < count; i++) {
+            this.timeline[x + i] = { id };
+        }
+        this.layout();
+    }
+    deleteFrame() {
+        if (this.timeline.length === 0) {
+            return false;
+        }
+        this.timeline[this.selected] = null;
+        this.selected--;
         this.layout();
     }
     expandTimeline(steps = 1) {
@@ -569,7 +587,7 @@ class Timeline {
             file: null,
             name: null,
             index: -1,
-            ref: null,
+            key: null,
             samples: null
         };
         const image = {
@@ -593,7 +611,7 @@ class Timeline {
             file: null,
             name: null,
             index: -1,
-            ref: null,
+            key: null,
             samples: new Float32Array(sampleLength)
         };
         const image = null;

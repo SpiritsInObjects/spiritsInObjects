@@ -223,6 +223,15 @@ class Timeline {
 		if (this.ui.currentPage !== 'timeline') {
 			return false;
 		}
+
+		//console.log(evt.code);
+		if (evt.code === 'Backspace') {
+			return this.deleteFrame();
+		} else if (evt.code === 'ArrowRight') {
+			return this.nextFrame();
+		} else if (evt.code === 'ArrowLeft') {
+			return this.prevFrame();
+		}
 		
 		key = this.codeToKey(evt.code, evt.shiftKey);
 
@@ -319,7 +328,7 @@ class Timeline {
 
 	public async addToBin ( files : string[] ) {
 		let bi : BinImage;
-		let ref : string;
+		let key : string;
 		let index : number;
 		let image : any = null;
 		let count : number = 0;
@@ -337,7 +346,7 @@ class Timeline {
 			}
 
 			index = this.bin.length;
-			ref = typeof this.keys[index] !== 'undefined' ? this.keys[index] : null;
+			key = typeof this.keys[index] !== 'undefined' ? this.keys[index] : null;
 
 			bi = {
 				id : uuid(),
@@ -345,7 +354,7 @@ class Timeline {
 				//@ts-ignore
 				name : basename(file),
 				index,
-				ref,
+				key,
 				samples : null
 			}
 
@@ -388,7 +397,7 @@ class Timeline {
 
 	private getByKey (key : string) : BinImage {
 		let match : BinImage = this.bin.find((item : BinImage) => {
-			if (item.ref === key) {
+			if (item.key === key) {
 				return true;
 			}
 			return false;
@@ -429,8 +438,8 @@ class Timeline {
 			key = document.createElement('td');
 			name = document.createElement('td');
 
-			if (file.ref) {
-				key.innerText = file.ref;
+			if (file.key) {
+				key.innerText = file.key;
 			}
 
 			row.setAttribute('id', file.id);
@@ -539,7 +548,7 @@ class Timeline {
 
 			if (this.timeline[i] != null) {
 				bi = this.getById(this.timeline[i].id);
-				frame.innerText = bi.ref;
+				frame.innerText = bi.key;
 			}
 
 			between = document.createElement('div');
@@ -654,10 +663,19 @@ class Timeline {
 		//console.log(`${this.selected} = ${bi.id}`)
 	}
 
-	public assignFrame (id : string, x : number) {
-		this.timeline[x] = {
-			id
-		};
+	public assignFrame (id : string, x : number, count : number = 1) {
+		for (let i = 0; i < count; i++) {
+			this.timeline[x + i] = { id };
+		}
+		this.layout();
+	}
+
+	public deleteFrame (  ) {
+		if (this.timeline.length === 0) {
+			return false;
+		}
+		this.timeline[this.selected] = null;
+		this.selected--;
 		this.layout();
 	}
 
@@ -683,7 +701,7 @@ class Timeline {
 			file : null,
 			name : null,
 			index : -1,
-			ref : null,
+			key : null,
 			samples : null
 		};
 		const image : any = {
@@ -712,7 +730,7 @@ class Timeline {
 			file : null,
 			name : null,
 			index : -1,
-			ref : null,
+			key : null,
 			samples : new Float32Array(sampleLength)
 		};
 		const image : any = null;
