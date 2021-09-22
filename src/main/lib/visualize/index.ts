@@ -6,6 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { join as pathJoin } from 'path';
 import { mkdir, rmdir, createWriteStream, unlink } from 'fs-extra';
 import ndarray from 'ndarray';
+import type { NdArray } from 'ndarray';
 
 export class Visualize {
 	private ffmpeg : any;
@@ -45,7 +46,7 @@ export class Visualize {
 	public async exportFrame (frameNumber : number, data : any[], width : number, height : number) {
 		const paddedNum = `${frameNumber}`.padStart(8, '0');
 		const framePath = pathJoin(this.tmp, `${paddedNum}.png`);
-		const nd : ndarray = ndarray(data, [width, height, 4], [4, width*4, 1]);
+		const nd : NdArray = ndarray(data, [width, height, 4], [4, width*4, 1]);
 
 		return new Promise((resolve : Function, reject: Function) => {
 			const stream : any = createWriteStream(framePath);

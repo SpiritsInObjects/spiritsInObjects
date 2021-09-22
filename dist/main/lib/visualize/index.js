@@ -38,10 +38,10 @@ class Visualize {
     }
     async exportFrame(frameNumber, data, width, height) {
         const paddedNum = `${frameNumber}`.padStart(8, '0');
-        const framePath = path_1.join(this.tmp, `${paddedNum}.png`);
-        const nd = ndarray_1.default(data, [width, height, 4], [4, width * 4, 1]);
+        const framePath = (0, path_1.join)(this.tmp, `${paddedNum}.png`);
+        const nd = (0, ndarray_1.default)(data, [width, height, 4], [4, width * 4, 1]);
         return new Promise((resolve, reject) => {
-            const stream = fs_extra_1.createWriteStream(framePath);
+            const stream = (0, fs_extra_1.createWriteStream)(framePath);
             stream.on('finish', function () {
                 stream.close(() => {
                     resolve(true);
@@ -49,21 +49,21 @@ class Visualize {
             });
             stream.on('error', async (err) => {
                 try {
-                    await fs_extra_1.unlink(framePath);
+                    await (0, fs_extra_1.unlink)(framePath);
                 }
                 catch (err) {
                     console.error(err);
                 }
                 reject(err);
             });
-            save_pixels_1.default(nd, 'PNG').pipe(stream);
+            (0, save_pixels_1.default)(nd, 'PNG').pipe(stream);
         });
     }
     async startExport(format) {
-        this.tmp = path_1.join(os_1.tmpdir(), uuid_1.v4());
+        this.tmp = (0, path_1.join)((0, os_1.tmpdir)(), (0, uuid_1.v4)());
         this.format = format;
         try {
-            await fs_extra_1.mkdir(this.tmp);
+            await (0, fs_extra_1.mkdir)(this.tmp);
         }
         catch (err) {
             throw err;
@@ -71,7 +71,7 @@ class Visualize {
         return true;
     }
     async endExport(onProgress) {
-        const inputPath = path_1.join(this.tmp, `%8d.png`);
+        const inputPath = (0, path_1.join)(this.tmp, `%8d.png`);
         let tmpVideo;
         let ext;
         if (this.format === 'prores3') {
@@ -89,7 +89,7 @@ class Visualize {
         }
         try {
             //@ts-ignore
-            await fs_extra_1.rmdir(this.tmp, { recursive: true });
+            await (0, fs_extra_1.rmdir)(this.tmp, { recursive: true });
         }
         catch (err) {
             throw err;
