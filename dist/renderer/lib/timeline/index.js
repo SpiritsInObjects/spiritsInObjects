@@ -3,7 +3,7 @@ const electronPrompt = require('electron-prompt');
 const { extname } = require('path');
 const uuid = require('uuid').v4;
 class Timeline {
-    constructor(ui, onBin) {
+    constructor(ui, onBin, onPreview) {
         this.canvas = document.getElementById('tCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.display = document.getElementById('tCanvasDisplay');
@@ -26,6 +26,9 @@ class Timeline {
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
         this.playing = {};
+        this.currentHash = 0;
+        this.renderingPreview = false;
+        this.displayingPreview = false;
         this.silence = {
             sampleRate: 0
         };
@@ -39,6 +42,7 @@ class Timeline {
             get: () => { return false; }
         };
         this.onBin = onBin;
+        this.onPreview = onPreview;
     }
     bindListeners() {
         this.binElement.addEventListener('click', this.openBin.bind(this));
@@ -67,6 +71,36 @@ class Timeline {
                 targetElement = targetElement.parentElement;
             }
         }, true);
+    }
+    hash() {
+        const str = this.timeline.length > 0 ? this.timeline.join('') : '';
+        let hash = 0;
+        let char;
+        if (str.length == 0) {
+            return hash;
+        }
+        for (let i = 0; i < str.length; i++) {
+            char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
+    addClass(elem, className) {
+        try {
+            elem.classList.add(className);
+        }
+        catch (err) {
+            //
+        }
+    }
+    removeClass(elem, className) {
+        try {
+            elem.classList.remove(className);
+        }
+        catch (err) {
+            //
+        }
     }
     clickFrame(evt) {
         //@ts-ignore
@@ -634,6 +668,19 @@ class Timeline {
     preview() {
         const timeline = this.timeline.map((step) => (step && step.id) ? step.id : null);
         return timeline;
+    }
+    checkPreview() {
+        let newHash = this.hash();
+        if (this.currentHash !== newHash) {
+            this.currentHash = newHash;
+            if (!this.renderingPreview) {
+                this.renderingPreview = true;
+                this.onPreview();
+            }
+        }
+    }
+    onPreviewComplete(args) {
+        console.dir(args);
     }
     play() {
     }

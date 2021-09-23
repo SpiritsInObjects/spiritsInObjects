@@ -13,8 +13,8 @@ const wavefile_1 = require("wavefile");
 const uuid_1 = require("uuid");
 class Timeline {
     constructor(ffmpeg) {
-        this.tmpDir = path_1.join(os_1.tmpdir(), 'siotimeline');
-        this.binDir = path_1.join(os_1.tmpdir(), 'siobin');
+        this.tmpDir = (0, path_1.join)((0, os_1.tmpdir)(), 'siotimeline');
+        this.binDir = (0, path_1.join)((0, os_1.tmpdir)(), 'siobin');
         this.cancelled = false;
         this.ffmpeg = ffmpeg;
         this.initDirs();
@@ -40,7 +40,7 @@ class Timeline {
     }
     async makeTmp(dir) {
         try {
-            await fs_extra_1.mkdir(dir, { recursive: true });
+            await (0, fs_extra_1.mkdir)(dir, { recursive: true });
         }
         catch (err) {
             console.error(err);
@@ -49,7 +49,7 @@ class Timeline {
     async emptyTmp(dir) {
         let files;
         try {
-            files = await fs_extra_1.readdir(dir);
+            files = await (0, fs_extra_1.readdir)(dir);
         }
         catch (err) {
             throw err;
@@ -57,7 +57,7 @@ class Timeline {
         }
         for (const file of files) {
             try {
-                await fs_extra_1.unlink(path_1.join(dir, file));
+                await (0, fs_extra_1.unlink)((0, path_1.join)(dir, file));
             }
             catch (err) {
                 throw err;
@@ -66,10 +66,10 @@ class Timeline {
         }
     }
     async exportFrame(id, data, width, height) {
-        const framePath = path_1.join(this.binDir, `${id}.png`);
-        const nd = ndarray_1.default(data, [width, height, 4], [4, width * 4, 1]);
+        const framePath = (0, path_1.join)(this.binDir, `${id}.png`);
+        const nd = (0, ndarray_1.default)(data, [width, height, 4], [4, width * 4, 1]);
         return new Promise((resolve, reject) => {
-            const stream = fs_extra_1.createWriteStream(framePath);
+            const stream = (0, fs_extra_1.createWriteStream)(framePath);
             stream.on('finish', function () {
                 stream.close(() => {
                     resolve(framePath);
@@ -77,20 +77,20 @@ class Timeline {
             });
             stream.on('error', async (err) => {
                 try {
-                    await fs_extra_1.unlink(framePath);
+                    await (0, fs_extra_1.unlink)(framePath);
                 }
                 catch (err) {
                     console.error(err);
                 }
                 reject(err);
             });
-            save_pixels_1.default(nd, 'PNG').pipe(stream);
+            (0, save_pixels_1.default)(nd, 'PNG').pipe(stream);
         });
     }
     async copyFrame(id, filePath) {
-        const framePath = path_1.join(this.binDir, `${id}.png`);
+        const framePath = (0, path_1.join)(this.binDir, `${id}.png`);
         try {
-            await fs_extra_1.copy(filePath, framePath);
+            await (0, fs_extra_1.copy)(filePath, framePath);
         }
         catch (err) {
             console.error(err);
@@ -98,11 +98,11 @@ class Timeline {
         return framePath;
     }
     async exportAudio(id, samples) {
-        const audioPath = path_1.join(this.binDir, `${id}.wav`);
+        const audioPath = (0, path_1.join)(this.binDir, `${id}.wav`);
         const wav = new wavefile_1.WaveFile();
         wav.fromScratch(1, samples.length * 24, '32f', samples);
         try {
-            await fs_extra_1.writeFile(audioPath, wav.toBuffer());
+            await (0, fs_extra_1.writeFile)(audioPath, wav.toBuffer());
         }
         catch (err) {
             console.error(err);
@@ -120,10 +120,10 @@ class Timeline {
                 frame = 'blank';
             }
             paddedNum = `${frameNumber}`.padStart(8, '0');
-            framePath = path_1.join(this.tmpDir, `${paddedNum}.${ext}`);
-            binPath = path_1.join(this.binDir, `${frame}.${ext}`);
+            framePath = (0, path_1.join)(this.tmpDir, `${paddedNum}.${ext}`);
+            binPath = (0, path_1.join)(this.binDir, `${frame}.${ext}`);
             try {
-                await fs_extra_1.copy(binPath, framePath);
+                await (0, fs_extra_1.copy)(binPath, framePath);
             }
             catch (err) {
                 console.error(err);
@@ -149,10 +149,10 @@ class Timeline {
                 frame = 'silence';
             }
             paddedNum = `${frameNumber}`.padStart(8, '0');
-            framePath = path_1.join(this.tmpDir, `${paddedNum}.${ext}`);
-            binPath = path_1.join(this.binDir, `${frame}.${ext}`);
+            framePath = (0, path_1.join)(this.tmpDir, `${paddedNum}.${ext}`);
+            binPath = (0, path_1.join)(this.binDir, `${frame}.${ext}`);
             try {
-                await fs_extra_1.copy(binPath, framePath);
+                await (0, fs_extra_1.copy)(binPath, framePath);
             }
             catch (err) {
                 console.error(err);
@@ -168,10 +168,10 @@ class Timeline {
         return fileList;
     }
     async export(timeline, tmpVideo, onProgress) {
-        let id = uuid_1.v4();
+        let id = (0, uuid_1.v4)();
         let success = false;
-        let tmpAudio = path_1.join(this.tmpDir, `${id}.wav`);
-        let framesPath = path_1.join(this.tmpDir, `%08d.png`);
+        let tmpAudio = (0, path_1.join)(this.tmpDir, `${id}.wav`);
+        let framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
         let audioList;
         try {
             await this.emptyTmp(this.tmpDir);
@@ -190,7 +190,35 @@ class Timeline {
         }
         await this.ffmpeg.concatAudio(audioList, tmpAudio, onProgress);
         await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
-        await fs_extra_1.unlink(tmpAudio);
+        await (0, fs_extra_1.unlink)(tmpAudio);
+        return success;
+    }
+    async preview(args, tmpVideo) {
+        const id = (0, uuid_1.v4)();
+        const timeline = args.timeline;
+        let success = false;
+        let tmpAudio = (0, path_1.join)(this.tmpDir, `preview_${id}.wav`);
+        let framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
+        let audioList;
+        try {
+            await this.emptyTmp(this.tmpDir);
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        success = await this.images(timeline);
+        if (!success)
+            return success;
+        audioList = await this.audio(timeline);
+        if (!audioList) {
+            success = false;
+            return success;
+        }
+        await this.ffmpeg.concatAudio(audioList, tmpAudio, () => { });
+        console.log(args);
+        //await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', () => {});
+        await (0, fs_extra_1.unlink)(tmpAudio);
         return success;
     }
     cancel() {

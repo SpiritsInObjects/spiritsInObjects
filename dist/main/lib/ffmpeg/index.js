@@ -11,6 +11,7 @@ const bin = require('ffmpeg-static');
 const ffprobe = require('ffprobe-static').path;
 let tmp;
 let subprocess = null;
+let background = null;
 class ffmpeg {
     static async info(filePath) {
         const args = [
@@ -22,7 +23,7 @@ class ffmpeg {
         ];
         let res;
         try {
-            res = await spawnAsync_1.spawnAsync(ffprobe, args);
+            res = await (0, spawnAsync_1.spawnAsync)(ffprobe, args);
         }
         catch (err) {
             console.error(err);
@@ -31,7 +32,7 @@ class ffmpeg {
         return JSON.parse(res.stdout);
     }
     static hash(data) {
-        return crypto_1.createHash('sha1').update(data).digest('hex');
+        return (0, crypto_1.createHash)('sha1').update(data).digest('hex');
     }
     static parseStderr(line) {
         //frame= 6416 fps= 30 q=31.0 size=   10251kB time=00:03:34.32 bitrate= 391.8kbits/s speed=   1x
@@ -58,15 +59,15 @@ class ffmpeg {
         return obj;
     }
     static async exportPath() {
-        tmp = path_1.join(os_1.tmpdir(), 'sio');
+        tmp = (0, path_1.join)((0, os_1.tmpdir)(), 'sio');
         try {
-            await fs_extra_1.rmdirSync(tmp, { recursive: true });
+            await (0, fs_extra_1.rmdirSync)(tmp, { recursive: true });
         }
         catch (err) {
             console.error(err);
         }
         try {
-            await fs_extra_1.mkdir(tmp);
+            await (0, fs_extra_1.mkdir)(tmp);
         }
         catch (err) {
             console.error(err);
@@ -76,7 +77,7 @@ class ffmpeg {
     static async exportFrames(filePath, onProgress = () => { }) {
         const hash = this.hash(filePath);
         const input = {};
-        const output = path_1.join(tmp, `${hash}-export-%08d.png`);
+        const output = (0, path_1.join)(tmp, `${hash}-export-%08d.png`);
         const args = [
             '-i', filePath,
             '-compression_algo', 'raw',
@@ -87,10 +88,11 @@ class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            subprocess = child_process_1.spawn(bin, args);
+            subprocess = (0, child_process_1.spawn)(bin, args);
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -116,7 +118,7 @@ class ffmpeg {
     }
     static exportFramePath(hash, frameNum) {
         const padded = `${frameNum}`.padStart(8, '0');
-        return path_1.join(tmp, `${hash}-export-${padded}.png`);
+        return (0, path_1.join)(tmp, `${hash}-export-${padded}.png`);
     }
     /**
      * Export a single frame from a video.
@@ -127,7 +129,7 @@ class ffmpeg {
     static async exportFrame(filePath, frameNum) {
         const padded = `${frameNum}`.padStart(8, '0');
         const hash = this.hash(filePath);
-        const output = path_1.join(tmp, `${hash}-export-${padded}.png`);
+        const output = (0, path_1.join)(tmp, `${hash}-export-${padded}.png`);
         const args = [
             '-i', filePath,
             '-vf', `select='gte(n\\,${frameNum})'`,
@@ -140,7 +142,7 @@ class ffmpeg {
         ];
         let res;
         try {
-            res = await spawnAsync_1.spawnAsync(bin, args);
+            res = await (0, spawnAsync_1.spawnAsync)(bin, args);
         }
         catch (err) {
             throw err;
@@ -180,10 +182,11 @@ class ffmpeg {
         ]);
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            subprocess = child_process_1.spawn(bin, args);
+            subprocess = (0, child_process_1.spawn)(bin, args);
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -218,10 +221,11 @@ class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            subprocess = child_process_1.spawn(bin, args);
+            subprocess = (0, child_process_1.spawn)(bin, args);
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(output);
                 }
@@ -247,12 +251,12 @@ class ffmpeg {
     }
     static async concatAudio(audioTimeline, tmpAudio, onProgress = () => { }) {
         let fileList;
-        let tmpList = path_1.join(os_1.tmpdir(), 'sioaudiofilelist.txt');
+        let tmpList = (0, path_1.join)((0, os_1.tmpdir)(), 'sioaudiofilelist.txt');
         fileList = audioTimeline.map((file) => {
             return `file '${file}'`;
         });
         try {
-            await fs_extra_1.writeFile(tmpList, fileList.join('\n'), 'utf8');
+            await (0, fs_extra_1.writeFile)(tmpList, fileList.join('\n'), 'utf8');
         }
         catch (err) {
             console.error(err);
@@ -266,7 +270,7 @@ class ffmpeg {
             return false;
         }
         try {
-            await fs_extra_1.unlink(tmpList);
+            await (0, fs_extra_1.unlink)(tmpList);
         }
         catch (err) {
             console.error(err);
@@ -286,10 +290,11 @@ class ffmpeg {
         ];
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            subprocess = child_process_1.spawn(bin, args);
+            subprocess = (0, child_process_1.spawn)(bin, args);
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(output);
                 }
@@ -353,10 +358,11 @@ class ffmpeg {
         let res;
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve, reject) => {
-            subprocess = child_process_1.spawn(bin, args);
+            subprocess = (0, child_process_1.spawn)(bin, args);
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 }
@@ -372,7 +378,6 @@ class ffmpeg {
             subprocess.stderr.on('data', (data) => {
                 const line = data.toString();
                 const obj = this.parseStderr(line);
-                let estimated;
                 if (obj.frame) {
                     onProgress(obj);
                 }
@@ -388,7 +393,7 @@ class ffmpeg {
         let cancelled = false;
         if (subprocess && typeof subprocess['kill'] !== 'undefined') {
             try {
-                await spawnAsync_1.killSubprocess(subprocess);
+                await (0, spawnAsync_1.killSubprocess)(subprocess);
                 subprocess = null;
                 cancelled = true;
             }

@@ -2,9 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.killSubprocess = exports.spawnAsync = void 0;
 const child_process_1 = require("child_process");
+/**
+ * Execute a command asyncronously using a Promise so that it can
+ * be awaited without the same locking behavior that execSync does.
+ *
+ * @param {string} bin Path to binary
+ * @param {array} args Array of arguments for command
+ *
+ * @returns {object} Standard outputs or just error
+ **/
 async function spawnAsync(bin, args) {
     return new Promise((resolve, reject) => {
-        const child = child_process_1.spawn(bin, args);
+        const child = (0, child_process_1.spawn)(bin, args);
         let stdout = '';
         let stderr = '';
         child.on('exit', (code) => {

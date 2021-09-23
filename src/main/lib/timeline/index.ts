@@ -5,6 +5,7 @@ import { join } from 'path';
 import { readdir, mkdir, unlink, copy, createWriteStream, writeFile } from 'fs-extra';
 import savePixels from 'save-pixels';
 import ndarray from 'ndarray';
+import type { NdArray } from 'ndarray';
 import { WaveFile } from 'wavefile';
 import { v4 as uuid } from 'uuid';
 
@@ -69,7 +70,7 @@ export class Timeline{
 
 	public async exportFrame (id : string, data : any[], width : number, height : number) : Promise<string> {
 		const framePath : string = join(this.binDir, `${id}.png`);
-		const nd : ndarray = ndarray(data, [width, height, 4], [4, width * 4, 1]);
+		const nd : NdArray = ndarray(data, [width, height, 4], [4, width * 4, 1]);
 
 		return new Promise((resolve : Function, reject: Function) => {
 			const stream : any = createWriteStream(framePath);
@@ -211,6 +212,41 @@ export class Timeline{
 		await this.ffmpeg.concatAudio(audioList, tmpAudio, onProgress);
 
 		await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
+
+		await unlink(tmpAudio);
+
+		return success;
+
+	}
+
+	public async preview (args : any, tmpVideo : string) : Promise <boolean> {
+		const id : string = uuid();
+		const timeline : string[] = args.timeline;
+		let success : boolean = false;
+		let tmpAudio : string = join(this.tmpDir, `preview_${id}.wav`);
+		let framesPath : string = join(this.tmpDir, `%08d.png`);
+		let audioList : string[];
+
+		try {
+			await this.emptyTmp(this.tmpDir);
+		} catch (err) {
+			console.error(err);
+			return false;
+		}
+
+		success = await this.images(timeline);
+		if (!success) return success;
+
+		audioList = await this.audio(timeline);
+		if (!audioList) {
+			success = false;
+			return success;
+		}
+
+		await this.ffmpeg.concatAudio(audioList, tmpAudio, () => {});
+
+		console.log(args);
+		//await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', () => {});
 
 		await unlink(tmpAudio);
 

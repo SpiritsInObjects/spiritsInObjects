@@ -810,8 +810,19 @@ function keyDown (evt : KeyboardEvent) {
     console.log(evt.code);
 }
 
-function onBin (bi : any, image : any) {
+function onTimelineBin (bi : any, image : any) {
     ipcRenderer.send('bin', { bi, image } );
+}
+
+function onTimelinePreview () {
+    let tl : string[] = timeline.preview();
+    if (tl.length > 0) {
+        ipcRenderer.send('timeline_preview', { timeline : tl });
+    }
+}
+
+function onTimelinePreviewComplete (evt : Event, args : any) {
+    timeline.onPreviewComplete(args);
 }
 
 function bindListeners () {
@@ -896,10 +907,11 @@ function bindListeners () {
     ui = new UI(state);
     video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
+    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
     visualize = new Visualize(state, audioContext);
-    timeline = new Timeline(ui, onBin);
+    timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);
 
     bindListeners();
+    console.log('renderer started');
 
 })()

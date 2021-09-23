@@ -14,7 +14,7 @@ class Fluidsynth {
         let res;
         try {
             console.log(`${this.bin} ${args.join(' ')}`);
-            res = await spawnAsync_1.spawnAsync(this.bin, args);
+            res = await (0, spawnAsync_1.spawnAsync)(this.bin, args);
         }
         catch (err) {
             if (err.errno === 'ENOENT') {
@@ -46,7 +46,7 @@ class Fluidsynth {
         }
         try {
             console.log(`${this.bin} ${args.join(' ')}`);
-            res = await spawnAsync_1.spawnAsync(this.bin, args);
+            res = await (0, spawnAsync_1.spawnAsync)(this.bin, args);
         }
         catch (err) {
             console.error(`${this.bin} ${args.join(' ')}`);

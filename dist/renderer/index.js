@@ -150,7 +150,7 @@ class Files {
         const options = {
             title: `Select video, image or audio file`,
             properties: [`openFile`],
-            defaultPath: lastDir === '' ? os_1.homedir() : lastDir,
+            defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir,
             filters: [
                 {
                     name: 'All Files',
@@ -176,7 +176,7 @@ class Files {
         let valid = true;
         let type = 'video';
         let ext;
-        ext = path_1.extname(filePath.toLowerCase());
+        ext = (0, path_1.extname)(filePath.toLowerCase());
         if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
             valid = true;
         }
@@ -201,7 +201,7 @@ class Files {
             ui.page('visualize');
             this.setVisualize(filePath, type);
         }
-        lastDir = path_1.dirname(filePath);
+        lastDir = (0, path_1.dirname)(filePath);
     }
     async setSonify(filePath, type) {
         const elem = fileSourceProxy;
@@ -223,7 +223,7 @@ class Files {
     }
     async saveAudio(filePath) {
         const options = {
-            defaultPath: lastDir === '' ? os_1.homedir() : lastDir,
+            defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir,
         };
         let savePath;
         try {
@@ -234,13 +234,13 @@ class Files {
         }
         if (savePath) {
             savePath.filePath = await this.validatePathAudio(savePath.filePath);
-            lastDir = path_1.dirname(savePath.filePath);
+            lastDir = (0, path_1.dirname)(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
     async validatePathAudio(savePath) {
         const saveExt = '.wav';
-        const ext = path_1.extname(savePath);
+        const ext = (0, path_1.extname)(savePath);
         let proceed = false;
         let i;
         if (ext === '') {
@@ -264,7 +264,7 @@ class Files {
     }
     async saveVideo(filePath) {
         const options = {
-            defaultPath: lastDir === '' ? os_1.homedir() : lastDir
+            defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir
         };
         let savePath;
         try {
@@ -275,13 +275,13 @@ class Files {
         }
         if (savePath) {
             savePath.filePath = await this.validatePathVideo(savePath.filePath);
-            lastDir = path_1.dirname(savePath.filePath);
+            lastDir = (0, path_1.dirname)(savePath.filePath);
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
     async validatePathVideo(savePath) {
         const saveExt = videoFormatMap[visualize.format];
-        const ext = path_1.extname(savePath);
+        const ext = (0, path_1.extname)(savePath);
         let proceed = false;
         let i;
         if (ext === '') {
@@ -706,8 +706,17 @@ function keyDown(evt) {
     }
     console.log(evt.code);
 }
-function onBin(bi, image) {
+function onTimelineBin(bi, image) {
     ipcRenderer.send('bin', { bi, image });
+}
+function onTimelinePreview() {
+    let tl = timeline.preview();
+    if (tl.length > 0) {
+        ipcRenderer.send('timeline_preview', { timeline: tl });
+    }
+}
+function onTimelinePreviewComplete(evt, args) {
+    timeline.onPreviewComplete(args);
 }
 function bindListeners() {
     dropArea = document.getElementById('dragOverlay');
@@ -774,9 +783,10 @@ function bindListeners() {
     ui = new UI(state);
     video = new Video(state, ui);
     camera = new Camera(video);
-    sonify = new Sonify(state, video.canvas, audioContext); //need to refsth when settings change
+    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
     visualize = new Visualize(state, audioContext);
-    timeline = new Timeline(ui, onBin);
+    timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);
     bindListeners();
+    console.log('renderer started');
 })();
 //# sourceMappingURL=index.js.map

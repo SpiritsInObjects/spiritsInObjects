@@ -34,7 +34,7 @@ let CHILD : any = null;
 unhandled();
 contextMenu();
 
-if (is.development) {
+if (is.development && process.argv.indexOf('--prod') === -1) {
 	debug();
 }
 
@@ -487,6 +487,24 @@ ipcMain.on('timeline_export', async (evt : Event, args : any) => {
 	TMP.files.push(tmpVideo);
 
 	mainWindow.webContents.send('timeline_export_complete', { success, tmpVideo })
+});
+
+ipcMain.on('timeline_preview', async (evt : Event, args : any) => {
+	const id : string = uuid();
+	let success : boolean = false;
+	let tmpVideo : string = pathJoin(tmpdir(), `timeline_preview.mp4`);
+
+	try {
+		success = await timeline.preview(args, tmpVideo);
+	} catch (err) {
+		console.error(err);
+		return mainWindow.webContents.send('timeline_export_complete', { success })
+	}
+
+	if (TMP.files.indexOf(tmpVideo) === -1) {
+		TMP.files.push(tmpVideo);
+	}
+	mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo })
 });
 
 nodeCleanup((exitCode : any, signal : string) => {

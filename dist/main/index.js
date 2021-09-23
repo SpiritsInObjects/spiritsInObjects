@@ -29,15 +29,15 @@ const TMP = {
 };
 let CANCEL = false;
 let CHILD = null;
-electron_unhandled_1.default();
-electron_context_menu_1.default();
-if (electron_util_1.is.development) {
-    electron_debug_1.default();
+(0, electron_unhandled_1.default)();
+(0, electron_context_menu_1.default)();
+if (electron_util_1.is.development && process.argv.indexOf('--prod') === -1) {
+    (0, electron_debug_1.default)();
 }
 electron_1.app.setAppUserModelId('spiritsinobjects');
 async function pixels(filePath) {
     return new Promise((resolve, reject) => {
-        return get_pixels_1.default(filePath, (err, imageData) => {
+        return (0, get_pixels_1.default)(filePath, (err, imageData) => {
             if (err) {
                 return reject(err);
             }
@@ -46,7 +46,7 @@ async function pixels(filePath) {
     });
 }
 function hashStr(str) {
-    return crypto_1.createHash('sha1').update(str).digest('hex');
+    return (0, crypto_1.createHash)('sha1').update(str).digest('hex');
 }
 async function sonify(args) {
     const startTime = +new Date();
@@ -116,7 +116,7 @@ async function sonify(args) {
             filePath = args.state.filePath;
         }
         try {
-            tmpExists = await fs_extra_1.pathExists(filePath);
+            tmpExists = await (0, fs_extra_1.pathExists)(filePath);
         }
         catch (err) {
             console.error(err);
@@ -139,7 +139,7 @@ async function sonify(args) {
         arr.set(arrBuffer, i * arrBuffer.length);
         if (args.state.type === 'video') {
             try {
-                fs_extra_1.unlink(filePath);
+                (0, fs_extra_1.unlink)(filePath);
             }
             catch (err) {
                 console.error(err);
@@ -155,10 +155,10 @@ async function sonify(args) {
     console.log(`All frames exported and sonified for ${args.state.filePath}`);
     wav.fromScratch(1, args.state.samplerate, '32f', arr);
     console.log('Created wav from raw sample data');
-    tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
-    normalAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_normal_audio.wav`);
+    tmpAudio = (0, path_1.join)((0, os_1.tmpdir)(), `${(0, uuid_1.v4)()}_tmp_audio.wav`);
+    normalAudio = (0, path_1.join)((0, os_1.tmpdir)(), `${(0, uuid_1.v4)()}_normal_audio.wav`);
     try {
-        await fs_extra_1.writeFile(tmpAudio, wav.toBuffer());
+        await (0, fs_extra_1.writeFile)(tmpAudio, wav.toBuffer());
         console.log(`Saved temporary audio file to ${tmpAudio}`);
     }
     catch (err) {
@@ -211,7 +211,7 @@ const createMainWindow = async () => {
     });
     //for linux
     win.setResizable(false);
-    await win.loadFile(path_1.join(__dirname, '../views/index.html'));
+    await win.loadFile((0, path_1.join)(__dirname, '../views/index.html'));
     return win;
 };
 // Prevent multiple instances of the app
@@ -277,7 +277,7 @@ electron_1.ipcMain.on('info', async (evt, args) => {
 electron_1.ipcMain.on('preview', async (evt, args) => {
     const filePath = args.filePath;
     const pathHash = hashStr(filePath);
-    const tmpVideo = path_1.join(os_1.tmpdir(), `${pathHash}_tmp_video.mkv`);
+    const tmpVideo = (0, path_1.join)((0, os_1.tmpdir)(), `${pathHash}_tmp_video.mkv`);
     const frameStart = +new Date();
     const width = args.width;
     const height = args.height;
@@ -289,7 +289,7 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
         mainWindow.webContents.send('preview_progress', { ms, frameNumber: obj.frame });
     }
     try {
-        tmpExists = await fs_extra_1.pathExists(tmpVideo);
+        tmpExists = await (0, fs_extra_1.pathExists)(tmpVideo);
     }
     catch (err) {
         console.error(err);
@@ -313,7 +313,7 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
 electron_1.ipcMain.on('save', async (evt, args) => {
     if (args.savePath && !args.savePath.canceled) {
         try {
-            await fs_extra_1.copyFile(args.filePath, args.savePath.filePath);
+            await (0, fs_extra_1.copyFile)(args.filePath, args.savePath.filePath);
             console.log(`Saved file as ${args.savePath.filePath}`);
         }
         catch (err) {
@@ -322,7 +322,7 @@ electron_1.ipcMain.on('save', async (evt, args) => {
     }
 });
 electron_1.ipcMain.on('process_audio', async (evt, args) => {
-    const tmpAudio = path_1.join(os_1.tmpdir(), `${uuid_1.v4()}_tmp_audio.wav`);
+    const tmpAudio = (0, path_1.join)((0, os_1.tmpdir)(), `${(0, uuid_1.v4)()}_tmp_audio.wav`);
     const frameStart = +new Date();
     let info = {};
     let success = false;
@@ -412,9 +412,9 @@ electron_1.ipcMain.on('bin', async (evt, args) => {
 });
 electron_1.ipcMain.on('timeline_export', async (evt, args) => {
     const frameStart = +new Date();
-    const id = uuid_1.v4();
+    const id = (0, uuid_1.v4)();
     let success = false;
-    let tmpVideo = path_1.join(os_1.tmpdir(), `timeline_${id}.mov`);
+    let tmpVideo = (0, path_1.join)((0, os_1.tmpdir)(), `timeline_${id}.mov`);
     function onProgress(obj) {
         const ms = ((+new Date()) - frameStart) / obj.frame;
         mainWindow.webContents.send('timeline_export_progress', { ms, frameNumber: obj.frame });
@@ -429,12 +429,28 @@ electron_1.ipcMain.on('timeline_export', async (evt, args) => {
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('timeline_export_complete', { success, tmpVideo });
 });
-node_cleanup_1.default((exitCode, signal) => {
+electron_1.ipcMain.on('timeline_preview', async (evt, args) => {
+    const id = (0, uuid_1.v4)();
+    let success = false;
+    let tmpVideo = (0, path_1.join)((0, os_1.tmpdir)(), `timeline_preview.mp4`);
+    try {
+        success = await timeline.preview(args, tmpVideo);
+    }
+    catch (err) {
+        console.error(err);
+        return mainWindow.webContents.send('timeline_export_complete', { success });
+    }
+    if (TMP.files.indexOf(tmpVideo) === -1) {
+        TMP.files.push(tmpVideo);
+    }
+    mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo });
+});
+(0, node_cleanup_1.default)((exitCode, signal) => {
     let exists = false;
     console.log(`Cleaning up on exit code ${exitCode}...`);
     for (let dir of TMP.dirs) {
         try {
-            fs_extra_1.rmdirSync(dir, { recursive: true });
+            (0, fs_extra_1.rmdirSync)(dir, { recursive: true });
             console.log(`Removed directory ${dir}`);
         }
         catch (err) {
@@ -443,14 +459,14 @@ node_cleanup_1.default((exitCode, signal) => {
     }
     for (let file of TMP.files) {
         try {
-            exists = fs_extra_1.existsSync(file);
+            exists = (0, fs_extra_1.existsSync)(file);
         }
         catch (err) {
             console.error(err);
         }
         if (exists) {
             try {
-                fs_extra_1.unlinkSync(file);
+                (0, fs_extra_1.unlinkSync)(file);
                 console.log(`Removed ${file}`);
             }
             catch (err) {
@@ -461,7 +477,7 @@ node_cleanup_1.default((exitCode, signal) => {
     console.log(`Exiting spiritsInObjects...`);
 });
 (async () => {
-    const menu = menu_1.createMenu();
+    const menu = (0, menu_1.createMenu)();
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();

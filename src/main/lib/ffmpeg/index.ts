@@ -1,6 +1,6 @@
 'use strict';
 
-import { spawn } from 'child_process';
+import { spawn, ChildProcessWithoutNullStreams} from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdir, unlink, rmdirSync, writeFile } from 'fs-extra';
@@ -12,7 +12,8 @@ const ffprobe : string = require('ffprobe-static').path;
 let tmp : string;
 
 
-let subprocess : any = null;
+let subprocess : ChildProcessWithoutNullStreams = null;
+let background : ChildProcessWithoutNullStreams = null;
 
 export class ffmpeg {
     static async info (filePath : string) : Promise<any> {
@@ -97,9 +98,10 @@ export class ffmpeg {
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
             subprocess = spawn(bin, args);
-            let stdout = '';
-            let stderr = '';
+            let stdout : string = '';
+            let stderr : string = '';
             subprocess.on('exit', (code : number) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -197,9 +199,10 @@ export class ffmpeg {
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
             subprocess = spawn(bin, args);
-            let stdout = '';
-            let stderr = '';
+            let stdout : string = '';
+            let stderr : string = '';
             subprocess.on('exit', (code : number) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -236,9 +239,10 @@ export class ffmpeg {
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
             subprocess = spawn(bin, args);
-            let stdout = '';
-            let stderr = '';
+            let stdout : string = '';
+            let stderr : string = '';
             subprocess.on('exit', (code : number) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(output);
                 } else {
@@ -311,6 +315,7 @@ export class ffmpeg {
             let stdout = '';
             let stderr = '';
             subprocess.on('exit', (code : number) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(output);
                 } else {
@@ -381,9 +386,10 @@ export class ffmpeg {
         console.log(`${bin} ${args.join(' ')}`);
         return new Promise((resolve : Function, reject : Function) => {
             subprocess = spawn(bin, args);
-            let stdout = '';
-            let stderr = '';
+            let stdout : string = '';
+            let stderr : string = '';
             subprocess.on('exit', (code : number) => {
+                subprocess = null;
                 if (code === 0) {
                     return resolve(tmp);
                 } else {
@@ -398,7 +404,6 @@ export class ffmpeg {
             subprocess.stderr.on('data', (data : string) => {
                 const line : string = data.toString();
                 const obj : StdErr = this.parseStderr(line);
-                let estimated : any;
                 if (obj.frame) {
                     onProgress(obj);
                 }

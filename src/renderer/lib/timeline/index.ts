@@ -44,6 +44,11 @@ class Timeline {
 	private selectedBin : string;
 	private onBin : Function;
 
+	private currentHash : number = 0;
+	private renderingPreview : boolean = false;
+	private displayingPreview : boolean = false;
+	private onPreview : Function;
+
 	private silence : any = {
 		sampleRate : 0
 	};
@@ -52,13 +57,14 @@ class Timeline {
 		height: 0
 	};
 
-	constructor (ui : any, onBin : Function) {
+	constructor (ui : any, onBin : Function, onPreview : Function) {
 		this.ui = ui;
 		this.bindListeners();
 		this.state = {
 			get : () => { return false }
 		};
 		this.onBin = onBin;
+		this.onPreview = onPreview;
 	}
 
 	private bindListeners () {
@@ -93,6 +99,39 @@ class Timeline {
 			},
 			true
 		);
+	}
+
+	private hash () : number {
+		const str : string = this.timeline.length > 0 ? this.timeline.join('') : '';
+	    let hash : number = 0;
+	    let char : any;
+
+	    if (str.length == 0) {
+	        return hash;
+	    }
+
+	    for (let i = 0; i < str.length; i++) {
+	        char = str.charCodeAt(i);
+	        hash = ((hash<<5)-hash)+char;
+	        hash = hash & hash; // Convert to 32bit integer
+	    }
+	    return hash;
+	}
+
+	private addClass ( elem : HTMLElement, className : string ) {
+		try{
+			elem.classList.add(className);
+		} catch (err) {
+			//
+		}
+	}
+
+	private removeClass ( elem : HTMLElement, className : string ) {
+		try{
+			elem.classList.remove(className);
+		} catch (err) {
+			//
+		}
 	}
 
 	private clickFrame (evt : Event) {
@@ -764,6 +803,21 @@ class Timeline {
 	public preview () {
 		const timeline : string[] = this.timeline.map((step : TimelineStep) => (step && step.id) ? step.id : null );
 		return timeline;
+	}
+
+	private checkPreview () {
+		let newHash : number = this.hash();
+		if (this.currentHash !== newHash) {
+			this.currentHash = newHash;
+			if (!this.renderingPreview) {
+				this.renderingPreview = true;
+				this.onPreview();
+			}
+		}
+	}
+
+	public onPreviewComplete (args : any) {
+		console.dir(args);
 	}
 
 	play () {
