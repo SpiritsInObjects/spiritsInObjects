@@ -92,7 +92,7 @@
     "@types/spin.js": "^3.0.0",
     "@types/uuid": "^8.3.1",
     "chai": "^4.3.4",
-    "electron": "^15.0.0",
+    "electron": "^11.5.0",
     "electron-builder": "^22.11.7",
     "electron-installer-common": "^0.10.3",
     "electron-installer-dmg": "^3.0.0",
