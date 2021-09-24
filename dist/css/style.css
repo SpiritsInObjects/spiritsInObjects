@@ -551,7 +551,7 @@ textarea,
 #videoControl > div:not(.bg),
 #visualizeControl > div:not(.bg),
 #tControl > div:not(.bg) {
-  width: 125px;
+  width: 130px;
   margin: 0 auto;
 }
 #videoControl > div:not(.bg) *:last-child,
@@ -668,6 +668,10 @@ textarea,
 #timelineScreen .tWrapper {
   width: 996px;
   height: 560px;
+}
+#tElement {
+  overflow-y: scroll;
+  height: 347px;
 }
 #tBin {
   height: 380px;

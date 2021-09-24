@@ -3,6 +3,7 @@ const electronPrompt = require('electron-prompt');
 const { extname } = require('path');
 const uuid = require('uuid').v4;
 const { lstat, readdir } = require('fs-extra');
+const { platform } = require('os');
 class Timeline {
     constructor(ui, onBin, onPreview) {
         this.canvas = document.getElementById('tCanvas');
@@ -186,7 +187,7 @@ class Timeline {
             bi = this.getById(id);
         }
         if (bi != null) {
-            this.playFrame(bi.file, false);
+            this.playFrame(bi.key, false);
             this.selectBinImage(bi.id);
         }
         else {
@@ -355,17 +356,11 @@ class Timeline {
         return false;
     }
     async open() {
-        let selectionType = 'multiSelections';
+        const properties = platform() === 'darwin' ? ['openFile', 'openDirectory', 'multiSelections'] : ['multiSelections'];
         const options = {
-            title: `Select video, image or audio file`,
-            properties: [selectionType],
-            defaultPath: this.lastDir === '' ? homedir() : this.lastDir,
-            filters: [
-                {
-                    name: 'All Files',
-                    extensions: ['*']
-                },
-            ]
+            title: `Select image files or a folder of images`,
+            properties,
+            defaultPath: this.lastDir === '' ? homedir() : this.lastDir
         };
         let files;
         try {
@@ -424,7 +419,13 @@ class Timeline {
                     console.error(err);
                 }
                 if (dirFiles) {
-                    files = dirFiles.map((fileName) => {
+                    files = dirFiles.filter((fileName) => {
+                        if (fileName.indexOf('.') === 0) {
+                            return false;
+                        }
+                        return true;
+                    });
+                    files = files.map((fileName) => {
                         return join(baseDir, fileName);
                     });
                 }
