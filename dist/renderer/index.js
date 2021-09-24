@@ -710,9 +710,9 @@ function onTimelineBin(bi, image) {
     ipcRenderer.send('bin', { bi, image });
 }
 function onTimelinePreview() {
-    let tl = timeline.preview();
-    if (tl.length > 0) {
-        ipcRenderer.send('timeline_preview', { timeline: tl });
+    let settings = timeline.preview();
+    if (settings.timeline.length > 0) {
+        ipcRenderer.send('timeline_preview', settings);
     }
 }
 function onTimelinePreviewComplete(evt, args) {
@@ -763,6 +763,7 @@ function bindListeners() {
     ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
     ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
     ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
+    ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
 }
 /**
  * VISUALIZE

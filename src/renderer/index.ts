@@ -2,7 +2,6 @@
 
 import { basename, extname, join, dirname } from 'path';
 import { homedir } from 'os';
-import { lstat, readdir } from 'fs-extra';
 
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
@@ -815,9 +814,9 @@ function onTimelineBin (bi : any, image : any) {
 }
 
 function onTimelinePreview () {
-    let tl : string[] = timeline.preview();
-    if (tl.length > 0) {
-        ipcRenderer.send('timeline_preview', { timeline : tl });
+    let settings : any = timeline.preview();
+    if (settings.timeline.length > 0) {
+        ipcRenderer.send('timeline_preview', settings );
     }
 }
 
@@ -881,6 +880,8 @@ function bindListeners () {
 
     ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
     ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
+
+    ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
 }
 
 /**

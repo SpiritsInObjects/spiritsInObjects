@@ -187,10 +187,10 @@ export class Timeline{
 	}
 
 	public async export (timeline : string[], tmpVideo : string, onProgress : Function) : Promise <boolean> {
-		let id : string = uuid();
+		const id : string = uuid();
+		const tmpAudio : string = join(this.tmpDir, `${id}.wav`);
+		const framesPath : string = join(this.tmpDir, `%08d.png`);
 		let success : boolean = false;
-		let tmpAudio : string = join(this.tmpDir, `${id}.wav`);
-		let framesPath : string = join(this.tmpDir, `%08d.png`);
 		let audioList : string[];
 
 		try {
@@ -222,9 +222,15 @@ export class Timeline{
 	public async preview (args : any, tmpVideo : string) : Promise <boolean> {
 		const id : string = uuid();
 		const timeline : string[] = args.timeline;
+		const tmpAudio : string = join(this.tmpDir, `preview_${id}.wav`);
+		const framesPath : string = join(this.tmpDir, `%08d.png`);
+		const options :PreviewOptions = {
+			width : args.width,
+			height : args.height,
+			audio : tmpAudio,
+			forceScale : true
+		};
 		let success : boolean = false;
-		let tmpAudio : string = join(this.tmpDir, `preview_${id}.wav`);
-		let framesPath : string = join(this.tmpDir, `%08d.png`);
 		let audioList : string[];
 
 		try {
@@ -245,8 +251,7 @@ export class Timeline{
 
 		await this.ffmpeg.concatAudio(audioList, tmpAudio, () => {});
 
-		console.log(args);
-		//await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', () => {});
+		await this.ffmpeg.exportPreview (framesPath, tmpVideo, options);
 
 		await unlink(tmpAudio);
 

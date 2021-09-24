@@ -23,6 +23,30 @@ video::webkit-media-controls {
 .noselect {
   user-select: none;
 }
+.btn {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  height: 24px;
+  line-height: 13px;
+  margin-top: 11px;
+  font-size: 12px;
+  border-top: 1px solid #5d616a;
+  border-left: 1px solid #5d616a;
+  border-bottom: 1px solid #f2f2f3;
+  border-right: 1px solid #f2f2f3;
+  border-radius: 20px;
+  color: #2b2b2b;
+  background: #cecdd3;
+}
+.btn:active,
+.btn.active {
+  background: #f6f6f7;
+  border-top: 1px solid #f2f2f3;
+  border-left: 1px solid #f2f2f3;
+  border-bottom: 1px solid #5d616a;
+  border-right: 1px solid #5d616a;
+}
 #menu {
   box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
   margin: 0;
@@ -172,32 +196,6 @@ video::webkit-media-controls {
   right: 0;
   width: 385px !important;
   overflow: hidden;
-}
-#sonifyControl button,
-#vSonifyControl button {
-  -webkit-appearance: none;
-  outline: none;
-  height: 24px;
-  line-height: 24px;
-  margin-top: 11px;
-  font-size: 12px;
-  border-top: 1px solid #5d616a;
-  border-left: 1px solid #5d616a;
-  border-bottom: 1px solid #f2f2f3;
-  border-right: 1px solid #f2f2f3;
-  border-radius: 20px;
-  color: #2b2b2b;
-  background: #cecdd3;
-}
-#sonifyControl button:active,
-#vSonifyControl button:active,
-#sonifyControl button.active,
-#vSonifyControl button.active {
-  background: #f6f6f7;
-  border-top: 1px solid #f2f2f3;
-  border-left: 1px solid #f2f2f3;
-  border-bottom: 1px solid #5d616a;
-  border-right: 1px solid #5d616a;
 }
 #theatre,
 #vTheatre {
@@ -416,6 +414,7 @@ textarea,
 #vSync,
 #tSync {
   -webkit-appearance: none;
+  appearance: none;
   outline: none;
   width: 36px;
   height: 36px;
@@ -424,6 +423,9 @@ textarea,
   background: #dee0e6;
   background: radial-gradient(circle, #dee0e6 0%, #596397 100%);
   box-shadow: inset 1px 2px 2px rgba(0, 0, 0, 0.2), 0 2px 2px rgba(255, 255, 255, 0.4);
+  display: block;
+  float: left;
+  margin-right: 10px;
 }
 #nextFrame img,
 #prevFrame img,
@@ -469,6 +471,29 @@ textarea,
 #tPrevFrame img {
   margin-left: -4px;
 }
+#sync #syncSpinner,
+#vSync #syncSpinner,
+#tSync #syncSpinner,
+#sync #vSyncSpinner,
+#vSync #vSyncSpinner,
+#tSync #vSyncSpinner,
+#sync #tSyncSpinner,
+#vSync #tSyncSpinner,
+#tSync #tSyncSpinner {
+  display: none;
+  width: 22px;
+}
+#sync #syncSpinner .spinner,
+#vSync #syncSpinner .spinner,
+#tSync #syncSpinner .spinner,
+#sync #vSyncSpinner .spinner,
+#vSync #vSyncSpinner .spinner,
+#tSync #vSyncSpinner .spinner,
+#sync #tSyncSpinner .spinner,
+#vSync #tSyncSpinner .spinner,
+#tSync #tSyncSpinner .spinner {
+  position: relative !important;
+}
 #sync[disabled],
 #vSync[disabled],
 #tSync[disabled] {
@@ -494,7 +519,10 @@ textarea,
 #tSync.rendering #syncSpinner,
 #sync.rendering #vSyncSpinner,
 #vSync.rendering #vSyncSpinner,
-#tSync.rendering #vSyncSpinner {
+#tSync.rendering #vSyncSpinner,
+#sync.rendering #tSyncSpinner,
+#vSync.rendering #tSyncSpinner,
+#tSync.rendering #tSyncSpinner {
   display: block;
 }
 #videoControl,
@@ -532,7 +560,7 @@ textarea,
   float: none;
 }
 #tControl .tVideoControls {
-  width: 640px !important;
+  width: 438px !important;
   float: right;
 }
 #overlay {
@@ -651,14 +679,26 @@ textarea,
   width: max-content;
   min-width: 100%;
 }
+#tBin table thead tr {
+  border-bottom: 1px solid #999;
+}
 #tBin table thead th {
   text-align: center;
+  font-size: 13px;
+}
+#tBin table thead th:first-child {
+  border-right: 1px solid #999;
 }
 #tBin table tbody tr td {
   cursor: pointer;
+  font-size: 14px;
 }
 #tBin table tbody tr td:first-child {
   text-align: center;
+  border-right: 1px solid #999;
+}
+#tBin table tbody tr td.name {
+  padding-left: 8px;
 }
 #tBin table tbody tr.selected {
   background: rgba(255, 255, 255, 0.5);
@@ -699,6 +739,14 @@ textarea,
 #tElement .frame.selected {
   background: rgba(255, 255, 0, 0.5);
 }
+#tElement .frame.playing,
+#tElement .frame.playing.selected {
+  background: rgba(100, 100, 255, 0.2);
+}
+#tElement .frame.group,
+#tElement .frame.group.selected {
+  background: rgba(100, 255, 100, 0.5);
+}
 #tElement .btw {
   width: 2px;
   height: 26px;
@@ -730,6 +778,6 @@ textarea,
 #tRemove {
   line-height: 14px;
 }
-#tExport {
+#tLoop {
   float: right !important;
 }

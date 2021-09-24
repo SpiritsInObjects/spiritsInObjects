@@ -60,8 +60,8 @@
                 </div>
                 <div id="sonifyControl">
                     <div>
-                        <button id="sonifyFrame" disabled>Sonify Frame</button>
-                        <button id="sonifyVideo" disabled>Sonify Video</button>
+                        <button id="sonifyFrame" class="btn" disabled>Sonify Frame</button>
+                        <button id="sonifyVideo" class="btn" disabled>Sonify Video</button>
                     </div>
                 </div>
                 <div>
@@ -129,8 +129,8 @@
                 </div>
                 <div id="vSonifyControl">
                     <div>
-                        <button id="sonifyVisualizeBtn" disabled>Play Frame</button>
-                        <button id="visualizeExportBtn" disabled>Export Video</button>
+                        <button id="sonifyVisualizeBtn" class="btn" disabled>Play Frame</button>
+                        <button id="visualizeExportBtn" class="btn" disabled>Export Video</button>
                     </div>
                 </div>
             </div>
@@ -169,7 +169,7 @@
             </div>
             <div class="tWrapper clearfix">
                 <div id="tBin">
-                    <table class="noselect">
+                    <table class="noselect hide">
                         <thead>
                             <tr>
                                 <th>Key</th>
@@ -183,17 +183,19 @@
                     <div id="tPreview">
                         <canvas id="tCanvas"></canvas>
                         <img id="tCanvasDisplay" class="hide" src="#" />
-                        <video id="tPreview" class="hide"></video>
+                        <video id="tPreviewVideo" class="hide"></video>
                     </div>
                 </div>
             </div>
             <div id="tControl">
                 <div class="bg"></div>
-                <button id="tAddBin">Import to Bin</button>
-                <button id="tAddTimeline">Add to Timeline</button>
-                <button id="tCreate">New Timeline</button>
+                <button id="tAddBin" class="btn">Import to Bin</button>
+                <button id="tAddTimeline" class="btn">Add to Timeline</button>
+                <input id="tStepSize" type="number" class="btn" value="1" />
+                <button id="tCreate" class="btn">New Timeline</button>
+                <button id="tExport" class="btn">Export Timeline</button>
                 <div class="tVideoControls">
-                    <button id="tExport">Export Timeline</button>
+                    <button id="tLoop" class="btn">Loop: OFF</button>
                     <div class="tButtons">
                         <button id="tPrevFrame"><img src="../image/navigate_before.svg" title="Previous Frame"></button>
                         <button id="tSync" title="Preview sync" disabled>
@@ -202,15 +204,21 @@
                         </button>
                         <button id="tNextFrame"><img src="../image/navigate_next.svg" title="Next Frame" ></button>
                     </div>
-
+                    <div>
+                        
+                        <!--
+                        <button id="tOffsetAudio"> Audio Offset: ON</button>
+                        <button id="tOffsetImage"> Image Offset: OFF</button>
+                        -->
+                    </div>
                 </div>
+            </div>
+            <div class="clearfix">
+                <button id="tRemove" class="hide">-</button>
+                <button id="tAdd" class="hide">+</button>
             </div>
             <div id="tElement">
                 <div id="tWrapper" class="clearfix"></div>
-                <div class="clearfix">
-                    <button id="tRemove" class="hide">-</button>
-                    <button id="tAdd" class="hide">+</button>
-                </div>
 
             </div>
         </div>

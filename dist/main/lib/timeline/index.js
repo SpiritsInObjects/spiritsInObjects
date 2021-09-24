@@ -168,10 +168,10 @@ class Timeline {
         return fileList;
     }
     async export(timeline, tmpVideo, onProgress) {
-        let id = (0, uuid_1.v4)();
+        const id = (0, uuid_1.v4)();
+        const tmpAudio = (0, path_1.join)(this.tmpDir, `${id}.wav`);
+        const framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
         let success = false;
-        let tmpAudio = (0, path_1.join)(this.tmpDir, `${id}.wav`);
-        let framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
         let audioList;
         try {
             await this.emptyTmp(this.tmpDir);
@@ -196,9 +196,15 @@ class Timeline {
     async preview(args, tmpVideo) {
         const id = (0, uuid_1.v4)();
         const timeline = args.timeline;
+        const tmpAudio = (0, path_1.join)(this.tmpDir, `preview_${id}.wav`);
+        const framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
+        const options = {
+            width: args.width,
+            height: args.height,
+            audio: tmpAudio,
+            forceScale: true
+        };
         let success = false;
-        let tmpAudio = (0, path_1.join)(this.tmpDir, `preview_${id}.wav`);
-        let framesPath = (0, path_1.join)(this.tmpDir, `%08d.png`);
         let audioList;
         try {
             await this.emptyTmp(this.tmpDir);
@@ -216,8 +222,7 @@ class Timeline {
             return success;
         }
         await this.ffmpeg.concatAudio(audioList, tmpAudio, () => { });
-        console.log(args);
-        //await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', () => {});
+        await this.ffmpeg.exportPreview(framesPath, tmpVideo, options);
         await (0, fs_extra_1.unlink)(tmpAudio);
         return success;
     }

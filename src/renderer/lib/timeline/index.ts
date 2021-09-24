@@ -3,6 +3,7 @@
 const electronPrompt = require('electron-prompt');
 const { extname } = require('path');
 const uuid = require('uuid').v4;
+const { lstat, readdir } = require('fs-extra');
 
 class Timeline {
 	private ui : any;
@@ -10,8 +11,14 @@ class Timeline {
 	private canvas : HTMLCanvasElement = document.getElementById('tCanvas') as HTMLCanvasElement;
 	private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
 	private display : HTMLImageElement = document.getElementById('tCanvasDisplay') as HTMLImageElement;
+	private theatre : HTMLElement = document.getElementById('tTheatre');
 	private binElement : HTMLElement = document.getElementById('tBin');
 	private timelineElement : HTMLElement = document.getElementById('tElement');
+	private playBtn : HTMLButtonElement = document.getElementById('tSync') as HTMLButtonElement;
+	private previewVideo : HTMLVideoElement = document.getElementById('tPreviewVideo') as HTMLVideoElement;
+	private loopBtn : HTMLButtonElement = document.getElementById('tLoop') as HTMLButtonElement;
+	private stepSizeElement : HTMLInputElement = document.getElementById('tStepSize') as HTMLInputElement;
+
 	public stillLoader : HTMLImageElement;
 
 	private createBtn : HTMLButtonElement = document.getElementById('tCreate') as HTMLButtonElement;
@@ -45,9 +52,21 @@ class Timeline {
 	private onBin : Function;
 
 	private currentHash : number = 0;
-	private renderingPreview : boolean = false;
-	private displayingPreview : boolean = false;
 	private onPreview : Function;
+
+	private previewState : any = {
+		hash : 0,
+		displaying : false,
+		rendering : false,
+		playing : false,
+		loop : false
+	};
+	private previewInterval : any;
+
+	private dragState : any = {
+		dragging : false,
+		target : null
+	};
 
 	private silence : any = {
 		sampleRate : 0
@@ -59,12 +78,14 @@ class Timeline {
 
 	constructor (ui : any, onBin : Function, onPreview : Function) {
 		this.ui = ui;
-		this.bindListeners();
+		this.onBin = onBin;
+		this.onPreview = onPreview;
+		
 		this.state = {
 			get : () => { return false }
 		};
-		this.onBin = onBin;
-		this.onPreview = onPreview;
+
+		this.bindListeners();
 	}
 
 	private bindListeners () {
@@ -76,13 +97,29 @@ class Timeline {
 		this.prev.addEventListener('click', this.prevFrame.bind(this));
 		this.addBtn.addEventListener('click', (function (){ this.expandTimeline(); }).bind(this));
 		this.removeBtn.addEventListener('click', (function (){ this.contractTimeline(); }).bind(this));
+		this.playBtn.addEventListener('click', this.playPreview.bind(this));
+		this.loopBtn.addEventListener('click', this.toggleLoop.bind(this));
+		this.previewVideo.addEventListener('ended', this.previewEnded.bind(this), false);
+		this.stepSizeElement.addEventListener('change', this.changeStepSize.bind(this));
 
 		document.addEventListener('keydown', this.keyDown.bind(this), false);
 		document.addEventListener('keyup', this.keyUp.bind(this), false);
 
+
 		this.bindGlobal('.frame', 'click', this.clickFrame.bind(this));
+		this.bindGlobal('.frame', 'dblclick', this.dblclickFrame.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'click', this.clickBinImage.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'dblclick', this.dblclickBinImage.bind(this));
+
+
+		this.bindGlobal('#tBin tbody tr', 'dragstart', this.binDragStart.bind(this));
+		this.bindGlobal('.frame', 'dragenter', this.binDragEnter.bind(this));
+		this.bindGlobal('#tWrapper', 'dragleave', this.binDragLeave.bind(this));
+
+		this.bindGlobal('#tBin tbody tr', 'drop', this.binDragEnd.bind(this));
+		this.bindGlobal('#tBin tbody tr', 'dragend', this.binDragEnd.bind(this));
+
+		document.addEventListener('drop', this.binDragEnd.bind(this), false);
 	}
 
 	private bindGlobal (selector : string, event : string, handler : Function) {
@@ -102,11 +139,23 @@ class Timeline {
 	}
 
 	private hash () : number {
-		const str : string = this.timeline.length > 0 ? this.timeline.join('') : '';
+		let str : string = '';
 	    let hash : number = 0;
 	    let char : any;
 
-	    if (str.length == 0) {
+	    if (this.timeline.length > 0) {
+	    	str = this.timeline.map( (el : any) : string => {
+	    		if (el == null) {
+	    			return 'null';
+	    		} else {
+	    			return el.id;
+	    		}
+	    	}).join('');
+	    }
+
+	    this.timeline.length > 0 ? this.timeline.join('') : '';
+
+	    if (str.length === 0) {
 	        return hash;
 	    }
 
@@ -126,6 +175,13 @@ class Timeline {
 		}
 	}
 
+	private addClassAll ( selector : string, className : string) {
+		const elems : NodeListOf<Element> = document.querySelectorAll(selector);
+		[].forEach.call(elems, (el : HTMLElement) => {
+			this.addClass(el, className);
+		});
+	}
+
 	private removeClass ( elem : HTMLElement, className : string ) {
 		try{
 			elem.classList.remove(className);
@@ -134,9 +190,44 @@ class Timeline {
 		}
 	}
 
+	private removeClassAll ( selector : string, className : string) {
+		const elems : NodeListOf<Element> = document.querySelectorAll(selector);
+		[].forEach.call(elems, (el : HTMLElement) => {
+			this.removeClass(el, className);
+		});
+	}
+
+	private changeStepSize () {
+		let val : number = parseInt(this.stepSizeElement.value, 10);
+		if (val < 1) {
+			this.stepSizeElement.value = String(1);
+			val = 1;
+		}
+		this.stepSize = val;
+	}
+
 	private clickFrame (evt : Event) {
-        //@ts-ignore
-        const x : number = parseInt(evt.target.getAttribute('x'), 10);
+		const x : number = parseInt((evt.target as HTMLElement).getAttribute('x'), 10);
+		let bi : BinImage = null;
+		let id : string;
+
+		this.selectFrame(x);
+
+		if ( this.timeline[x] != null) {
+			id = this.timeline[x].id;
+			bi = this.getById(id);
+		}
+
+		if (bi != null) {
+			this.displayFrame(bi.file);
+			this.selectBinImage(bi.id);
+		} else {
+			this.stopDisplay();
+		}
+	}
+
+	private dblclickFrame (evt : Event) {
+        const x : number = parseInt((evt.target as HTMLElement).getAttribute('x'), 10);
         let bi : BinImage = null;
         let id : string;
 
@@ -148,7 +239,7 @@ class Timeline {
 		}
 
 		if (bi != null) {
-			this.displayFrame(bi.file);
+			this.playFrame(bi.file, false);
 			this.selectBinImage(bi.id);
 		} else {
 			this.stopDisplay();
@@ -189,30 +280,54 @@ class Timeline {
 
 		if (bi) {
 			this.displayFrame(bi.file);
-			this.assignFrame(this.selectedBin, this.selected);
-			if (this.selected + 1 <= this.timeline.length - 1) {
-				this.selectFrame(this.selected + 1);
+			this.assignFrame(this.selectedBin, this.selected, this.stepSize);
+			if (this.selected + this.stepSize <= this.timeline.length - 1) {
+				this.selectFrame(this.selected + this.stepSize);
+			} else {
+				this.selectFrame(this.timeline.length - 1);
 			}
 		}
     }
 
     private selectBinImage (id : string) {
-    	const binImages = document.querySelectorAll('#tBin tbody tr');
-    	[].forEach.call(binImages, (el : HTMLElement) => {
-			el.classList.remove('selected');
-		});
+    	this.removeClassAll('#tBin tbody tr.selected', 'selected');
+    	this.addClass(document.getElementById(id), 'selected');
    		this.selectedBin = id;
-
-    	document.getElementById(id).classList.add('selected');
     }
 
     private selectFrame (x : number) {
-    	const frames = document.querySelectorAll('.frame');
-    	[].forEach.call(frames, (el : HTMLElement) => {
-			el.classList.remove('selected');
-		});
+    	this.removeClassAll('.frame.selected', 'selected');
+		this.addClass(document.querySelector(`.frame[x="${x}"]`), 'selected');
     	this.selected = x;
-		document.querySelector(`.frame[x="${x}"]`).classList.add('selected');
+    }
+
+    private selectFrameGroup (x : number, size : number, id : string = null) {
+    	let bi : BinImage = null;
+    	let frame : HTMLElement;
+    	
+    	if (id != null) {
+    		bi = this.getById(this.selectedBin);
+    	}
+
+    	this.removeClassAll('.frame.group', 'group');
+
+    	for (let i = 0; i < this.timeline.length; i++) {
+    		frame = document.querySelector(`.frame[x="${i}"]`);
+			if (frame && i >= x && i <= x + size - 1) {
+				this.addClass(frame, 'group');
+				if (bi != null && bi.key != null) {
+					frame.innerText = bi.key;
+				} else {
+					frame.innerText = '?';
+				}
+			} else {
+				if (this.timeline[i] != null) {
+					frame.innerText = this.getById(this.timeline[i].id).key;
+				} else {
+					frame.innerText = '';
+				}
+			}
+    	}
     }
 
     private nextFrame () {
@@ -270,12 +385,14 @@ class Timeline {
 			return this.nextFrame();
 		} else if (evt.code === 'ArrowLeft') {
 			return this.prevFrame();
+		} else if (evt.code === 'Space') {
+			return this.playPreview();
 		}
 		
 		key = this.codeToKey(evt.code, evt.shiftKey);
 
     	if (key) {
-    		this.playFrame(key);
+    		this.playFrame(key, true);
     	}
 	}
 
@@ -316,7 +433,7 @@ class Timeline {
 	}
 
 	private async open () {
-		let selectionType : string = 'multiSelections'
+		let selectionType : string = 'multiSelections';
         const options : any = {
             title: `Select video, image or audio file`,
             properties: [ selectionType ],
@@ -371,6 +488,31 @@ class Timeline {
 		let index : number;
 		let image : any = null;
 		let count : number = 0;
+		let stat : any;
+		let baseDir : string;
+		let dirFiles : string[];
+
+		if (files.length === 1) {
+			baseDir = files[0];
+			try{
+				stat = await lstat(baseDir);
+			} catch (err) {
+				console.error(err);
+			}
+
+			if (stat.isDirectory()) {
+				try {
+					dirFiles = await readdir(baseDir);
+				} catch (err) {
+					console.error(err);
+				}
+				if (dirFiles) {
+					files = dirFiles.map( (fileName : string) => {
+						return join(baseDir, fileName);
+					});
+				}
+			}
+		}
 
 		if ( !this.validate(files) ) {
         	return false;
@@ -477,17 +619,24 @@ class Timeline {
 			key = document.createElement('td');
 			name = document.createElement('td');
 
-			if (file.key) {
+			row.setAttribute('id', file.id);
+			row.setAttribute('draggable', 'true');
+
+			if (file.key != null) {
 				key.innerText = file.key;
 			}
 
-			row.setAttribute('id', file.id);
 			name.innerText = file.name;
+			name.classList.add('name');
 
 			row.appendChild(key);
 			row.appendChild(name);
 
 			container.appendChild(row);
+		}
+
+		if (this.bin.length > 0) {
+			this.removeClass(this.binElement.querySelector('table'), 'hide');
 		}
 		
 		this.ui.overlay.hide();
@@ -495,7 +644,7 @@ class Timeline {
 
 	public async create () {
 		const options : any = {
-			title: 'New timeline',
+			title: 'New Timeline',
 			label: 'Number of frames:',
 			value: '255',
 			customStylesheet : 'dist/css/style.css',
@@ -541,6 +690,15 @@ class Timeline {
 		for (let i = 0; i < len; i++) {
 			this.timeline.push(null);
 		}
+
+		if (len > 0) {
+			this.playBtn.removeAttribute('disabled');
+		} else {
+			this.playBtn.setAttribute('disabled', 'disabled');
+		}
+
+		this.removeClass(this.addBtn,'hide');
+		this.removeClass(this.removeBtn, 'hide');
 
 		this.layout();
 	}
@@ -597,9 +755,6 @@ class Timeline {
 			container.appendChild(frame);
 			container.appendChild(between);
 		}
-
-		this.addBtn.classList.remove('hide');
-		this.removeBtn.classList.remove('hide');
 	}
 
 	private async preProcess ( filePath : string ) {
@@ -637,7 +792,7 @@ class Timeline {
 		});
 	}
 
-	public playFrame ( key : string ) {
+	public playFrame ( key : string, loop : boolean = false) {
 		let bi : BinImage;
 		let buf : any;
 		let mono : any;
@@ -657,7 +812,9 @@ class Timeline {
 			mono = buf.getChannelData(0);
 			mono.set(bi.samples, 0);
 			this.playing[key].buffer = buf;
-			this.playing[key].loop = true;
+			if (loop) {
+				this.playing[key].loop = true;
+			}
 			this.playing[key].connect(this.audioContext.destination);
 			this.playing[key].start();
 		}
@@ -673,20 +830,16 @@ class Timeline {
 	}
 
 	public displayFrame ( filePath: string) {
-		this.display.setAttribute('src', filePath);
-		try {
-			this.display.classList.remove('hide');
-		} catch (err) {
-			//
+		if (this.previewState.displaying) {
+			this.addClass(this.previewVideo, 'hide');
+			this.previewState.displaying = false;
 		}
+		this.display.setAttribute('src', filePath);
+		this.removeClass(this.display, 'hide')
 	}
 
 	public stopDisplay () {
-		try {
-			this.display.classList.add('hide');
-		} catch (err) {
-			//
-		}
+		this.addClass(this.display, 'hide');
 		this.display.setAttribute('src', '#');
 	}
 
@@ -694,9 +847,11 @@ class Timeline {
 		let bi : BinImage;
 		if (this.selectedBin != null) {
 			bi = this.getById(this.selectedBin);
-			this.assignFrame(this.selectedBin, this.selected);
-			if (this.selected + 1 <= this.timeline.length - 1) {
-				this.selectFrame(this.selected + 1);
+			this.assignFrame(this.selectedBin, this.selected, this.stepSize);
+			if (this.selected + this.stepSize <= this.timeline.length - 1) {
+				this.selectFrame(this.selected + this.stepSize);
+			} else {
+				this.selectFrame(this.timeline.length - 1);
 			}
 		}
 		//console.log(`${this.selected} = ${bi.id}`)
@@ -704,7 +859,9 @@ class Timeline {
 
 	public assignFrame (id : string, x : number, count : number = 1) {
 		for (let i = 0; i < count; i++) {
-			this.timeline[x + i] = { id };
+			if (typeof this.timeline[x + i] !== 'undefined') {
+				this.timeline[x + i] = { id };
+			}
 		}
 		this.layout();
 	}
@@ -800,27 +957,151 @@ class Timeline {
 		return timeline;
 	}
 
-	public preview () {
+	public preview () : any {
 		const timeline : string[] = this.timeline.map((step : TimelineStep) => (step && step.id) ? step.id : null );
-		return timeline;
+		const width : number = this.theatre.clientWidth;
+		const height : number = this.theatre.clientHeight;
+		return { timeline, width, height };
+	}
+
+	public playPreview () {
+		if (this.previewState.playing) {
+			this.pause();
+		} else {
+			this.checkPreview();
+		}
+	}
+
+	private previewEnded () {
+		this.pause();
 	}
 
 	private checkPreview () {
 		let newHash : number = this.hash();
-		if (this.currentHash !== newHash) {
-			this.currentHash = newHash;
-			if (!this.renderingPreview) {
-				this.renderingPreview = true;
+		if (this.previewState.hash !== newHash) {
+			this.previewState.hash = newHash;
+			if (!this.previewState.rendering) {
+				this.previewState.rendering = true;
+				this.stopDisplay();
+				this.playBtn.setAttribute('disabled', 'disabled');
+				showSpinner('tSyncSpinner', 'small');
+				this.addClass(this.playBtn, 'rendering');
 				this.onPreview();
+			}
+		} else if (this.previewState.hash === newHash && this.previewState.hash !== 0) {
+			if (this.previewState.playing) {
+				this.pause();
+			} else {
+				this.play();
 			}
 		}
 	}
 
 	public onPreviewComplete (args : any) {
-		console.dir(args);
+		const source : HTMLSourceElement = document.createElement('source') as HTMLSourceElement;
+		this.previewState.rendering = false;
+		this.previewVideo.innerHTML = '';
+		source.setAttribute('src', `${args.tmpVideo}?hash=${this.previewState.hash}`);
+		this.previewVideo.appendChild(source);
+		this.previewVideo.load();
+		hideSpinner('tSyncSpinner');
+		this.playBtn.removeAttribute('disabled');
+		this.removeClass(this.playBtn, 'rendering');
+		this.play();
 	}
 
-	play () {
+	private toggleLoop () {
+		if (this.previewState.loop) {
+			this.previewState.loop = false;
+			this.loopBtn.innerText = 'Loop: OFF';
+			this.previewVideo.removeAttribute('loop');
+		} else {
+			this.previewState.loop = true;
+			this.loopBtn.innerText = 'Loop: ON';
+			this.previewVideo.setAttribute('loop', 'loop');
+		}
+	}
+	private startInterval () {
+		this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 10);
+	}
 
+	private previewIntervalFunction () {
+    	const time : number = this.previewVideo.currentTime / this.previewVideo.duration;
+    	let x : number = Math.floor(time * this.timeline.length);
+    	x = x === -0 ? 0 : x; //catch -0 values (thanks Javascript!)
+		this.removeClassAll('.frame.playing', 'playing');
+		this.addClass(document.querySelector(`.frame[x="${x}"]`), 'playing');
+	}
+
+	public play () {
+		if (!this.previewState.displaying) {
+			this.stopDisplay();
+			this.removeClass(this.previewVideo, 'hide');
+			this.previewState.displaying = true;
+		}
+
+		this.previewState.playing = true;
+		this.previewVideo.play();
+		this.startInterval();
+	}
+
+	public pause () {
+		this.previewVideo.pause();
+		this.previewState.playing = false;
+		try {
+			clearInterval(this.previewInterval);
+		} catch (err) {
+			//
+		}
+		this.removeClassAll('.frame.playing', 'playing');
+	}
+
+	private binDragStart (evt: DragEvent) {
+		const id : string = (evt.target as HTMLElement).getAttribute('id');
+		const bi : BinImage = this.getById(id);
+		const canvas : HTMLCanvasElement = document.createElement('canvas');
+  		canvas.width = canvas.height = 50;
+		const ctx : CanvasRenderingContext2D = canvas.getContext('2d');
+
+		ctx.font = '12px serif';
+		ctx.textAlign = 'left';
+		ctx.fillText(bi.key != null ? bi.key : '?', 25, 10);
+		ctx.stroke();
+  		evt.dataTransfer.setDragImage(canvas, 25, 25);
+
+		//evt.dataTransfer.setData("text/plain", bi.key != null ? bi.key : '?');
+		this.selectBinImage(bi.id);
+		this.displayFrame(bi.file);
+		this.dragState.dragging = true;
+	}
+
+	private binDragEnter (evt : DragEvent) {
+		let x : number;
+		if (this.dragState.dragging) {
+			x = parseInt((evt.target as HTMLElement).getAttribute('x'), 10);
+			this.dragState.target = x;
+			this.selectFrameGroup(x, this.stepSize, this.selectedBin);
+		}
+	}
+
+	private binDragLeave (evt : DragEvent) {
+		if ((evt.target as HTMLElement).id === 'tWrapper' && this.dragState.dragging) {
+			this.dragState.target = null;
+			this.layout();
+		}
+	}
+
+	private binDragEnd (evt: DragEvent) {
+		let selectAfter : number = 0;
+		if (this.dragState.dragging && this.dragState.target != null) {
+			selectAfter = this.dragState.target + this.stepSize;
+			if (selectAfter >= this.timeline.length) {
+				selectAfter = this.timeline.length - 1;
+			}
+			this.selectFrame(selectAfter);
+			this.assignFrame(this.selectedBin, this.dragState.target, this.stepSize);
+		}
+		this.dragState.target = null;
+		this.dragState.dragging = false;
 	}
 }
