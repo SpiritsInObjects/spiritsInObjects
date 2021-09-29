@@ -30,6 +30,8 @@ class Timeline {
 	public prev : HTMLButtonElement = document.getElementById('tPrevFrame') as HTMLButtonElement;
     public next : HTMLButtonElement = document.getElementById('tNextFrame') as HTMLButtonElement;
 
+
+
 	public timeline : any[] = [];
 	private bin : BinImage[] = [];
 	private lastDir : string = '';
@@ -90,23 +92,27 @@ class Timeline {
 	}
 
 	private bindListeners () {
-		this.binElement.addEventListener('click', this.openBin.bind(this));
-		this.importBtn.addEventListener('click', this.open.bind(this));
-		this.createBtn.addEventListener('click', this.create.bind(this));
-		this.addTimelineBtn.addEventListener('click', this.addTimeline.bind(this));
-		this.next.addEventListener('click', this.nextFrame.bind(this));
-		this.prev.addEventListener('click', this.prevFrame.bind(this));
-		this.addBtn.addEventListener('click', (function (){ this.expandTimeline(); }).bind(this));
-		this.removeBtn.addEventListener('click', (function (){ this.contractTimeline(); }).bind(this));
-		this.playBtn.addEventListener('click', this.playPreview.bind(this));
-		this.loopBtn.addEventListener('click', this.toggleLoop.bind(this));
-		this.previewVideo.addEventListener('ended', this.previewEnded.bind(this), false);
-		this.stepSizeElement.addEventListener('change', this.changeStepSize.bind(this));
+		this.bindListener('click', this.binElement, this.openBin);
+		this.bindListener('click', this.importBtn, this.open);
+		this.bindListener('click', this.createBtn, this.create);
+		this.bindListener('click', this.addTimelineBtn, this.addTimeline);
+		this.bindListener('click', this.next, this.nextFrame);
+		this.bindListener('click', this.prev, this.prevFrame);
+		this.bindListener('click', this.addBtn, function (){ this.expandTimeline(); });
+		this.bindListener('click', this.removeBtn, function (){ this.contractTimeline(); });
+		this.bindListener('click', this.playBtn, this.playPreview);
+		this.bindListener('click', this.loopBtn, this.toggleLoop);
 
-		document.addEventListener('keydown', this.keyDown.bind(this), false);
-		document.addEventListener('keyup', this.keyUp.bind(this), false);
+		this.bindListener('ended', this.previewVideo, this.previewEnded);
 
+		this.bindListener('change', this.stepSizeElement, this.changeStepSize);
 
+		this.bindListener('keydown', document, this.keyDown);
+		
+		this.bindListener('keyup', document, this.keyUp);
+
+		
+		/** Drag and Drop **/
 		this.bindGlobal('.frame', 'click', this.clickFrame.bind(this));
 		this.bindGlobal('.frame', 'dblclick', this.dblclickFrame.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'click', this.clickBinImage.bind(this));
@@ -120,7 +126,12 @@ class Timeline {
 		this.bindGlobal('#tBin tbody tr', 'drop', this.binDragEnd.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'dragend', this.binDragEnd.bind(this));
 
-		document.addEventListener('drop', this.binDragEnd.bind(this), false);
+		this.bindListener('drop', document, this.binDragEnd);
+		
+	}
+
+	private bindListener (event : string, element : HTMLElement|Document, func : Function) {
+		element.addEventListener(event, func.bind(this), false);
 	}
 
 	private bindGlobal (selector : string, event : string, handler : Function) {
@@ -441,6 +452,8 @@ class Timeline {
             defaultPath: this.lastDir === '' ? homedir() : this.lastDir
         };
         let files : any;
+
+        this.importBtn.blur();
         
         try {
         	//@ts-ignore
@@ -660,6 +673,7 @@ class Timeline {
 		let len : number;
 
 		this.selected = 0;
+		this.createBtn.blur();
 
 		if (this.timeline.length > 0) {
 			try{
@@ -846,6 +860,7 @@ class Timeline {
 
 	private addTimeline () {
 		let bi : BinImage;
+		this.addTimelineBtn.blur();
 		if (this.selectedBin != null) {
 			bi = this.getById(this.selectedBin);
 			this.assignFrame(this.selectedBin, this.selected, this.stepSize);
@@ -1012,6 +1027,7 @@ class Timeline {
 	}
 
 	private toggleLoop () {
+		this.loopBtn.blur();
 		if (this.previewState.loop) {
 			this.previewState.loop = false;
 			this.loopBtn.innerText = 'Loop: OFF';
