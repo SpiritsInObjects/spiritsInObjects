@@ -223,7 +223,7 @@ const BrowserOptions = {
 	resizable: false,
 	backgroundColor: '#a7abb4',
 	webPreferences : {
-		webSecurity : false,
+		webSecurity : true,
 		nodeIntegration: true,
 		enableRemoteModule: true,
 		contextIsolation : false
