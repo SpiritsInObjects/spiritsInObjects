@@ -60,7 +60,7 @@ export class Timeline{
 
 		for (const file of files) {
 			try {
-				await unlink( join(dir, file) );
+				//await unlink( join(dir, file) );
 			} catch (err) {
 				throw err;
 				return false;
@@ -105,7 +105,8 @@ export class Timeline{
 	}
 
 	public async exportAudio (id : string, samples: Float32Array) : Promise<string> {
-		const audioPath : string = join(this.binDir, `${id}.wav`);
+		const audioPath : string = join(this.binDir, `${id}-raw.wav`);
+		const resamplePath : string = join(this.binDir, `${id}.wav`);
 		const wav : any = new WaveFile();
 
 		wav.fromScratch(1, samples.length * 24, '32f', samples);
@@ -116,7 +117,19 @@ export class Timeline{
 			console.error(err);
 		}
 
-		return audioPath;
+		try {
+			await this.ffmpeg.resampleAudio(audioPath, resamplePath,  96000, 1);
+		} catch (err) {
+			console.error(err);
+		}
+
+		try {
+			//await unlink(audioPath);
+		} catch (err) {
+			console.error(err);
+		}
+
+		return resamplePath;
 	}
 
 	public async images ( timeline: string[] ) : Promise <boolean> {
@@ -213,7 +226,7 @@ export class Timeline{
 
 		await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
 
-		await unlink(tmpAudio);
+		//await unlink(tmpAudio);
 
 		return success;
 
@@ -253,7 +266,7 @@ export class Timeline{
 
 		await this.ffmpeg.exportPreview (framesPath, tmpVideo, options);
 
-		await unlink(tmpAudio);
+		//await unlink(tmpAudio);
 
 		return success;
 

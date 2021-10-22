@@ -57,7 +57,7 @@ class Timeline {
         }
         for (const file of files) {
             try {
-                await (0, fs_extra_1.unlink)((0, path_1.join)(dir, file));
+                //await unlink( join(dir, file) );
             }
             catch (err) {
                 throw err;
@@ -98,7 +98,8 @@ class Timeline {
         return framePath;
     }
     async exportAudio(id, samples) {
-        const audioPath = (0, path_1.join)(this.binDir, `${id}.wav`);
+        const audioPath = (0, path_1.join)(this.binDir, `${id}-raw.wav`);
+        const resamplePath = (0, path_1.join)(this.binDir, `${id}.wav`);
         const wav = new wavefile_1.WaveFile();
         wav.fromScratch(1, samples.length * 24, '32f', samples);
         try {
@@ -107,7 +108,19 @@ class Timeline {
         catch (err) {
             console.error(err);
         }
-        return audioPath;
+        try {
+            await this.ffmpeg.resampleAudio(audioPath, resamplePath, 96000, 1);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        try {
+            //await unlink(audioPath);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        return resamplePath;
     }
     async images(timeline) {
         let frameNumber = 0;
@@ -190,7 +203,7 @@ class Timeline {
         }
         await this.ffmpeg.concatAudio(audioList, tmpAudio, onProgress);
         await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
-        await (0, fs_extra_1.unlink)(tmpAudio);
+        //await unlink(tmpAudio);
         return success;
     }
     async preview(args, tmpVideo) {
@@ -223,7 +236,7 @@ class Timeline {
         }
         await this.ffmpeg.concatAudio(audioList, tmpAudio, () => { });
         await this.ffmpeg.exportPreview(framesPath, tmpVideo, options);
-        await (0, fs_extra_1.unlink)(tmpAudio);
+        //await unlink(tmpAudio);
         return success;
     }
     cancel() {
