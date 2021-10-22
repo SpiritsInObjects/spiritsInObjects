@@ -41,11 +41,17 @@ video::webkit-media-controls {
 }
 .btn:active,
 .btn.active {
+  outline: none;
+  box-shadow: none;
   background: #f6f6f7;
   border-top: 1px solid #f2f2f3;
   border-left: 1px solid #f2f2f3;
   border-bottom: 1px solid #5d616a;
   border-right: 1px solid #5d616a;
+}
+.btn:focus {
+  outline: none;
+  box-shadow: none;
 }
 #menu {
   box-shadow: 0 1px 1px rgba(100, 100, 100, 0.1);
@@ -175,7 +181,8 @@ video::webkit-media-controls {
   background: white;
 }
 #currentFrame,
-#vCurrentFrame {
+#vCurrentFrame,
+#tCurrentFrame {
   text-align: center;
   margin-left: 320px;
 }
@@ -382,6 +389,12 @@ textarea,
   height: 26px;
   box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.4);
 }
+#tTimecodes {
+  margin-bottom: 4px;
+}
+#tControlButtons {
+  margin-bottom: 10px;
+}
 #startTimecode,
 #vStartTimecode,
 #tStartTimecode {
@@ -471,6 +484,11 @@ textarea,
 #tPrevFrame img {
   margin-left: -4px;
 }
+#sync .pause,
+#vSync .pause,
+#tSync .pause {
+  display: none;
+}
 #sync #syncSpinner,
 #vSync #syncSpinner,
 #tSync #syncSpinner,
@@ -504,6 +522,11 @@ textarea,
 #tSync[disabled] img {
   opacity: 0.5;
 }
+#sync[disabled] .pause,
+#vSync[disabled] .pause,
+#tSync[disabled] .pause {
+  display: none;
+}
 #sync.rendering,
 #vSync.rendering,
 #tSync.rendering {
@@ -523,6 +546,16 @@ textarea,
 #sync.rendering #tSyncSpinner,
 #vSync.rendering #tSyncSpinner,
 #tSync.rendering #tSyncSpinner {
+  display: block;
+}
+#sync.playing img.play,
+#vSync.playing img.play,
+#tSync.playing img.play {
+  display: none;
+}
+#sync.playing img.pause,
+#vSync.playing img.pause,
+#tSync.playing img.pause {
   display: block;
 }
 #videoControl,
@@ -559,8 +592,12 @@ textarea,
 #tControl > div:not(.bg) *:last-child {
   float: none;
 }
+#tControl {
+  float: right;
+  width: 680px;
+}
 #tControl .tVideoControls {
-  width: 438px !important;
+  width: 679px !important;
   float: right;
 }
 #overlay {
@@ -662,6 +699,48 @@ textarea,
   text-transform: uppercase;
   padding: 5px 20px;
 }
+/**
+ * SweetAlert2 custom styles 
+ **/
+.swal2-container .swal2-popup {
+  background: #a7abb4;
+  font-family: 'Helvetica Neue', Arial, 'Helvetica', sans-serif;
+  color: #2b2b2b;
+  border-radius: 0;
+}
+.swal2-container .swal2-title {
+  font-size: 12px;
+  font-weight: normal;
+  color: #000;
+  background: #c0c2c5;
+  box-shadow: 0px 0px 3px #000014, inset 0 2px 7px rgba(255, 255, 255, 0.8);
+  padding: 5px 0;
+}
+.swal2-container .swal2-input-label {
+  font-size: 12px;
+}
+.swal2-container .swal2-input {
+  margin: 20px auto;
+  outline: none;
+}
+.swal2-container .swal2-actions > button.swal2-styled {
+  background: #cbcccf;
+  font-family: monospace;
+  color: #000;
+  border-top: 1px solid #f2f2f3;
+  border-left: 1px solid #f2f2f3;
+  border-bottom: 1px solid #5d616a;
+  border-right: 1px solid #5d616a;
+  height: 20px;
+  line-height: 15px;
+  font-size: 12px;
+  border-radius: 0;
+  margin: 4px;
+  padding: 0 20px;
+}
+.swal2-container .swal2-actions > button.swal2-styled:active {
+  background: #f6f6f7;
+}
 .hide {
   display: none !important;
 }
@@ -674,7 +753,7 @@ textarea,
   height: 347px;
 }
 #tBin {
-  height: 380px;
+  height: 430px;
   width: 320px;
   float: left;
   overflow: scroll;
@@ -710,7 +789,6 @@ textarea,
 #tTheatre {
   height: 380px;
   width: 676px;
-  float: right;
   overflow: hidden;
 }
 #tCanvasDisplay {
@@ -723,7 +801,8 @@ textarea,
   width: 676px;
   height: 380.25px;
   background: #000;
-  position: relative;
+  position: absolute;
+  right: 2px;
 }
 #tElement .frame {
   width: 30px;
@@ -764,7 +843,6 @@ textarea,
 #tRemove {
   width: 30px;
   height: 24px;
-  float: left;
   background: rgba(0, 0, 0, 0.1);
   text-align: center;
   font-weight: bold;
@@ -784,4 +862,19 @@ textarea,
 }
 #tLoop {
   float: right !important;
+  margin-right: 10px;
+}
+#tStepSize {
+  width: 60px;
+  text-align: center;
+  padding: 0;
+  margin-top: 15px;
+}
+#tAddBin {
+  margin-left: 5px;
+}
+#tExport,
+#tCreate {
+  float: right;
+  margin-right: 5px;
 }
