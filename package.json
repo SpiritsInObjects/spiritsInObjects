@@ -52,6 +52,7 @@
     "dev": "npm run compile && npm run docs && npm run test && sh scripts/start_dev.sh",
     "compile": "sh scripts/compile.sh",
     "docs": "sh scripts/docs.sh",
+    "manual": "bash scripts/manual.sh",
     "install": "sh scripts/rebuild.sh",
     "test": "sh scripts/test.sh",
     "pretest": "",
@@ -102,13 +103,13 @@
     "jsdoc-to-markdown": "^7.0.1",
     "less": "^4.1.1",
     "mocha": "^9.1.1",
+    "showdown": "^1.9.1",
     "typescript": "^4.4.3"
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.27",
     "electron-context-menu": "^3.1.1",
     "electron-debug": "^3.2.0",
-    "electron-prompt": "^1.7.0",
     "electron-store": "^8.0.1",
     "electron-unhandled": "^3.0.2",
     "electron-util": "^0.17.2",
