@@ -25,3 +25,12 @@ interface BinImage {
 	key : string;
 	samples : any;
 }
+
+interface PromptConfig{
+	title : string;
+	label : string;
+	input : string;
+	inputValue : string;
+	inputLabel : string;
+	inputPlaceholder : string;
+}
