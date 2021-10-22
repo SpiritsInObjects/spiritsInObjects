@@ -633,6 +633,7 @@ function playSync() {
 }
 function timelineExport() {
     let tl = timeline.export();
+    timelineExportBtn.blur();
     if (tl.length > 0) {
         ui.overlay.show(`Exporting ${tl.length} frame Timeline...`);
         ui.overlay.progress(0, `Determining time left...`);
@@ -788,6 +789,5 @@ function bindListeners() {
     visualize = new Visualize(state, audioContext);
     timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);
     bindListeners();
-    console.log('renderer started');
 })();
 //# sourceMappingURL=index.js.map
