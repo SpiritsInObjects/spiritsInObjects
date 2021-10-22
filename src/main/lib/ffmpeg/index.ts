@@ -164,6 +164,7 @@ export class ffmpeg {
 
     static async exportVideo (inputPath : string, outputPath : string, audio : string = null, format : string = 'prores3', onProgress : Function = () => {}) : Promise<string> {
         let args : string[] = [
+            '-framerate', '24',
             '-f', 'image2',
             '-i',  inputPath
         ];
@@ -173,8 +174,7 @@ export class ffmpeg {
                 '-i', audio, 
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac',
-                '-shortest'
+                '-c:a', 'aac'
             ]);
         }
 
@@ -355,6 +355,8 @@ export class ffmpeg {
         const width : number = options.width;
         const height : number = options.height;
         let args : string[] = [
+            '-framerate', '24',
+            '-f', 'image2',
             '-i',  inputPath
         ];
 
@@ -363,8 +365,7 @@ export class ffmpeg {
                 '-i', options.audio, 
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac',
-                '-shortest'
+                '-c:a', 'aac'
             ]);
         }
 
@@ -413,7 +414,7 @@ export class ffmpeg {
     }
 
     /**
-     * Kill the subprocess that is currently running in spawn mode.
+     * Cancel the subprocess that is currently running in spawn mode.
      * 
      **/
 
@@ -423,6 +424,25 @@ export class ffmpeg {
             try {
                 await killSubprocess(subprocess);
                 subprocess = null;
+                cancelled = true;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        return cancelled;
+    }
+
+    /**
+     * Cancel the background process that is currently running in spawn mode.
+     * 
+     **/
+
+    static async cancelBackground () {
+        let cancelled : boolean = false;
+        if (background && typeof background['kill'] !== 'undefined') {
+            try {
+                await killSubprocess(background);
+                background = null;
                 cancelled = true;
             } catch (err) {
                 console.error(err);

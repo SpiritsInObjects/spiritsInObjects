@@ -151,6 +151,7 @@ class ffmpeg {
     }
     static async exportVideo(inputPath, outputPath, audio = null, format = 'prores3', onProgress = () => { }) {
         let args = [
+            '-framerate', '24',
             '-f', 'image2',
             '-i', inputPath
         ];
@@ -159,8 +160,7 @@ class ffmpeg {
                 '-i', audio,
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac',
-                '-shortest'
+                '-c:a', 'aac'
             ]);
         }
         if (format === 'prores3') {
@@ -332,6 +332,8 @@ class ffmpeg {
         const width = options.width;
         const height = options.height;
         let args = [
+            '-framerate', '24',
+            '-f', 'image2',
             '-i', inputPath
         ];
         if (typeof options.audio !== 'undefined') {
@@ -339,8 +341,7 @@ class ffmpeg {
                 '-i', options.audio,
                 '-map', '0:v',
                 '-map', '1:a',
-                '-c:a', 'aac',
-                '-shortest'
+                '-c:a', 'aac'
             ]);
         }
         if (options.forceScale) {
@@ -386,7 +387,7 @@ class ffmpeg {
         });
     }
     /**
-     * Kill the subprocess that is currently running in spawn mode.
+     * Cancel the subprocess that is currently running in spawn mode.
      *
      **/
     static async cancel() {
@@ -395,6 +396,24 @@ class ffmpeg {
             try {
                 await (0, spawnAsync_1.killSubprocess)(subprocess);
                 subprocess = null;
+                cancelled = true;
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
+        return cancelled;
+    }
+    /**
+     * Cancel the background process that is currently running in spawn mode.
+     *
+     **/
+    static async cancelBackground() {
+        let cancelled = false;
+        if (background && typeof background['kill'] !== 'undefined') {
+            try {
+                await (0, spawnAsync_1.killSubprocess)(background);
+                background = null;
                 cancelled = true;
             }
             catch (err) {
