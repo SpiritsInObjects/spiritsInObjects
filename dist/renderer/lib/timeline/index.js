@@ -1,9 +1,9 @@
 'use strict';
-const electronPrompt = require('electron-prompt');
 const { extname } = require('path');
 const uuid = require('uuid').v4;
 const { lstat, readdir } = require('fs-extra');
 const { platform } = require('os');
+const Swal = require('../contrib/sweetalert2.min.js');
 class Timeline {
     constructor(ui, onBin, onPreview) {
         this.canvas = document.getElementById('tCanvas');
@@ -12,10 +12,12 @@ class Timeline {
         this.theatre = document.getElementById('tTheatre');
         this.binElement = document.getElementById('tBin');
         this.timelineElement = document.getElementById('tElement');
-        this.playBtn = document.getElementById('tSync');
         this.previewVideo = document.getElementById('tPreviewVideo');
-        this.loopBtn = document.getElementById('tLoop');
         this.stepSizeElement = document.getElementById('tStepSize');
+        this.promptElement = document.getElementById('prompt');
+        this.counter = document.getElementById('tCurrentFrame');
+        this.loopBtn = document.getElementById('tLoop');
+        this.playBtn = document.getElementById('tSync');
         this.createBtn = document.getElementById('tCreate');
         this.addBtn = document.getElementById('tAdd');
         this.removeBtn = document.getElementById('tRemove');
@@ -43,7 +45,14 @@ class Timeline {
         };
         this.dragState = {
             dragging: false,
-            target: null
+            target: null,
+            frame: false,
+            group: false
+        };
+        this.selectState = {
+            active: false,
+            start: -1,
+            end: -1
         };
         this.silence = {
             sampleRate: 0
@@ -51,6 +60,11 @@ class Timeline {
         this.blank = {
             width: 0,
             height: 0
+        };
+        this.copyState = {
+            timeline: [],
+            cut: false,
+            cutLocation: 0
         };
         this.ui = ui;
         this.onBin = onBin;
@@ -67,25 +81,31 @@ class Timeline {
         this.bindListener('click', this.addTimelineBtn, this.addTimeline);
         this.bindListener('click', this.next, this.nextFrame);
         this.bindListener('click', this.prev, this.prevFrame);
-        this.bindListener('click', this.addBtn, function () { this.expandTimeline(); });
-        this.bindListener('click', this.removeBtn, function () { this.contractTimeline(); });
+        //this.bindListener('click', this.addBtn, function (){ this.expandTimeline(); });
+        //this.bindListener('click', this.removeBtn, function (){ this.contractTimeline(); });
         this.bindListener('click', this.playBtn, this.playPreview);
         this.bindListener('click', this.loopBtn, this.toggleLoop);
         this.bindListener('ended', this.previewVideo, this.previewEnded);
         this.bindListener('change', this.stepSizeElement, this.changeStepSize);
         this.bindListener('keydown', document, this.keyDown);
         this.bindListener('keyup', document, this.keyUp);
-        /** Drag and Drop **/
         this.bindGlobal('.frame', 'click', this.clickFrame.bind(this));
         this.bindGlobal('.frame', 'dblclick', this.dblclickFrame.bind(this));
         this.bindGlobal('#tBin tbody tr', 'click', this.clickBinImage.bind(this));
         this.bindGlobal('#tBin tbody tr', 'dblclick', this.dblclickBinImage.bind(this));
+        /** Drag and Drop **/
         this.bindGlobal('#tBin tbody tr', 'dragstart', this.binDragStart.bind(this));
         this.bindGlobal('.frame', 'dragenter', this.binDragEnter.bind(this));
         this.bindGlobal('#tWrapper', 'dragleave', this.binDragLeave.bind(this));
         this.bindGlobal('#tBin tbody tr', 'drop', this.binDragEnd.bind(this));
         this.bindGlobal('#tBin tbody tr', 'dragend', this.binDragEnd.bind(this));
+        this.bindGlobal('.frame', 'dragstart', this.frameDragStart.bind(this));
+        this.bindGlobal('.group', 'dragstart', this.groupDragStart.bind(this));
         this.bindListener('drop', document, this.binDragEnd);
+        this.bindListener('drop', document, this.frameDragEnd.bind(this));
+        this.bindListener('drop', document, this.groupDragEnd.bind(this));
+        /** Selection UI **/
+        this.bindGlobal('.frame', 'click', this.clickSelect.bind(this));
     }
     bindListener(event, element, func) {
         element.addEventListener(event, func.bind(this), false);
@@ -102,6 +122,16 @@ class Timeline {
                 targetElement = targetElement.parentElement;
             }
         }, true);
+    }
+    progress(percent) {
+        let index;
+        if (this.timeline && this.timeline.length > 0) {
+            index = Math.round(percent * this.timeline.length);
+            if (typeof this.timeline[index] !== 'undefined') {
+                this.removeClassAll('.frame.progress', 'progress');
+                this.addClass(document.querySelector(`.frame[x="${index}"]`), 'progress');
+            }
+        }
     }
     hash() {
         let str = '';
@@ -163,6 +193,7 @@ class Timeline {
             val = 1;
         }
         this.stepSize = val;
+        this.addTimelineBtn.innerHTML = `Add ${val} Frame${val === 1 ? '' : 's'} to Timeline`;
     }
     clickFrame(evt) {
         const x = parseInt(evt.target.getAttribute('x'), 10);
@@ -179,6 +210,9 @@ class Timeline {
         }
         else {
             this.stopDisplay();
+        }
+        if (!this.selectState.active) {
+            this.clearSelect();
         }
     }
     dblclickFrame(evt) {
@@ -216,6 +250,9 @@ class Timeline {
         let id;
         let tr = evt.target;
         let bi;
+        let startFrame = this.selected;
+        let nullFill = 0;
+        let stepSize = this.stepSize;
         if (tr.nodeName === 'TD') {
             tr = tr.parentElement;
         }
@@ -223,14 +260,21 @@ class Timeline {
         bi = this.getById(id);
         this.selectBinImage(id);
         if (bi) {
+            if (this.selectState.start !== -1) {
+                startFrame = this.selectState.start;
+                stepSize = (this.selectState.end - this.selectState.start) + 1; //inclusive length
+            }
             this.displayFrame(bi.file);
-            this.assignFrame(this.selectedBin, this.selected, this.stepSize);
-            if (this.selected + this.stepSize <= this.timeline.length - 1) {
-                this.selectFrame(this.selected + this.stepSize);
+            this.assignFrame(this.selectedBin, startFrame, stepSize);
+            if (startFrame + stepSize <= this.timeline.length - 1) {
+                this.selectFrame(startFrame + stepSize);
             }
             else {
                 this.selectFrame(this.timeline.length - 1);
             }
+        }
+        if (!this.selectState.active && this.selectState.start !== -1) {
+            this.clearSelect();
         }
     }
     selectBinImage(id) {
@@ -241,7 +285,7 @@ class Timeline {
     selectFrame(x) {
         this.removeClassAll('.frame.selected', 'selected');
         this.addClass(document.querySelector(`.frame[x="${x}"]`), 'selected');
-        this.selected = x;
+        this.changeSelected(x);
     }
     selectFrameGroup(x, size, id = null) {
         let bi = null;
@@ -312,7 +356,19 @@ class Timeline {
         if (this.ui.currentPage !== 'timeline') {
             return false;
         }
-        //console.log(evt.code);
+        //console.dir(evt);
+        console.log(evt.code);
+        if (evt.ctrlKey || evt.metaKey) {
+            if (evt.code === 'KeyC') {
+                return this.copy();
+            }
+            else if (evt.code === 'KeyX') {
+                return this.cut();
+            }
+            else if (evt.code === 'KeyV') {
+                return this.paste();
+            }
+        }
         if (evt.code === 'Backspace') {
             return this.deleteFrame();
         }
@@ -325,6 +381,9 @@ class Timeline {
         else if (evt.code === 'Space') {
             return this.playPreview();
         }
+        else if (evt.code === 'ShiftRight' || evt.code === 'ShiftLeft') {
+            return this.startSelect();
+        }
         key = this.codeToKey(evt.code, evt.shiftKey);
         if (key) {
             this.playFrame(key, true);
@@ -334,6 +393,9 @@ class Timeline {
         let key = null;
         if (this.ui.currentPage !== 'timeline') {
             return false;
+        }
+        if (evt.code === 'ShiftRight' || evt.code === 'ShiftLeft') {
+            return this.endSelect();
         }
         key = this.codeToKey(evt.code, evt.shiftKey);
         if (key) {
@@ -546,18 +608,15 @@ class Timeline {
     async create() {
         const options = {
             title: 'New Timeline',
-            label: 'Number of frames:',
-            value: '255',
-            customStylesheet: 'dist/css/style.css',
-            inputAttrs: {
-                type: 'number'
-            },
-            type: 'input'
+            input: 'text',
+            inputValue: '255',
+            inputLabel: 'Length of your timeline (frames)',
+            inputPlaceholder: '255'
         };
         let res;
         let confirmRes;
         let len;
-        this.selected = 0;
+        this.changeSelected(0);
         this.createBtn.blur();
         if (this.timeline.length > 0) {
             try {
@@ -572,7 +631,7 @@ class Timeline {
             }
         }
         try {
-            res = await electronPrompt(options);
+            res = await this.prompt(options);
         }
         catch (err) {
             console.error(err);
@@ -595,6 +654,17 @@ class Timeline {
         this.removeClass(this.addBtn, 'hide');
         this.removeClass(this.removeBtn, 'hide');
         this.layout();
+    }
+    async prompt(options) {
+        let res;
+        try {
+            //@ts-ignore
+            res = await Swal.fire(options);
+        }
+        catch (err) {
+            console.error(err);
+        }
+        return res.value;
     }
     async confirm() {
         const options = {
@@ -628,10 +698,16 @@ class Timeline {
             frame.setAttribute('x', String(i));
             if (i === this.selected) {
                 frame.classList.add('selected');
+                this.counter.value = String(i);
             }
             if (this.timeline[i] != null) {
                 bi = this.getById(this.timeline[i].id);
                 frame.innerText = bi.key;
+            }
+            if (this.selectState.start !== -1 && (this.selectState.active || this.selectState.start !== this.selectState.end)) {
+                if (i >= this.selectState.start && i <= this.selectState.end) {
+                    frame.classList.add('group');
+                }
             }
             between = document.createElement('div');
             between.classList.add('btw');
@@ -729,12 +805,20 @@ class Timeline {
                 this.selectFrame(this.timeline.length - 1);
             }
         }
+        if (!this.selectState.active && this.selectState.start !== -1) {
+            this.clearSelect();
+        }
         //console.log(`${this.selected} = ${bi.id}`)
     }
     assignFrame(id, x, count = 1) {
         for (let i = 0; i < count; i++) {
             if (typeof this.timeline[x + i] !== 'undefined') {
-                this.timeline[x + i] = { id };
+                if (id != null) {
+                    this.timeline[x + i] = { id };
+                }
+                else {
+                    this.timeline[x + i] = null;
+                }
             }
         }
         this.layout();
@@ -744,7 +828,7 @@ class Timeline {
             return false;
         }
         this.timeline[this.selected] = null;
-        this.selected--;
+        this.changeSelected(this.selected - 1);
         this.layout();
     }
     expandTimeline(steps = 1) {
@@ -876,7 +960,7 @@ class Timeline {
         }
     }
     startInterval() {
-        this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 10);
+        this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
     }
     previewIntervalFunction() {
         const time = this.previewVideo.currentTime / this.previewVideo.duration;
@@ -884,6 +968,7 @@ class Timeline {
         x = x === -0 ? 0 : x; //catch -0 values (thanks Javascript!)
         this.removeClassAll('.frame.playing', 'playing');
         this.addClass(document.querySelector(`.frame[x="${x}"]`), 'playing');
+        this.counter.value = String(x);
     }
     play() {
         if (!this.previewState.displaying) {
@@ -892,12 +977,14 @@ class Timeline {
             this.previewState.displaying = true;
         }
         this.previewState.playing = true;
+        this.addClass(this.playBtn, 'playing');
         this.previewVideo.play();
         this.startInterval();
     }
     pause() {
         this.previewVideo.pause();
         this.previewState.playing = false;
+        this.removeClass(this.playBtn, 'playing');
         try {
             clearInterval(this.previewInterval);
         }
@@ -905,6 +992,7 @@ class Timeline {
             //
         }
         this.removeClassAll('.frame.playing', 'playing');
+        this.counter.value = String(this.selected);
     }
     binDragStart(evt) {
         const id = evt.target.getAttribute('id');
@@ -927,7 +1015,11 @@ class Timeline {
         if (this.dragState.dragging) {
             x = parseInt(evt.target.getAttribute('x'), 10);
             this.dragState.target = x;
-            this.selectFrameGroup(x, this.stepSize, this.selectedBin);
+            if (this.dragState.group) {
+            }
+            else {
+                this.selectFrameGroup(x, this.stepSize, this.selectedBin);
+            }
         }
     }
     binDragLeave(evt) {
@@ -939,6 +1031,7 @@ class Timeline {
     binDragEnd(evt) {
         let selectAfter = 0;
         if (this.dragState.dragging && this.dragState.target != null) {
+            console.log('binDragEnd');
             selectAfter = this.dragState.target + this.stepSize;
             if (selectAfter >= this.timeline.length) {
                 selectAfter = this.timeline.length - 1;
@@ -948,6 +1041,188 @@ class Timeline {
         }
         this.dragState.target = null;
         this.dragState.dragging = false;
+    }
+    startSelect() {
+        if (typeof this.timeline[this.selected] !== 'undefined') {
+            console.log('startSelect');
+            console.log(this.selected);
+            this.selectState.start = this.selected;
+            this.selectState.end = this.selected;
+            this.selectState.active = true;
+        }
+        else {
+            this.selectState.start = -1;
+        }
+        this.layout();
+    }
+    clickSelect(evt) {
+        let target;
+        let x;
+        if (this.selectState.active && this.selectState.start !== -1) {
+            console.log('clickSelect');
+            target = evt.target;
+            x = parseInt(target.getAttribute('x'), 10);
+            if (x !== this.selectState.start) {
+                console.log(x);
+                if (x < this.selectState.start) {
+                    this.selectState.end = this.selectState.start + 0;
+                    this.selectState.start = x;
+                    this.selectFrame(x);
+                }
+                else if (x > this.selectState.start) {
+                    this.selectState.end = x;
+                }
+            }
+            else {
+                this.selectState.end = -1;
+            }
+            console.dir(this.selectState);
+            this.layout();
+        }
+    }
+    endSelect() {
+        console.log('endSelect');
+        this.selectState.active = false;
+        if (this.selectState.end !== -1) {
+            this.layout();
+        }
+    }
+    clearSelect() {
+        console.log('clearSelect');
+        console.trace();
+        this.selectState.start = -1;
+        this.selectState.end = -1;
+        this.selectState.active = false;
+        this.layout();
+    }
+    copy() {
+        console.log('copy');
+        this.copyState.cut = false;
+        if (this.selectState.start !== -1) {
+            //copy selected 
+            this.copyState.timeline = [];
+            for (let x = this.selectState.start; x < this.selectState.end + 1; x++) {
+                this.copyState.timeline.push(this.timeline[x]);
+            }
+        }
+        else {
+            //copy single selected frame
+            this.copyState.timeline = [this.timeline[this.selected]];
+        }
+        console.log(this.copyState.timeline);
+    }
+    cut() {
+        console.log('cut');
+        let stepSize;
+        this.copy();
+        this.copyState.cut = true;
+        if (this.selectState.start !== -1) {
+            stepSize = (this.selectState.end - this.selectState.start) + 1;
+            this.assignFrame(null, this.selectState.start, stepSize);
+            this.copyState.cutLocation = this.selectState.start;
+        }
+        else {
+            this.assignFrame(null, this.selected, 1);
+            this.copyState.cutLocation = this.selected;
+        }
+        this.layout();
+    }
+    paste() {
+        console.log('paste');
+        let startFrame = 0;
+        let frame;
+        if (this.selectState.start !== -1) {
+            startFrame = this.selectState.start;
+        }
+        else {
+            startFrame = this.selected;
+        }
+        for (let i = 0; i < this.copyState.timeline.length; i++) {
+            if (startFrame + i === this.timeline.length) {
+                break;
+            }
+            frame = this.copyState.timeline[i] != null ? this.copyState.timeline[i].id : null;
+            this.assignFrame(frame, startFrame + i, 1);
+        }
+        this.clearSelect();
+    }
+    frameDragStart(evt) {
+        const target = evt.target;
+        let x;
+        if (!target || !target.classList.contains('frame')) {
+            return false;
+        }
+        if (target.classList.contains('group')) {
+            return false;
+        }
+        x = parseInt(target.getAttribute('x'), 10);
+        this.dragState.frame = true;
+        this.dragState.group = false;
+        this.copyState.cutLocation = x;
+        this.copyState.timeline = [this.timeline[x]];
+    }
+    //override frame select
+    groupDragStart(evt) {
+        const target = evt.target;
+        let x;
+        if (!target || !target.classList.contains('frame')) {
+            return false;
+        }
+        if (!target.classList.contains('group')) {
+            return false;
+        }
+        x = parseInt(target.getAttribute('x'), 10);
+        this.copyState.group = true;
+        this.copyState.frame = false;
+        this.copyState.cutLocation = x;
+        this.copyState.timeline = [];
+        for (let i = this.selectState.start; i < this.selectState.end + 1; i++) {
+            this.copyState.timeline.push(this.timeline[i]);
+        }
+    }
+    frameDragEnd(evt) {
+        const target = evt.target;
+        let x;
+        if (this.dragState.frame && !this.dragState.group) {
+            console.log('frameDragEnd');
+            if (target.classList.contains('frame')) {
+                x = parseInt(target.getAttribute('x'), 10);
+                this.assignFrame(null, this.copyState.cutLocation, 1);
+                this.assignFrame(this.copyState.timeline[0].id, x, 1);
+                this.changeSelected(x);
+                this.layout();
+            }
+            this.dragState.frame = false;
+            this.dragState.group = false;
+            this.copyState.cut = false;
+            this.copyState.cutLocation = -1;
+            this.copyState.timeline = [];
+        }
+    }
+    groupDragEnd(evt) {
+        const target = evt.target;
+        let x;
+        if (this.dragState.group && !this.dragState.frame) {
+            console.log(this.selectState);
+            if (this.selectState.start !== -1) {
+                console.log('groupDragEnd');
+                x = this.selectState.start;
+                for (let i = 0; i < this.copyState.timeline.length; i++) {
+                    this.assignFrame(null, this.copyState.cutLocation + i, 1);
+                    this.assignFrame(this.copyState.timeline[i].id, x, 1);
+                }
+                this.changeSelected(x + this.copyState.timeline.length);
+                this.layout();
+            }
+            this.dragState.group = false;
+            this.copyState.frame = false;
+            this.copyState.cut = false;
+            this.copyState.timeline = [];
+        }
+    }
+    changeSelected(x) {
+        this.selected = x;
+        this.counter.value = String(x);
     }
 }
 //# sourceMappingURL=index.js.map

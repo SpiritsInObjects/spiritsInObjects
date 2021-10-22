@@ -1,39 +1,39 @@
 'use strict';
 
-const electronPrompt = require('electron-prompt');
 const { extname } = require('path');
 const uuid = require('uuid').v4;
 const { lstat, readdir } = require('fs-extra');
 const { platform } = require('os');
+const Swal = require('../contrib/sweetalert2.min.js');
 
 class Timeline {
 	private ui : any;
 
-	private canvas : HTMLCanvasElement = document.getElementById('tCanvas') as HTMLCanvasElement;
-	private ctx : CanvasRenderingContext2D = this.canvas.getContext('2d');
-	private display : HTMLImageElement = document.getElementById('tCanvasDisplay') as HTMLImageElement;
-	private theatre : HTMLElement = document.getElementById('tTheatre');
-	private binElement : HTMLElement = document.getElementById('tBin');
+	private canvas 			: HTMLCanvasElement = document.getElementById('tCanvas') as HTMLCanvasElement;
+	private ctx 			: CanvasRenderingContext2D = this.canvas.getContext('2d');
+	private display 		: HTMLImageElement = document.getElementById('tCanvasDisplay') as HTMLImageElement;
+	private theatre 		: HTMLElement = document.getElementById('tTheatre');
+	private binElement 		: HTMLElement = document.getElementById('tBin');
 	private timelineElement : HTMLElement = document.getElementById('tElement');
-	private playBtn : HTMLButtonElement = document.getElementById('tSync') as HTMLButtonElement;
-	private previewVideo : HTMLVideoElement = document.getElementById('tPreviewVideo') as HTMLVideoElement;
-	private loopBtn : HTMLButtonElement = document.getElementById('tLoop') as HTMLButtonElement;
+	private previewVideo 	: HTMLVideoElement = document.getElementById('tPreviewVideo') as HTMLVideoElement;
 	private stepSizeElement : HTMLInputElement = document.getElementById('tStepSize') as HTMLInputElement;
+	private promptElement 	: HTMLElement = document.getElementById('prompt');
+	private counter  		: HTMLInputElement = document.getElementById('tCurrentFrame') as HTMLInputElement;
 
-	public stillLoader : HTMLImageElement;
+	public stillLoader 		: HTMLImageElement;
 
-	private createBtn : HTMLButtonElement = document.getElementById('tCreate') as HTMLButtonElement;
-	private addBtn : HTMLButtonElement = document.getElementById('tAdd') as HTMLButtonElement;
-	private removeBtn : HTMLButtonElement = document.getElementById('tRemove') as HTMLButtonElement;
-	private importBtn : HTMLButtonElement = document.getElementById('tAddBin') as HTMLButtonElement;
-	private addTimelineBtn : HTMLButtonElement = document.getElementById('tAddTimeline') as HTMLButtonElement;
-	public prev : HTMLButtonElement = document.getElementById('tPrevFrame') as HTMLButtonElement;
-    public next : HTMLButtonElement = document.getElementById('tNextFrame') as HTMLButtonElement;
-
-
+	private loopBtn 		: HTMLButtonElement = document.getElementById('tLoop') as HTMLButtonElement;
+	private playBtn 		: HTMLButtonElement = document.getElementById('tSync') as HTMLButtonElement;
+	private createBtn 		: HTMLButtonElement = document.getElementById('tCreate') as HTMLButtonElement;
+	private addBtn 			: HTMLButtonElement = document.getElementById('tAdd') as HTMLButtonElement;
+	private removeBtn 		: HTMLButtonElement = document.getElementById('tRemove') as HTMLButtonElement;
+	private importBtn 		: HTMLButtonElement = document.getElementById('tAddBin') as HTMLButtonElement;
+	private addTimelineBtn 	: HTMLButtonElement = document.getElementById('tAddTimeline') as HTMLButtonElement;
+	public prev 			: HTMLButtonElement = document.getElementById('tPrevFrame') as HTMLButtonElement;
+    public next 			: HTMLButtonElement = document.getElementById('tNextFrame') as HTMLButtonElement;
 
 	public timeline : any[] = [];
-	private bin : BinImage[] = [];
+	public bin : BinImage[] = [];
 	private lastDir : string = '';
 	private stepSize : number = 1;
 
@@ -68,15 +68,30 @@ class Timeline {
 
 	private dragState : any = {
 		dragging : false,
-		target : null
+		target : null,
+		frame : false,
+		group : false
+	};
+
+	private selectState : any = {
+		active : false,
+		start : -1,
+		end : -1
 	};
 
 	private silence : any = {
 		sampleRate : 0
 	};
+
 	private blank : any = {
 		width : 0,
 		height: 0
+	};
+
+	private copyState : any = {
+		timeline : [],
+		cut : false,
+		cutLocation : 0
 	};
 
 	constructor (ui : any, onBin : Function, onPreview : Function) {
@@ -98,8 +113,8 @@ class Timeline {
 		this.bindListener('click', this.addTimelineBtn, this.addTimeline);
 		this.bindListener('click', this.next, this.nextFrame);
 		this.bindListener('click', this.prev, this.prevFrame);
-		this.bindListener('click', this.addBtn, function (){ this.expandTimeline(); });
-		this.bindListener('click', this.removeBtn, function (){ this.contractTimeline(); });
+		//this.bindListener('click', this.addBtn, function (){ this.expandTimeline(); });
+		//this.bindListener('click', this.removeBtn, function (){ this.contractTimeline(); });
 		this.bindListener('click', this.playBtn, this.playPreview);
 		this.bindListener('click', this.loopBtn, this.toggleLoop);
 
@@ -111,14 +126,12 @@ class Timeline {
 		
 		this.bindListener('keyup', document, this.keyUp);
 
-		
-		/** Drag and Drop **/
 		this.bindGlobal('.frame', 'click', this.clickFrame.bind(this));
 		this.bindGlobal('.frame', 'dblclick', this.dblclickFrame.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'click', this.clickBinImage.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'dblclick', this.dblclickBinImage.bind(this));
 
-
+		/** Drag and Drop **/
 		this.bindGlobal('#tBin tbody tr', 'dragstart', this.binDragStart.bind(this));
 		this.bindGlobal('.frame', 'dragenter', this.binDragEnter.bind(this));
 		this.bindGlobal('#tWrapper', 'dragleave', this.binDragLeave.bind(this));
@@ -126,8 +139,16 @@ class Timeline {
 		this.bindGlobal('#tBin tbody tr', 'drop', this.binDragEnd.bind(this));
 		this.bindGlobal('#tBin tbody tr', 'dragend', this.binDragEnd.bind(this));
 
+		this.bindGlobal('.frame', 'dragstart', this.frameDragStart.bind(this));
+		this.bindGlobal('.group', 'dragstart', this.groupDragStart.bind(this));
+
 		this.bindListener('drop', document, this.binDragEnd);
-		
+		this.bindListener('drop', document, this.frameDragEnd.bind(this));
+		this.bindListener('drop', document, this.groupDragEnd.bind(this));
+
+		/** Selection UI **/
+
+		this.bindGlobal('.frame', 'click', this.clickSelect.bind(this));
 	}
 
 	private bindListener (event : string, element : HTMLElement|Document, func : Function) {
@@ -148,6 +169,17 @@ class Timeline {
 			},
 			true
 		);
+	}
+
+	private progress (percent : number) {
+		let index : number;
+		if (this.timeline && this.timeline.length > 0) {
+			index = Math.round(percent * this.timeline.length);
+			if (typeof this.timeline[index] !== 'undefined') {
+				this.removeClassAll('.frame.progress', 'progress');
+				this.addClass(document.querySelector(`.frame[x="${index}"]`), 'progress');
+			}
+		}
 	}
 
 	private hash () : number {
@@ -216,6 +248,7 @@ class Timeline {
 			val = 1;
 		}
 		this.stepSize = val;
+		this.addTimelineBtn.innerHTML = `Add ${val} Frame${val === 1 ? '' : 's'} to Timeline`;
 	}
 
 	private clickFrame (evt : Event) {
@@ -235,6 +268,10 @@ class Timeline {
 			this.selectBinImage(bi.id);
 		} else {
 			this.stopDisplay();
+		}
+
+		if (!this.selectState.active) {
+			this.clearSelect();
 		}
 	}
 
@@ -278,26 +315,37 @@ class Timeline {
     }
 
     private dblclickBinImage (evt : Event) {
-    	let id : string;
-    	let tr : any = evt.target;
-    	let bi : BinImage;
+		let id : string;
+		let tr : any = evt.target;
+		let bi : BinImage;
+		let startFrame : number = this.selected;
+		let nullFill : number = 0;
+		let stepSize : number = this.stepSize;
 
-    	if (tr.nodeName === 'TD') {
-    		tr = tr.parentElement;
-    	}
+		if (tr.nodeName === 'TD') {
+			tr = tr.parentElement;
+		}
 
-    	id = tr.id;
-    	bi = this.getById(id);
-    	this.selectBinImage(id);
+		id = tr.id;
+		bi = this.getById(id);
+		this.selectBinImage(id);
 
 		if (bi) {
+			if (this.selectState.start !== -1) {
+				startFrame = this.selectState.start;
+				stepSize = (this.selectState.end - this.selectState.start) + 1; //inclusive length
+			}
 			this.displayFrame(bi.file);
-			this.assignFrame(this.selectedBin, this.selected, this.stepSize);
-			if (this.selected + this.stepSize <= this.timeline.length - 1) {
-				this.selectFrame(this.selected + this.stepSize);
+			this.assignFrame(this.selectedBin, startFrame, stepSize);
+			if (startFrame + stepSize <= this.timeline.length - 1) {
+				this.selectFrame(startFrame + stepSize);
 			} else {
 				this.selectFrame(this.timeline.length - 1);
 			}
+		}
+
+		if (!this.selectState.active && this.selectState.start !== -1) {
+			this.clearSelect();
 		}
     }
 
@@ -310,7 +358,7 @@ class Timeline {
     private selectFrame (x : number) {
     	this.removeClassAll('.frame.selected', 'selected');
 		this.addClass(document.querySelector(`.frame[x="${x}"]`), 'selected');
-    	this.selected = x;
+    	this.changeSelected(x);
     }
 
     private selectFrameGroup (x : number, size : number, id : string = null) {
@@ -390,7 +438,19 @@ class Timeline {
 			return false;
 		}
 
-		//console.log(evt.code);
+		//console.dir(evt);
+		console.log(evt.code);
+
+		if (evt.ctrlKey || evt.metaKey){
+			if (evt.code === 'KeyC') {
+				return this.copy();
+			} else if (evt.code === 'KeyX') {
+				return this.cut();
+			} else if (evt.code === 'KeyV') {
+				return this.paste();
+			}
+		}
+
 		if (evt.code === 'Backspace') {
 			return this.deleteFrame();
 		} else if (evt.code === 'ArrowRight') {
@@ -399,6 +459,8 @@ class Timeline {
 			return this.prevFrame();
 		} else if (evt.code === 'Space') {
 			return this.playPreview();
+		} else if (evt.code === 'ShiftRight' || evt.code === 'ShiftLeft') {
+			return this.startSelect();
 		}
 		
 		key = this.codeToKey(evt.code, evt.shiftKey);
@@ -413,6 +475,10 @@ class Timeline {
 
 		if (this.ui.currentPage !== 'timeline') {
 			return false;
+		}
+
+		if (evt.code === 'ShiftRight' || evt.code === 'ShiftLeft') {
+			return this.endSelect();
 		}
 
 		key = this.codeToKey(evt.code, evt.shiftKey);
@@ -659,20 +725,17 @@ class Timeline {
 	public async create () {
 		const options : any = {
 			title: 'New Timeline',
-			label: 'Number of frames:',
-			value: '255',
-			customStylesheet : 'dist/css/style.css',
-			inputAttrs: {
-				type: 'number'
-			},
-			type: 'input'
+  			input: 'text',
+  			inputValue: '255',
+  			inputLabel: 'Length of your timeline (frames)',
+  			inputPlaceholder: '255'
 		};
 
 		let res : string;
 		let confirmRes : any;
 		let len : number;
 
-		this.selected = 0;
+		this.changeSelected(0);
 		this.createBtn.blur();
 
 		if (this.timeline.length > 0) {
@@ -689,7 +752,7 @@ class Timeline {
 		}
 
 		try {
-			res = await electronPrompt(options);
+			res = await this.prompt(options);
 		} catch (err) {
 			console.error(err);
 			return false;
@@ -716,6 +779,19 @@ class Timeline {
 		this.removeClass(this.removeBtn, 'hide');
 
 		this.layout();
+	}
+
+	private async prompt (options : PromptConfig) : Promise<string>{
+		let res : any;
+
+		try {
+			//@ts-ignore
+			res = await Swal.fire(options);
+		} catch (err) {
+			console.error(err);
+		}
+
+		return res.value;
 	}
 
 	private async confirm () : Promise <any>{
@@ -756,11 +832,18 @@ class Timeline {
 
 			if (i === this.selected){
 				frame.classList.add('selected');
+				this.counter.value = String(i);
 			}
 
 			if (this.timeline[i] != null) {
 				bi = this.getById(this.timeline[i].id);
 				frame.innerText = bi.key;
+			}
+
+			if (this.selectState.start !== -1 && (this.selectState.active || this.selectState.start !== this.selectState.end) ) {
+				if (i >= this.selectState.start && i <= this.selectState.end) {
+					frame.classList.add('group');
+				}
 			}
 
 			between = document.createElement('div');
@@ -870,13 +953,21 @@ class Timeline {
 				this.selectFrame(this.timeline.length - 1);
 			}
 		}
+		if (!this.selectState.active && this.selectState.start !== -1) {
+			this.clearSelect();
+		}
 		//console.log(`${this.selected} = ${bi.id}`)
 	}
 
 	public assignFrame (id : string, x : number, count : number = 1) {
 		for (let i = 0; i < count; i++) {
 			if (typeof this.timeline[x + i] !== 'undefined') {
-				this.timeline[x + i] = { id };
+				if (id != null) {
+					this.timeline[x + i] = { id };
+				} else {
+					this.timeline[x + i] = null;
+				}
+				
 			}
 		}
 		this.layout();
@@ -887,7 +978,7 @@ class Timeline {
 			return false;
 		}
 		this.timeline[this.selected] = null;
-		this.selected--;
+		this.changeSelected(this.selected - 1);
 		this.layout();
 	}
 
@@ -1039,7 +1130,7 @@ class Timeline {
 		}
 	}
 	private startInterval () {
-		this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 10);
+		this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
 	}
 
 	private previewIntervalFunction () {
@@ -1048,6 +1139,7 @@ class Timeline {
     	x = x === -0 ? 0 : x; //catch -0 values (thanks Javascript!)
 		this.removeClassAll('.frame.playing', 'playing');
 		this.addClass(document.querySelector(`.frame[x="${x}"]`), 'playing');
+		this.counter.value = String(x);
 	}
 
 	public play () {
@@ -1058,6 +1150,7 @@ class Timeline {
 		}
 
 		this.previewState.playing = true;
+		this.addClass(this.playBtn, 'playing');
 		this.previewVideo.play();
 		this.startInterval();
 	}
@@ -1065,12 +1158,14 @@ class Timeline {
 	public pause () {
 		this.previewVideo.pause();
 		this.previewState.playing = false;
+		this.removeClass(this.playBtn, 'playing');
 		try {
 			clearInterval(this.previewInterval);
 		} catch (err) {
 			//
 		}
 		this.removeClassAll('.frame.playing', 'playing');
+		this.counter.value = String(this.selected);
 	}
 
 	private binDragStart (evt: DragEvent) {
@@ -1097,7 +1192,11 @@ class Timeline {
 		if (this.dragState.dragging) {
 			x = parseInt((evt.target as HTMLElement).getAttribute('x'), 10);
 			this.dragState.target = x;
-			this.selectFrameGroup(x, this.stepSize, this.selectedBin);
+			if (this.dragState.group) {
+
+			} else {
+				this.selectFrameGroup(x, this.stepSize, this.selectedBin);
+			}
 		}
 	}
 
@@ -1111,6 +1210,7 @@ class Timeline {
 	private binDragEnd (evt: DragEvent) {
 		let selectAfter : number = 0;
 		if (this.dragState.dragging && this.dragState.target != null) {
+			console.log('binDragEnd');
 			selectAfter = this.dragState.target + this.stepSize;
 			if (selectAfter >= this.timeline.length) {
 				selectAfter = this.timeline.length - 1;
@@ -1120,5 +1220,200 @@ class Timeline {
 		}
 		this.dragState.target = null;
 		this.dragState.dragging = false;
+	}
+
+	private startSelect () {
+		if (typeof this.timeline[this.selected] !== 'undefined') {
+			console.log('startSelect')
+			console.log(this.selected);
+			this.selectState.start = this.selected;
+			this.selectState.end = this.selected;
+			this.selectState.active = true;
+		} else {
+			this.selectState.start = -1;
+		}
+		this.layout();
+	}
+
+	private clickSelect (evt : MouseEvent) {
+		let target : HTMLElement;
+		let x : number;
+		if (this.selectState.active && this.selectState.start !== -1) {
+			console.log('clickSelect')
+			target = evt.target as HTMLElement;
+			x = parseInt( target.getAttribute('x'), 10 );
+			if (x !== this.selectState.start) {
+				console.log(x);
+				if (x < this.selectState.start) {
+					this.selectState.end = this.selectState.start + 0;
+					this.selectState.start = x;
+					this.selectFrame(x);
+				} else if (x > this.selectState.start) {
+					this.selectState.end = x;
+				}
+			} else {
+				this.selectState.end = -1;
+			}
+			console.dir(this.selectState);
+			this.layout();
+		}
+	}
+
+	private endSelect () {
+		console.log('endSelect');
+		this.selectState.active = false;
+		if (this.selectState.end !== -1) {
+			this.layout();
+		}
+	}
+
+	private clearSelect () {
+		console.log('clearSelect');
+		console.trace();
+		this.selectState.start = -1;
+		this.selectState.end = -1;
+		this.selectState.active = false;
+		this.layout();
+	}
+
+	private copy () {
+		console.log('copy');
+		this.copyState.cut = false;
+		if (this.selectState.start !== -1) {
+			//copy selected 
+			this.copyState.timeline = [ ];
+			for (let x = this.selectState.start; x < this.selectState.end + 1; x++) {
+				this.copyState.timeline.push(this.timeline[x]);
+			}
+		} else {
+			//copy single selected frame
+			this.copyState.timeline = [ this.timeline[this.selected] ];
+		}
+		console.log(this.copyState.timeline);
+	}
+
+	private cut () {
+		console.log('cut');
+		let stepSize : number;
+		this.copy();
+		this.copyState.cut = true;
+		if (this.selectState.start !== -1) {
+			stepSize = (this.selectState.end - this.selectState.start) + 1;
+			this.assignFrame(null, this.selectState.start, stepSize);
+			this.copyState.cutLocation = this.selectState.start;
+		} else {
+			this.assignFrame(null, this.selected, 1);
+			this.copyState.cutLocation = this.selected;
+		}
+		this.layout();
+	}
+
+	private paste () {
+		console.log('paste');
+		let startFrame : number = 0;
+		let frame : string;
+
+		if (this.selectState.start !== -1) {
+			startFrame = this.selectState.start;
+		} else {
+			startFrame = this.selected;
+		}
+
+		for (let i = 0; i < this.copyState.timeline.length; i++) {
+			if (startFrame + i === this.timeline.length) {
+				break;
+			}
+			frame = this.copyState.timeline[i] != null ? this.copyState.timeline[i].id : null;
+			this.assignFrame(frame, startFrame + i, 1);
+		}
+
+		this.clearSelect();
+	}
+
+	private frameDragStart (evt : DragEvent) {
+		const target : HTMLElement = evt.target as HTMLElement;
+		let x : number;
+
+		if (!target || !target.classList.contains('frame')) {
+			return false;
+		}
+		if (target.classList.contains('group')) {
+			return false;
+		}
+
+		x = parseInt(target.getAttribute('x'), 10);
+		this.dragState.frame = true;
+		this.dragState.group = false;
+		this.copyState.cutLocation = x;
+		this.copyState.timeline = [ this.timeline[x] ];
+	}
+
+	//override frame select
+	private groupDragStart (evt : DragEvent) {
+		const target : HTMLElement = evt.target as HTMLElement;
+		let x: number;
+
+		if (!target || !target.classList.contains('frame')) {
+			return false;
+		}
+		if (!target.classList.contains('group')) {
+			return false;
+		}
+		x = parseInt(target.getAttribute('x'), 10);
+
+		this.copyState.group = true;
+		this.copyState.frame = false;
+		this.copyState.cutLocation = x;
+		this.copyState.timeline = [];
+		for (let i = this.selectState.start; i < this.selectState.end + 1; i++) {
+			this.copyState.timeline.push(this.timeline[i]);
+		}
+	}
+
+	private frameDragEnd (evt : DragEvent) {
+		const target : HTMLElement = evt.target as HTMLElement;
+		let x : number;
+		if (this.dragState.frame && !this.dragState.group) {
+			console.log('frameDragEnd');
+			if (target.classList.contains('frame')) {
+				x = parseInt(target.getAttribute('x'), 10);
+				this.assignFrame(null, this.copyState.cutLocation, 1);
+				this.assignFrame(this.copyState.timeline[0].id, x, 1);
+				this.changeSelected(x);
+				this.layout();
+			}
+			this.dragState.frame = false;
+			this.dragState.group = false;
+			this.copyState.cut = false;
+			this.copyState.cutLocation = -1;
+			this.copyState.timeline = [];
+		}
+	}
+
+	private groupDragEnd (evt : DragEvent) {
+		const target : HTMLElement = evt.target as HTMLElement;
+		let x : number;
+		if (this.dragState.group && !this.dragState.frame) {
+			console.log(this.selectState);
+			if (this.selectState.start !== -1) {
+				console.log('groupDragEnd');
+				x = this.selectState.start;
+				for (let i = 0; i < this.copyState.timeline.length; i++) { 
+					this.assignFrame(null, this.copyState.cutLocation + i, 1);
+					this.assignFrame(this.copyState.timeline[i].id, x, 1);
+				}
+				this.changeSelected(x + this.copyState.timeline.length);
+				this.layout();
+			} 
+			this.dragState.group = false;
+			this.copyState.frame = false;
+			this.copyState.cut = false;
+			this.copyState.timeline = [];
+		}
+	}
+
+	private changeSelected (x : number) {
+		this.selected = x;
+		this.counter.value = String(x);
 	}
 }
