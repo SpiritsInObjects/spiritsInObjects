@@ -7,21 +7,8 @@ Built off the work by [Carlos Dominguez](https://github.com/carlosdominguez) in 
 
 ### Dependencies
 
-The application packages `ffmpeg` and `SoX` but requires the installation of `fluidsynth` to visualize MIDI files.
+The application packages binaries for `ffmpeg` and `ffprobe` using [ffmpeg-static](https://www.npmjs.com/package/ffmpeg-static) and [ffprobe-static](https://www.npmjs.com/package/ffprobe-static).
 
-**Install on Mac**
-
-Using [Homebrew](https://brew.sh/):
-
-```bash
-brew install fluid-synth
-```
-
-**Install on Linux (debian-based)**
-
-```bash
-apt install fluidsynth
-```
 
 ### Running from source
 
