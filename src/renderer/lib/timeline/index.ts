@@ -146,6 +146,9 @@ class Timeline {
 		this.bindListener('drop', document, this.frameDragEnd.bind(this));
 		this.bindListener('drop', document, this.groupDragEnd.bind(this));
 
+		this.bindGlobal('.frame', 'dragenter', this.groupDragEnter.bind(this));
+		this.bindGlobal('.frame', 'dragleave', this.groupDragLeave.bind(this));
+
 		/** Selection UI **/
 
 		this.bindGlobal('.frame', 'click', this.clickSelect.bind(this));
@@ -1243,7 +1246,6 @@ class Timeline {
 			target = evt.target as HTMLElement;
 			x = parseInt( target.getAttribute('x'), 10 );
 			if (x !== this.selectState.start) {
-				console.log(x);
 				if (x < this.selectState.start) {
 					this.selectState.end = this.selectState.start + 0;
 					this.selectState.start = x;
@@ -1254,7 +1256,6 @@ class Timeline {
 			} else {
 				this.selectState.end = -1;
 			}
-			console.dir(this.selectState);
 			this.layout();
 		}
 	}
@@ -1269,7 +1270,6 @@ class Timeline {
 
 	private clearSelect () {
 		console.log('clearSelect');
-		console.trace();
 		this.selectState.start = -1;
 		this.selectState.end = -1;
 		this.selectState.active = false;
@@ -1359,12 +1359,13 @@ class Timeline {
 		if (!target.classList.contains('group')) {
 			return false;
 		}
-		x = parseInt(target.getAttribute('x'), 10);
+		x = this.selectState.start;
 
-		this.copyState.group = true;
-		this.copyState.frame = false;
+		this.dragState.group = true;
+		this.dragState.frame = false;
 		this.copyState.cutLocation = x;
 		this.copyState.timeline = [];
+
 		for (let i = this.selectState.start; i < this.selectState.end + 1; i++) {
 			this.copyState.timeline.push(this.timeline[i]);
 		}
@@ -1373,12 +1374,14 @@ class Timeline {
 	private frameDragEnd (evt : DragEvent) {
 		const target : HTMLElement = evt.target as HTMLElement;
 		let x : number;
+		let id : string;
 		if (this.dragState.frame && !this.dragState.group) {
 			console.log('frameDragEnd');
 			if (target.classList.contains('frame')) {
 				x = parseInt(target.getAttribute('x'), 10);
 				this.assignFrame(null, this.copyState.cutLocation, 1);
-				this.assignFrame(this.copyState.timeline[0].id, x, 1);
+				id = this.copyState.timeline[0] == null ? null : this.copyState.timeline[0].id;
+				this.assignFrame(id, x, 1);
 				this.changeSelected(x);
 				this.layout();
 			}
@@ -1390,23 +1393,46 @@ class Timeline {
 		}
 	}
 
+	private groupDragEnter (evt : DragEvent) {
+		const target : HTMLElement = evt.target as HTMLElement;
+		let x : number;
+		//console.log('groupDragEnter');
+		if (this.dragState.group && !this.dragState.frame) {
+			x = parseInt(target.getAttribute('x'), 10);
+			this.removeClassAll('.frame.selected', 'selected');
+			for (let i = 0; i < this.copyState.timeline.length; i++) {
+				this.addClass(document.querySelector(`.frame[x="${x + i}"]`), 'selected');
+			}
+		}
+	}
+
+	private groupDragLeave (evt : DragEvent) {
+		//const target : HTMLElement = evt.target as HTMLElement;
+		//let x : number;
+		//console.log('groupDragLeave');
+		if (this.dragState.group && !this.dragState.frame) {
+			this.removeClassAll('.frame.selected', 'selected');
+		}
+	}
+
 	private groupDragEnd (evt : DragEvent) {
 		const target : HTMLElement = evt.target as HTMLElement;
 		let x : number;
+		let id : string;
 		if (this.dragState.group && !this.dragState.frame) {
-			console.log(this.selectState);
 			if (this.selectState.start !== -1) {
-				console.log('groupDragEnd');
-				x = this.selectState.start;
+				x = parseInt(target.getAttribute('x'), 10);
 				for (let i = 0; i < this.copyState.timeline.length; i++) { 
+					id = this.copyState.timeline[i] == null ? null : this.copyState.timeline[i].id;
 					this.assignFrame(null, this.copyState.cutLocation + i, 1);
-					this.assignFrame(this.copyState.timeline[i].id, x, 1);
+					this.assignFrame(id, x + i, 1);
 				}
 				this.changeSelected(x + this.copyState.timeline.length);
+				this.clearSelect();
 				this.layout();
 			} 
 			this.dragState.group = false;
-			this.copyState.frame = false;
+			this.dragState.frame = false;
 			this.copyState.cut = false;
 			this.copyState.timeline = [];
 		}
