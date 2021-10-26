@@ -29,7 +29,7 @@ tmp_file=`mktemp`
 cat ./docs/manual/head.html.tmpl > "${HTML}" 
 cat "${tmp_file}" >> "${HTML}"
 echo "" >> "${HTML}"
-echo "<footer><hr/ ><center>&copy; ${YEAR}</center></footer>" >> "${HTML}"
+echo "<br/><br/><footer><hr/ ><center>&copy; ${YEAR}</center></footer>" >> "${HTML}"
 cat ./docs/manual/footer.html.tmpl >> "${HTML}"
 
 rm "${tmp_file}"
@@ -44,7 +44,8 @@ tmp_file=`mktemp`
 tmp_md="${tmp_file}.md"
 
 cat "./docs/manual/README.md" > "${tmp_md}"
-echo "" >> "${tmp_md}"
+echo " " >> "${tmp_md}"
+echo " " >> "${tmp_md}"
 echo "__________" >> "${tmp_md}"
 echo "<center>&copy; ${YEAR}</center>" >> "${tmp_md}"
 
