@@ -494,6 +494,12 @@ class Visualize {
             console.error(err);
         }
         this.previewState.rendered = false;
+        try {
+            this.sync.removeAttribute('disabled');
+        }
+        catch (err) {
+            //
+        }
         soundData = Array.from(this.so.soundData);
         timelineScale = Math.floor(soundData.length / this.midiTimeline.width);
         //quick downsample, can improve
