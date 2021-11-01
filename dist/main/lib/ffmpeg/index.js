@@ -331,11 +331,16 @@ class ffmpeg {
     static async exportPreview(inputPath, outputPath, options, onProgress = () => { }) {
         const width = options.width;
         const height = options.height;
-        let args = [
-            '-framerate', '24',
-            '-f', 'image2',
+        let args = [];
+        if (typeof options.sequence !== 'undefined' && options.sequence) {
+            args = args.concat([
+                '-framerate', '24',
+                '-f', 'image2'
+            ]);
+        }
+        args = args.concat([
             '-i', inputPath
-        ];
+        ]);
         if (typeof options.audio !== 'undefined') {
             args = args.concat([
                 '-i', options.audio,

@@ -17,6 +17,7 @@ class Visualize {
         this.prev = document.getElementById('vPrevFrame');
         this.next = document.getElementById('vNextFrame');
         this.current = document.getElementById('vCurrentFrame');
+        this.sync = document.getElementById('vSync');
         this.preview = document.getElementById('vPreview');
         this.cursor = document.querySelector('#visualizeTimeline .cursor');
         this.scrubbing = false;
@@ -50,6 +51,14 @@ class Visualize {
         this.trackIndex = 0;
         this.trackNo = 0;
         this.tracksWithNotes = [];
+        this.previewState = {
+            hash: 0,
+            displaying: false,
+            rendered: false,
+            rendering: false,
+            playing: false,
+            loop: false
+        };
         const visualizeState = {
             get: function () { return false; }
         };
@@ -79,6 +88,36 @@ class Visualize {
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
         this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
+        this.sync.addEventListener('click', this.onSync.bind(this), false);
+        this.preview.addEventListener('ended', this.previewEnded.bind(this), false);
+    }
+    addClass(elem, className) {
+        try {
+            elem.classList.add(className);
+        }
+        catch (err) {
+            //
+        }
+    }
+    addClassAll(selector, className) {
+        const elems = document.querySelectorAll(selector);
+        [].forEach.call(elems, (el) => {
+            this.addClass(el, className);
+        });
+    }
+    removeClass(elem, className) {
+        try {
+            elem.classList.remove(className);
+        }
+        catch (err) {
+            //
+        }
+    }
+    removeClassAll(selector, className) {
+        const elems = document.querySelectorAll(selector);
+        [].forEach.call(elems, (el) => {
+            this.removeClass(el, className);
+        });
     }
     set(filePath, type) {
         this.filePath = filePath;
@@ -93,38 +132,18 @@ class Visualize {
         }
     }
     showMidi() {
-        try {
-            this.tracksSelect.classList.remove('hide');
-            this.wavesSelect.classList.remove('hide');
-            //this.stylesSelect.classList.remove('hide');
-            this.offsetSelect.classList.remove('hide');
-        }
-        catch (err) {
-            //
-        }
-        try {
-            this.typesSelect.classList.add('hide');
-        }
-        catch (err) {
-            //
-        }
+        this.removeClass(this.tracksSelect, 'hide');
+        this.removeClass(this.wavesSelect, 'hide');
+        //this.removeClass(this.stylesSelect, 'hide');
+        this.removeClass(this.offsetSelect, 'hide');
+        this.addClass(this.typesSelect, 'hide');
     }
     showAudio() {
-        try {
-            this.tracksSelect.classList.add('hide');
-            this.wavesSelect.classList.add('hide');
-            //this.wavesSelect.classList.add('hide');
-            this.offsetSelect.classList.add('hide');
-        }
-        catch (err) {
-            //
-        }
-        try {
-            this.typesSelect.classList.remove('hide');
-        }
-        catch (err) {
-            //
-        }
+        this.addClass(this.tracksSelect, 'hide');
+        this.addClass(this.wavesSelect, 'hide');
+        //this.addClass(this.wavesSelect, 'hide');
+        this.addClass(this.offsetSelect, 'hide');
+        this.removeClass(this.typesSelect, 'hide');
     }
     editFrame() {
         let frame = parseInt(this.current.value);
@@ -213,6 +232,13 @@ class Visualize {
         }
         catch (err) {
             throw err;
+        }
+        this.previewState.rendered = false;
+        try {
+            this.sync.removeAttribute('disabled');
+        }
+        catch (err) {
+            //
         }
         this.name = midi.name;
         console.log(this.name);
@@ -345,6 +371,7 @@ class Visualize {
         const cursor = (frameNumber / this.frames.length) * 100.0;
         let lines;
         let offsetLines;
+        this.resetPreview();
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
             if (this.type === 'midi') {
                 this.frameNumber = frameNumber;
@@ -451,20 +478,10 @@ class Visualize {
         let bottomY;
         this.soundtrackFull = soundtrackTypeParts.length > 1;
         if (this.soundtrackFull) {
-            try {
-                this.offsetSelect.classList.remove('hide');
-            }
-            catch (err) {
-                //
-            }
+            this.removeClass(this.offsetSelect, 'hide');
         }
         else {
-            try {
-                this.offsetSelect.classList.add('hide');
-            }
-            catch (err) {
-                //
-            }
+            this.addClass(this.offsetSelect, 'hide');
         }
         this.midiCtx.fillStyle = '#FFFFFF';
         this.midiCtx.fillRect(0, 0, this.midiTimeline.width, this.midiTimeline.height);
@@ -476,6 +493,7 @@ class Visualize {
         catch (err) {
             console.error(err);
         }
+        this.previewState.rendered = false;
         soundData = Array.from(this.so.soundData);
         timelineScale = Math.floor(soundData.length / this.midiTimeline.width);
         //quick downsample, can improve
@@ -541,6 +559,78 @@ class Visualize {
     exportFrame(frameNumber) {
         this.displayFrame(frameNumber);
         return this.ctx.getImageData(0, 0, this.width, this.height);
+    }
+    setPreview() {
+        this.removeClass(this.preview, 'hide');
+        this.addClass(this.display, 'hide');
+    }
+    resetPreview() {
+        this.addClass(this.preview, 'hide');
+        this.removeClass(this.display, 'hide');
+    }
+    onSync() {
+        if (this.previewState.playing) {
+            return this.pause();
+        }
+        this.setPreview();
+        if (this.previewState.rendered) {
+            this.play();
+        }
+        else {
+            //@ts-ignore
+            visualizePreview();
+            showSpinner('vSyncSpinner', 'small');
+            this.addClass(this.sync, 'rendering');
+        }
+    }
+    onPreview(tmpVideo) {
+        const now = (new Date()).getTime();
+        const videoPath = `${tmpVideo}?cache=${now}`;
+        const source = document.createElement('source');
+        this.previewState.rendered = true;
+        this.previewState.rendering = false;
+        source.setAttribute('src', videoPath);
+        this.preview.innerHTML = '';
+        this.preview.appendChild(source);
+        this.preview.load();
+        hideSpinner('vSyncSpinner');
+        this.removeClass(this.sync, 'rendering');
+        this.play();
+    }
+    play() {
+        if (!this.previewState.displaying) {
+            this.setPreview();
+            this.previewState.displaying = true;
+        }
+        this.previewState.playing = true;
+        this.addClass(this.sync, 'playing');
+        this.preview.play();
+        this.startInterval();
+    }
+    pause() {
+        this.preview.pause();
+        this.previewState.playing = false;
+        this.removeClass(this.sync, 'playing');
+        try {
+            clearInterval(this.previewInterval);
+        }
+        catch (err) {
+            //
+        }
+    }
+    previewEnded() {
+        this.pause();
+    }
+    startInterval() {
+        this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
+    }
+    previewIntervalFunction() {
+        const time = this.preview.currentTime / this.preview.duration;
+        const left = time * 100.0;
+        let x = Math.floor(time * this.frames.length);
+        x = x === -0 ? 0 : x;
+        this.current.value = String(x);
+        this.cursor.style.left = `${left}%`;
     }
 }
 //# sourceMappingURL=index.js.map

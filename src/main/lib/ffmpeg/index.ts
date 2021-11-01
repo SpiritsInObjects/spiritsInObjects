@@ -354,11 +354,18 @@ export class ffmpeg {
     static async exportPreview (inputPath : string, outputPath : string, options : PreviewOptions, onProgress : Function = () => {}) : Promise<string> {
         const width : number = options.width;
         const height : number = options.height;
-        let args : string[] = [
-            '-framerate', '24',
-            '-f', 'image2',
+        let args : string[] = [];
+
+        if (typeof options.sequence !== 'undefined' && options.sequence) {
+            args = args.concat([
+                '-framerate', '24',
+                '-f', 'image2'
+            ]);
+        }
+
+        args = args.concat([
             '-i',  inputPath
-        ];
+        ]);
 
         if (typeof options.audio !== 'undefined') {
             args = args.concat([

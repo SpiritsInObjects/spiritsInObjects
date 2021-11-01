@@ -241,7 +241,8 @@ export class Timeline{
 			width : args.width,
 			height : args.height,
 			audio : tmpAudio,
-			forceScale : true
+			forceScale : true,
+			sequence : true
 		};
 		let success : boolean = false;
 		let audioList : string[];

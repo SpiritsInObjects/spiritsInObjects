@@ -215,7 +215,8 @@ class Timeline {
             width: args.width,
             height: args.height,
             audio: tmpAudio,
-            forceScale: true
+            forceScale: true,
+            sequence: true
         };
         let success = false;
         let audioList;

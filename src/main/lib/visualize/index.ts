@@ -80,6 +80,16 @@ export class Visualize {
 		return true;
 	}
 
+	public async startPreview () {
+		this.tmp = pathJoin(tmpdir(), uuid());
+		try {
+			await mkdir(this.tmp);
+		} catch (err) {
+			throw err;
+		}
+		return true;
+	}
+
 	public async endExport (onProgress : Function) {
 		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
 		let tmpVideo : string;
@@ -95,6 +105,31 @@ export class Visualize {
 
 		try {
 			await this.ffmpeg.exportVideo(inputPath, tmpVideo, null, this.format, onProgress);
+		} catch (err) {
+			throw err;
+		}
+
+		try {
+			//@ts-ignore
+			await rmdir(this.tmp, { recursive : true });
+		} catch (err) {
+			throw err;
+		}
+
+		this.tmp = null;
+
+		return tmpVideo;
+	}
+
+	public async endPreview (options : any, onProgress : Function) {
+		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
+		const ext : string = 'mp4';
+		let tmpVideo : string;
+
+		tmpVideo = `${this.tmp}.${ext}`;
+
+		try {
+			await this.ffmpeg.exportPreview(inputPath, tmpVideo, options, onProgress)
 		} catch (err) {
 			throw err;
 		}

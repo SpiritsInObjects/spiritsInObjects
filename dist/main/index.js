@@ -288,6 +288,7 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
         const ms = ((+new Date()) - frameStart) / obj.frame;
         mainWindow.webContents.send('preview_progress', { ms, frameNumber: obj.frame });
     }
+    TMP.files.push(tmpVideo);
     try {
         tmpExists = await (0, fs_extra_1.pathExists)(tmpVideo);
     }
@@ -307,7 +308,6 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
         console.error(err);
         success = false;
     }
-    TMP.files.push(tmpVideo);
     mainWindow.webContents.send('preview', { tmpVideo, success });
 });
 electron_1.ipcMain.on('save', async (evt, args) => {
@@ -389,6 +389,41 @@ electron_1.ipcMain.on('visualize_end', async (evt, args) => {
     }
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_end', { success, tmpVideo });
+});
+electron_1.ipcMain.on('visualize_preview_start', async (evt, args) => {
+    let success = false;
+    try {
+        await visualize.startPreview();
+        success = true;
+    }
+    catch (err) {
+        console.log(err);
+    }
+    mainWindow.webContents.send('visualize_preview_start', { success });
+});
+electron_1.ipcMain.on('visualize_preview_end', async (evt, args) => {
+    const frameStart = +new Date();
+    const options = {
+        width: args.options.width,
+        height: args.options.height,
+        forceScale: true,
+        sequence: true
+    };
+    let success = false;
+    let tmpVideo;
+    const onProgress = (obj) => {
+        const ms = ((+new Date()) - frameStart) / obj.frame;
+        mainWindow.webContents.send('visualize_progress', { ms, frameNumber: obj.frame });
+    };
+    try {
+        tmpVideo = await visualize.endPreview(options, onProgress);
+        success = true;
+    }
+    catch (err) {
+        console.error(err);
+    }
+    TMP.files.push(tmpVideo);
+    mainWindow.webContents.send('visualize_preview_end', { success, tmpVideo });
 });
 electron_1.ipcMain.on('bin', async (evt, args) => {
     const { bi, image } = args;

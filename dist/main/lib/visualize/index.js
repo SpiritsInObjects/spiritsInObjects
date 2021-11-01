@@ -70,6 +70,16 @@ class Visualize {
         }
         return true;
     }
+    async startPreview() {
+        this.tmp = (0, path_1.join)((0, os_1.tmpdir)(), (0, uuid_1.v4)());
+        try {
+            await (0, fs_extra_1.mkdir)(this.tmp);
+        }
+        catch (err) {
+            throw err;
+        }
+        return true;
+    }
     async endExport(onProgress) {
         const inputPath = (0, path_1.join)(this.tmp, `%8d.png`);
         let tmpVideo;
@@ -83,6 +93,27 @@ class Visualize {
         tmpVideo = `${this.tmp}.${ext}`;
         try {
             await this.ffmpeg.exportVideo(inputPath, tmpVideo, null, this.format, onProgress);
+        }
+        catch (err) {
+            throw err;
+        }
+        try {
+            //@ts-ignore
+            await (0, fs_extra_1.rmdir)(this.tmp, { recursive: true });
+        }
+        catch (err) {
+            throw err;
+        }
+        this.tmp = null;
+        return tmpVideo;
+    }
+    async endPreview(options, onProgress) {
+        const inputPath = (0, path_1.join)(this.tmp, `%8d.png`);
+        const ext = 'mp4';
+        let tmpVideo;
+        tmpVideo = `${this.tmp}.${ext}`;
+        try {
+            await this.ffmpeg.exportPreview(inputPath, tmpVideo, options, onProgress);
         }
         catch (err) {
             throw err;

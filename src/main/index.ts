@@ -330,6 +330,8 @@ ipcMain.on('preview', async (evt : Event, args : any) => {
 		mainWindow.webContents.send('preview_progress', { ms, frameNumber : obj.frame });
 	}
 
+	TMP.files.push(tmpVideo);
+
 	try {
 		tmpExists = await pathExists(tmpVideo);
 	} catch (err) {
@@ -349,8 +351,6 @@ ipcMain.on('preview', async (evt : Event, args : any) => {
 		console.error(err);
 		success = false;
 	}
-
-	TMP.files.push(tmpVideo);
 
 	mainWindow.webContents.send('preview', { tmpVideo, success });
 });
@@ -441,6 +441,45 @@ ipcMain.on('visualize_end', async (evt : Event, args : any) => {
 	TMP.files.push(tmpVideo);
 
 	mainWindow.webContents.send('visualize_end', { success, tmpVideo });
+});
+
+ipcMain.on('visualize_preview_start', async (evt : Event, args : any) => {
+	let success : boolean = false;
+	try {
+		await visualize.startPreview();
+		success = true;
+	} catch (err) {
+		console.log(err);
+	}
+	mainWindow.webContents.send('visualize_preview_start', { success });
+});
+
+ipcMain.on('visualize_preview_end', async (evt : Event, args : any) => {
+	const frameStart : number = +new Date();
+	const options : PreviewOptions = {
+		width : args.options.width,
+		height : args.options.height,
+		forceScale : true,
+		sequence : true
+	}
+	let success : boolean = false;
+	let tmpVideo : string;
+
+	const onProgress : Function = (obj : any) => {
+		const ms : number = ((+new Date()) - frameStart) / obj.frame;
+		mainWindow.webContents.send('visualize_progress', { ms, frameNumber : obj.frame });
+	};
+
+	try {
+		tmpVideo = await visualize.endPreview(options, onProgress);
+		success = true;
+	} catch (err) {
+		console.error(err);
+	}
+
+	TMP.files.push(tmpVideo);
+
+	mainWindow.webContents.send('visualize_preview_end', { success, tmpVideo });
 });
 
 ipcMain.on('bin', async (evt : Event, args : any) => {

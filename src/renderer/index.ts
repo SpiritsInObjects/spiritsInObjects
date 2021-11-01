@@ -694,6 +694,92 @@ async function visualizeExport () {
     }
 }
 
+async function visualizePreviewStart () {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_preview_start', (evt : Event, args : any) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                return resolve(true);
+            }
+            return reject('Failed to start preview');
+        });
+        ipcRenderer.send('visualize_preview_start', {});
+    });
+}
+
+async function visualizePreviewEnd (options : any) : Promise<string> {
+    return new Promise((resolve, reject) => {
+        ipcRenderer.once('visualize_preview_end', (evt : Event, args : any) => {
+            if (typeof args.success !== 'undefined' && args.success === true) {
+                return resolve(args.tmpVideo);
+            }
+            return reject('Failed to export preview');
+        });
+        ipcRenderer.send('visualize_preview_end', { options } );
+    });
+}
+
+async function visualizePreview () {
+    const oWidth : number = visualize.width;
+    const oHeight : number = visualize.height;
+    const width : number = visualize.displayWidth;
+    const height : number = visualize.displayHeight;
+    let frameData : any;
+    let tmpVideo : string;
+
+    CANCEL = false;
+
+    if (visualize.frames.length > 0) {
+        ui.overlay.show(`Exporting frames of ${visualize.displayName} for preview...`, true);
+        ui.overlay.progress(0, `Determining time left...`);
+
+        avgMs = -1;
+        timeAvg = -1;
+
+        try {
+            await visualizePreviewStart();
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        for (let i : number = 0; i < visualize.frames.length; i++) {
+            frameData = visualize.exportFrame(i);
+            try {
+                await visualizeExportFrame(i, frameData.data, oWidth, oHeight);
+            } catch (err) {
+                console.error(err);
+                ui.overlay.hide();
+                return false;
+            }
+            if (CANCEL) {
+                CANCEL = false;
+                ui.overlay.hide();
+                return false;
+            }
+        }
+
+        avgMs = -1;
+        timeAvg = -1;
+
+        ui.overlay.show(`Exporting video of ${visualize.displayName}...`, true);
+        ui.overlay.progress(0, `Determining time left...`);
+
+        try {
+            tmpVideo = await visualizePreviewEnd({ width, height });
+        } catch (err) {
+            console.error(err);
+            ui.overlay.hide();
+            return false;
+        }
+
+        avgMs = -1;
+        timeAvg = -1;
+        ui.overlay.hide();
+
+        visualize.onPreview(tmpVideo);
+    }
+}
+
 function processAudio () {
     const visualizeState : any = state.get();
     ui.overlay.show(`Preparing audio file ${visualize.displayName}...`);
@@ -825,6 +911,15 @@ function onTimelinePreviewComplete (evt : Event, args : any) {
     timeline.onPreviewComplete(args);
 }
 
+async function onProcessAudio (evt : Event, args : any) {
+    if (args.success === true) {
+        await visualize.onProcessAudio(evt, args);
+    } else {
+        alert('Error processing audio file.');
+    }
+    ui.overlay.hide();
+}
+
 function bindListeners () {
     dropArea = document.getElementById('dragOverlay');
     fileSourceProxy = document.getElementById('fileSourceProxy') as HTMLInputElement;
@@ -868,14 +963,7 @@ function bindListeners () {
     ipcRenderer.on('preview_progress', onPreviewProgress);
     ipcRenderer.on('preview', onPreview);
 
-    ipcRenderer.on('process_audio', async (evt : Event, args : any) => {
-        if (args.success === true) {
-            await visualize.onProcessAudio(evt, args);
-        } else {
-            alert('Error processing audio file.');
-        }
-        ui.overlay.hide();
-    });
+    ipcRenderer.on('process_audio', onProcessAudio);
 
     ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
 

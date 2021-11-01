@@ -33,6 +33,7 @@ class Visualize {
     public prev : HTMLButtonElement = document.getElementById('vPrevFrame') as HTMLButtonElement;
     public next : HTMLButtonElement = document.getElementById('vNextFrame') as HTMLButtonElement;
     private current : HTMLInputElement = document.getElementById('vCurrentFrame') as HTMLInputElement;
+    private sync : HTMLButtonElement = document.getElementById('vSync') as HTMLButtonElement;
 
     private preview : HTMLVideoElement = document.getElementById('vPreview') as HTMLVideoElement;
 
@@ -90,6 +91,16 @@ class Visualize {
     private trackCount : number;
     private tracksWithNotes : number[] = [];
 
+    private previewState : any = {
+        hash : 0,
+        displaying : false,
+        rendered : false,
+        rendering : false,
+        playing : false,
+        loop : false
+    };
+    private previewInterval : any;
+
     constructor (state : State, audioContext : AudioContext) {
         const visualizeState = {
             get : function () { return false }
@@ -123,6 +134,39 @@ class Visualize {
         document.addEventListener('mousemove', this.moveScrubbing.bind(this), false);
         document.addEventListener('mouseup', this.endScrubbing.bind(this), false);
         this.cursor.parentElement.addEventListener('click', this.clickScrub.bind(this), false);
+
+        this.sync.addEventListener('click', this.onSync.bind(this), false);
+        this.preview.addEventListener('ended', this.previewEnded.bind(this), false);
+    }
+
+    private addClass ( elem : HTMLElement, className : string ) {
+        try{
+            elem.classList.add(className);
+        } catch (err) {
+            //
+        }
+    }
+
+    private addClassAll ( selector : string, className : string) {
+        const elems : NodeListOf<Element> = document.querySelectorAll(selector);
+        [].forEach.call(elems, (el : HTMLElement) => {
+            this.addClass(el, className);
+        });
+    }
+
+    private removeClass ( elem : HTMLElement, className : string ) {
+        try{
+            elem.classList.remove(className);
+        } catch (err) {
+            //
+        }
+    }
+
+    private removeClassAll ( selector : string, className : string) {
+        const elems : NodeListOf<Element> = document.querySelectorAll(selector);
+        [].forEach.call(elems, (el : HTMLElement) => {
+            this.removeClass(el, className);
+        });
     }
 
     public set (filePath : string, type : string) : string {
@@ -140,35 +184,21 @@ class Visualize {
     }
 
     private showMidi () {
-        try {
-            this.tracksSelect.classList.remove('hide');
-            this.wavesSelect.classList.remove('hide');
-            //this.stylesSelect.classList.remove('hide');
-            this.offsetSelect.classList.remove('hide');
-        } catch (err) {
-            //
-        }
-        try {
-            this.typesSelect.classList.add('hide');
-        } catch (err) {
-            //
-        }
+        this.removeClass(this.tracksSelect, 'hide');
+        this.removeClass(this.wavesSelect, 'hide');
+        //this.removeClass(this.stylesSelect, 'hide');
+        this.removeClass(this.offsetSelect, 'hide');
+
+        this.addClass(this.typesSelect, 'hide');
     }
 
     private showAudio () {
-        try {
-            this.tracksSelect.classList.add('hide');
-            this.wavesSelect.classList.add('hide');
-            //this.wavesSelect.classList.add('hide');
-            this.offsetSelect.classList.add('hide');
-        } catch (err) {
-            //
-        }
-        try {
-            this.typesSelect.classList.remove('hide');
-        } catch (err) {
-            //
-        }
+        this.addClass(this.tracksSelect, 'hide');
+        this.addClass(this.wavesSelect, 'hide');
+        //this.addClass(this.wavesSelect, 'hide');
+        this.addClass(this.offsetSelect, 'hide');
+
+        this.removeClass(this.typesSelect, 'hide');
     }
 
     private editFrame () {
@@ -270,6 +300,13 @@ class Visualize {
             midi = await Midi.fromUrl(this.filePath);
         } catch (err) {
             throw err;
+        }
+
+        this.previewState.rendered = false;
+        try {
+            this.sync.removeAttribute('disabled');
+        } catch (err) {
+            //
         }
         
         this.name = midi.name;
@@ -423,6 +460,8 @@ class Visualize {
         let lines : number;
         let offsetLines : number;
 
+        this.resetPreview();
+
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
             if (this.type === 'midi') {
                 this.frameNumber = frameNumber;
@@ -542,17 +581,9 @@ class Visualize {
         this.soundtrackFull = soundtrackTypeParts.length > 1;
 
         if (this.soundtrackFull) {
-            try {
-                this.offsetSelect.classList.remove('hide');
-            } catch (err) {
-                //
-            }
+            this.removeClass(this.offsetSelect, 'hide');
         } else {
-            try {
-                this.offsetSelect.classList.add('hide');
-            } catch (err) {
-                //
-            }
+            this.addClass(this.offsetSelect, 'hide');
         }
 
         this.midiCtx.fillStyle = '#FFFFFF';
@@ -566,6 +597,8 @@ class Visualize {
         } catch (err) {
             console.error(err);
         }
+
+        this.previewState.rendered = false;
 
         soundData = Array.from(this.so.soundData);
         timelineScale = Math.floor(soundData.length / this.midiTimeline.width);
@@ -639,5 +672,90 @@ class Visualize {
     public exportFrame (frameNumber : number) {
         this.displayFrame(frameNumber);
         return this.ctx.getImageData(0, 0, this.width, this.height);
+    }
+
+    private setPreview () {
+        this.removeClass(this.preview, 'hide');
+        this.addClass(this.display, 'hide');
+    }
+
+    private resetPreview () {
+        this.addClass(this.preview, 'hide');
+        this.removeClass(this.display, 'hide');
+    }
+
+    private onSync () {
+        if (this.previewState.playing) {
+            return this.pause();
+        }
+
+        this.setPreview();
+
+        if (this.previewState.rendered) {
+            this.play();
+        } else {
+            //@ts-ignore
+            visualizePreview();
+            showSpinner('vSyncSpinner', 'small');
+            this.addClass(this.sync, 'rendering');
+        }
+    }
+
+    public onPreview (tmpVideo : string) {
+        const now : number = (new Date()).getTime();
+        const videoPath : string = `${tmpVideo}?cache=${now}`;
+        const source : HTMLSourceElement = document.createElement('source') as HTMLSourceElement;
+
+        this.previewState.rendered = true;
+        this.previewState.rendering = false;
+        source.setAttribute('src', videoPath);
+
+        this.preview.innerHTML = '';
+        this.preview.appendChild(source);
+        this.preview.load();
+
+        hideSpinner('vSyncSpinner');
+        this.removeClass(this.sync, 'rendering');
+        this.play();
+    }
+
+    public play () {
+        if (!this.previewState.displaying) {
+            this.setPreview();
+            this.previewState.displaying = true;
+        }
+
+        this.previewState.playing = true;
+        this.addClass(this.sync, 'playing');
+        this.preview.play();
+        this.startInterval();
+    }
+
+    public pause () {
+        this.preview.pause();
+        this.previewState.playing = false;
+        this.removeClass(this.sync, 'playing');
+        try {
+            clearInterval(this.previewInterval);
+        } catch (err) {
+            //
+        }
+    }
+
+    private previewEnded () {
+        this.pause();
+    }
+
+    private startInterval () {
+        this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
+    }
+
+    private previewIntervalFunction () {
+        const time : number = this.preview.currentTime / this.preview.duration;
+        const left : number = time * 100.0;
+        let x : number = Math.floor(time * this.frames.length);
+        x = x === -0 ? 0 : x; 
+        this.current.value = String(x);
+        this.cursor.style.left = `${left}%`;
     }
 }

@@ -21,6 +21,7 @@ interface PreviewOptions{
     height : number;
     audio? : string;
     forceScale? : boolean;
+    sequence? : boolean;
 }
 
 interface ProcessOutput {
