@@ -569,10 +569,12 @@ class Visualize {
     setPreview() {
         this.removeClass(this.preview, 'hide');
         this.addClass(this.display, 'hide');
+        this.previewState.displaying = true;
     }
     resetPreview() {
         this.addClass(this.preview, 'hide');
         this.removeClass(this.display, 'hide');
+        this.previewState.displaying = false;
     }
     onSync() {
         if (this.previewState.playing) {
@@ -606,7 +608,6 @@ class Visualize {
     play() {
         if (!this.previewState.displaying) {
             this.setPreview();
-            this.previewState.displaying = true;
         }
         this.previewState.playing = true;
         this.addClass(this.sync, 'playing');
