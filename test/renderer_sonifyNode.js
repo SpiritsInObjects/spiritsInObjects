@@ -30,27 +30,52 @@ async function test () {
     let sonify
     let arr
 
+    sonify = new SonifyNode(state)
+
+    console.time('frame from disk')
     try {
         p = await pixels('./test/example.png')
     } catch (err) {
         console.error(err)
     }
 
-    sonify = new SonifyNode(state)
-
     console.time('frame')
     arr = sonify.sonify(p.data)
     console.timeEnd('frame')
-
-    //console.dir(arr)
+    console.timeEnd('frame from disk')
 
     wav.fromScratch(1, state.samplerate, '32f', arr)
     writeFileSync('./test/example.wav', wav.toBuffer())
-    //console.dir(p)
+
     it('Module should be function', () => {
-        console.log(typeof SonifyNode)
-        console.log(typeof sonify)
-        //expect(typeof SonifyNode).to.equal('Function')
+        assert.equal(typeof SonifyNode, 'function')
+    })
+    it('Image shape should be equal to pre-defined sonify state', () => {
+        assert.equal(p.shape[0], state.width)
+        assert.equal(p.shape[1], state.height)
+    })
+    it('Array length should equal height of image', () => {
+        assert.equal(arr.length, state.height)
+    })
+    it('Array should not contain a value greater than 1', () => {
+        let max = 0;
+        for (let val of arr) {
+            if (val > max) {
+                max = val;
+            }
+        }
+        console.log(`max: ${max}`)
+        assert.ok(max < 1)
+    })
+    it('Array should not contain a value less than -1', () => {
+        let min = 0;
+        for (let val of arr) {
+            if (val < min) {
+                min = val;
+            }
+        }
+        console.log(`min: ${min}`)
+        assert.ok(min > -1)
     })
 }
 
