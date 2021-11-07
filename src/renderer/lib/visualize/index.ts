@@ -92,12 +92,10 @@ class Visualize {
     private tracksWithNotes : number[] = [];
 
     private previewState : any = {
-        hash : 0,
         displaying : false,
         rendered : false,
         rendering : false,
-        playing : false,
-        loop : false
+        playing : false
     };
     private previewInterval : any;
 
@@ -461,6 +459,10 @@ class Visualize {
         let offsetLines : number;
 
         this.resetPreview();
+
+        if (this.previewState.rendered) {
+            this.preview.currentTime = this.preview.duration * (frameNumber / this.frames.length);
+        }
 
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
             if (this.type === 'midi') {

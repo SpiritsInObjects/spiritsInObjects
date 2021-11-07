@@ -39,7 +39,6 @@
       "dist/renderer/index.js",
       "dist/renderer/lib/sonifyCanvas/index.js",
       "dist/renderer/lib/state/index.js",
-      "dist/renderer/lib/camera/index.js",
       "dist/renderer/lib/ui/index.js",
       "dist/renderer/lib/video/index.js",
       "dist/renderer/lib/spinner/index.js",

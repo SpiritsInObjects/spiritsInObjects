@@ -45,16 +45,14 @@
                     <div class="cursor"></div>
                 </div>
             </div>
-            <!--<div id="timeline">
-                <div class="frame"></div>
-            </div>-->
             <div id="videoControl">
                 <div class="bg"></div>
                 <div class="buttons">
                     <button id="prevFrame"><img src="../image/navigate_before.svg" title="Previous Frame"></button>
                     <button id="sync" title="Preview sync" disabled>
                         <div id="syncSpinner"></div>
-                        <img src="../image/sync.svg" />
+                        <img class="play" src="../image/sync.svg" />
+                        <img class="pause" src="../image/pause.svg" />
                     </button>
                     <button id="nextFrame"><img src="../image/navigate_next.svg" title="Next Frame"></button>
                 </div>
@@ -64,32 +62,18 @@
                         <button id="sonifyVideo" class="btn" disabled>Sonify Video</button>
                     </div>
                 </div>
-                <div>
-                    <button id="play" class="hide" title="Play Video" disabled>Play Muted</button>
-                </div>
             </div>
             <div id="sonifyPeaks"></div>
             <audio id="sonifyPeaksAudio"></audio>
-            <div class="optionWrapper">
-                <div class="options">
-                    <input type="text" id="fileSourceProxy" placeholder="Video or still image" title="Select a video or image sequence" readonly></input>
-                    
-                    <select id="videoSource" class="hide" required title="Select a camera video source" disabled>
-                        <option disabled selected value="">Camera</option>
-                    </select>
-
-                    <!--
-                    <button id="clear">Clear</button>
-                    -->
-                </div>
-                <div class="options">
-                    <div class="info hide">
-                        <div>Frames: <span id="frames"></span></div>
-                        <div>FPS: <span id="fps"></span></div>
-                        <div>Resolution: <span id="resolution"></span></div>
-                        <div>Sample Rate: <span id="samplerate"></span></div>
-                        <div>Selected: <span id="selectedarea"></span></div>
-                    </div>
+            <div class="optionWrapper" id="clickSelect">
+                <div class="" id="dropMessage">Select or drag an image or video to sonify</div>                
+                <div class="info hide">
+                    <strong><div id="fileSourceProxy"></div></strong>
+                    <div>Frames: <span id="frames"></span></div>
+                    <div>FPS: <span id="fps"></span></div>
+                    <div>Resolution: <span id="resolution"></span></div>
+                    <div>Sample Rate: <span id="samplerate"></span></div>
+                    <div>Selected: <span id="selectedarea"></span></div>
                 </div>
             </div>
         </div>
@@ -112,7 +96,7 @@
                 <video id="vPreview" class="hide" playsinline></video>
             </div>
             <div id="visualizeTimeline">
-                <div class="vTimeline">
+                <div id="vTimeline" class="timeline">
                     <canvas id="midiTimeline"></canvas>
                     <div class="cursor"></div>
                 </div>
@@ -130,37 +114,39 @@
                 </div>
                 <div id="vSonifyControl">
                     <div>
-                        <button id="sonifyVisualizeBtn" class="btn" disabled>Play Frame</button>
                         <button id="visualizeExportBtn" class="btn" disabled>Export Video</button>
+                        <button id="sonifyVisualizeBtn" class="btn" disabled>Play Frame</button>
                     </div>
                 </div>
             </div>
             <div class="optionWrapper">
-                <input type="text" id="vFileSourceProxy" placeholder="File" title="Select a midi or wav file" readonly />
-                <button id="vClear" class="hide">Clear</button>
-                <select id="vTracks" class="hide">
-                    
-                </select>
-                <select id="vType" class="hide">
-                    <option value="variable density full">Variable density (full screen)</option>
-                    <!--<option value="variable density">Variable density</option>
-                    <option value="unilateral">Unilateral</option>
-                    <option value="variable area">Variable area</option>
-                    <option value="dual variable area" selected>Dual variable area</option>
-                    <option value="multiple variable area">Multiple variable area</option>-->
-                </select>
-                <select id="vWaves" class="hide">
-                    <option value="square" selected>Square Wave</option>
-                    <option value="sine">Sine Wave</option>
-                </select>
-                <select id="vStyle" class="hide">
-                    <option value="simple" selected>Simple</option>
-                    <option value="advanced">Advanced</option>
-                </select>
-                <select id="vOffset" class="hide">
-                    <option value="false" selected>No offset</option>
-                    <option value="true">Offset 26 frames</option>
-                </select>
+                <div class="" id="vDropMessage">Select or drag a MIDI or audio file to visualize</div>
+                <div id="vSelect">
+                    <select id="vTracks" class="hide"></select>
+                    <select id="vType" class="hide">
+                        <option value="variable density full">Variable density (full screen)</option>
+                        <!--<option value="variable density">Variable density</option>
+                        <option value="unilateral">Unilateral</option>
+                        <option value="variable area">Variable area</option>
+                        <option value="dual variable area" selected>Dual variable area</option>
+                        <option value="multiple variable area">Multiple variable area</option>-->
+                    </select>
+                    <select id="vWaves" class="hide">
+                        <option value="square" selected>Square Wave</option>
+                        <option value="sine">Sine Wave</option>
+                    </select>
+                    <select id="vStyle" class="hide">
+                        <option value="simple" selected>Simple</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                    <select id="vOffset" class="hide">
+                        <option value="false" selected>No offset</option>
+                        <option value="true">Offset 26 frames</option>
+                    </select>
+                    <div id="vInfo" class="hide">
+                        <strong><div type="text" id="vFileSourceProxy"></div></strong>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="timeline" class="page show">
@@ -248,7 +234,6 @@
         <script src="../renderer/lib/state/index.js"></script>
         <script src="../renderer/lib/spinner/index.js"></script>
         <script src="../renderer/lib/video/index.js"></script>
-        <script src="../renderer/lib/camera/index.js"></script>
         <script src="../renderer/lib/sonifyCanvas/index.js"></script>
         <script src="../renderer/lib/visualize/index.js"></script>
         <script src="../renderer/lib/timeline/index.js"></script>

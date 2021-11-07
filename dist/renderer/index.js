@@ -19,7 +19,6 @@ let endMoving = false;
 let audioContext;
 let state;
 let video;
-let camera;
 let sonify;
 let visualize;
 let timeline;
@@ -32,6 +31,7 @@ let CANCEL = false;
 /* ELEMENTS */
 let dropArea;
 let fileSourceProxy;
+let clickSelect;
 let vFileSourceProxy;
 let sonifyFrameBtn;
 let sonifyVideo;
@@ -42,6 +42,7 @@ let sonifyVisualizeBtn;
 let visualizeExportBtn;
 let timelineBtn;
 let timelineExportBtn;
+let syncBtn;
 /**
  * Bind an event to an element whether or not it exists yet.
  *
@@ -210,7 +211,7 @@ class Files {
         ipcRenderer.send('info', { filePath, type });
         state.set('filePath', filePath);
         state.set('type', type);
-        elem.value = displayName;
+        elem.innerHTML = displayName;
     }
     async setVisualize(filePath, type) {
         const elem = vFileSourceProxy;
@@ -218,7 +219,8 @@ class Files {
         displayName = visualize.set(filePath, type);
         state.set('filePath', filePath);
         state.set('type', type);
-        elem.value = displayName;
+        elem.innerHTML = displayName;
+        document.getElementById('vInfo').classList.remove('hide');
         visualizeStart();
     }
     async saveAudio(filePath) {
@@ -305,17 +307,50 @@ class Files {
     }
 }
 const audioCtx = new window.AudioContext();
+const syncPreviewState = {
+    rendered: false,
+    rendering: false
+};
+/**
+ * COMMON FUNCTIONS
+ **/
+function cancel() {
+    CANCEL = true;
+    ipcRenderer.send('cancel', {});
+}
+function onCancel(evt, args) {
+    console.log('Cancellation confirmed');
+    avgMs = -1;
+    timeAvg = -1;
+    ui.overlay.hide();
+    CANCEL = false;
+}
+async function confirmCancel() {
+    let proceed = false;
+    try {
+        proceed = await confirm(`Are you sure you want to cancel?`);
+    }
+    catch (err) {
+        console.log(err);
+    }
+    if (!proceed) {
+        return false;
+    }
+    cancel();
+}
+/**
+ * SONIFY FUNCTIONS
+ **/
 function onInfo(evt, args) {
     let preview = video.onInfo(evt, args);
-    const width = 996;
-    const height = 560;
     if (!preview) {
         sonify = new Sonify(state, video.canvas, audioContext);
     }
     else {
         //generate preview for sonify, if needed
-        previewStart(width, height);
+        previewStart();
     }
+    syncBtn.removeAttribute('disabled');
 }
 function previewProgress(frameNumber, ms) {
     let timeLeft;
@@ -339,9 +374,11 @@ function previewProgress(frameNumber, ms) {
 function onPreviewProgress(evt, args) {
     previewProgress(args.frameNumber, args.ms);
 }
-async function previewStart(width, height) {
+async function previewStart() {
     const filePath = state.get('filePath');
     const displayName = video.displayName;
+    const width = video.width;
+    const height = video.height;
     let proceed = false;
     try {
         proceed = await confirm(`To view the video ${displayName} a proxy must be rendered. Do you wish to proceed?`);
@@ -356,7 +393,7 @@ async function previewStart(width, height) {
     avgMs = -1;
     ui.overlay.show(`Rendering proxy of ${displayName}...`);
     ui.overlay.progress(0, `Determining time left...`);
-    ipcRenderer.send('preview', { filePath, width: video.width, height: video.height });
+    ipcRenderer.send('preview', { filePath, width, height });
 }
 function onPreview(evt, args) {
     video.previewFile(args.tmpVideo);
@@ -364,6 +401,53 @@ function onPreview(evt, args) {
         sonify = new Sonify(state, video.canvas, audioContext);
         ui.overlay.hide();
     }, 100);
+}
+function onSync(evt) {
+    if (!syncPreviewState.rendering && !syncPreviewState.rendered) {
+        syncPreviewStart();
+    }
+    else if (syncPreviewState.rendered) {
+        if (!video.playing) {
+            video.play();
+        }
+        else {
+            video.pause();
+        }
+    }
+}
+function syncPreviewStart() {
+    const sonifyState = state.get();
+    const filePath = state.get('filePath');
+    const displayName = video.displayName;
+    const width = video.displayWidth;
+    const height = video.displayHeight;
+    const args = {
+        state: sonifyState,
+        save: false,
+        filePath,
+        width,
+        height
+    };
+    timeAvg = -1;
+    avgMs = -1;
+    ui.overlay.show(`Rendering synchronized preview of ${displayName}...`);
+    ui.overlay.progress(0, `Determining time left...`);
+    ipcRenderer.send('sync_preview', args);
+    syncPreviewState.rendering = true;
+    syncPreviewState.rendered = false;
+    //@ts-ignore
+    showSpinner('syncSpinner', 'small');
+    syncBtn.classList.add('rendering');
+}
+function onSyncPreview(evt, args) {
+    avgMs = -1;
+    timeAvg = -1;
+    ui.overlay.hide();
+    video.previewFile(args.tmpVideo, true);
+    syncPreviewState.rendering = false;
+    syncPreviewState.rendered = true;
+    syncBtn.classList.remove('rendering');
+    video.play();
 }
 async function sonifyStart() {
     const sonifyState = state.get();
@@ -381,19 +465,6 @@ async function sonifyStart() {
 async function onStartSonify() {
     ui.overlay.show(`Sonifying ${video.displayName}...`, true);
     ui.overlay.progress(0, `Determining time left...`);
-}
-async function confirmCancel() {
-    let proceed = false;
-    try {
-        proceed = await confirm(`Are you sure you want to cancel?`);
-    }
-    catch (err) {
-        console.log(err);
-    }
-    if (!proceed) {
-        return false;
-    }
-    cancel();
 }
 function onSonifyProgress(evt, args) {
     let timeLeft;
@@ -420,17 +491,6 @@ function onSonifyComplete(evt, args) {
     ui.overlay.hide();
     f.saveAudio(args.tmpAudio);
 }
-function cancel() {
-    CANCEL = true;
-    ipcRenderer.send('cancel', {});
-}
-function onCancel(evt, args) {
-    console.log('Cancellation confirmed');
-    avgMs = -1;
-    timeAvg = -1;
-    ui.overlay.hide();
-    CANCEL = false;
-}
 function sonifyFrame() {
     const source = audioContext.createBufferSource();
     let buf = audioContext.createBuffer(1, video.height, video.samplerate);
@@ -454,10 +514,14 @@ function sonifyFrame() {
         }
     }, 42);
 }
+/**
+ * VISUALIZE FUNCTIONS
+ **/
 async function visualizeStart() {
     let type = state.get('type');
     sonifyVisualizeBtn.removeAttribute('disabled');
     visualizeExportBtn.removeAttribute('disabled');
+    document.getElementById('vDropMessage').classList.add('hide');
     if (type === 'midi') {
         await visualize.processMidi();
         visualize.decodeMidi(0);
@@ -703,10 +767,9 @@ function processAudioProgress(frameNumber, ms) {
 function onProcessAudioProgress(evt, args) {
     processAudioProgress(args.frameNumber, args.ms);
 }
-function playSync() {
-    //video.play();
-    //audio.play();
-}
+/**
+ * TIMELINE FUNCTIONS
+ **/
 function timelineExport() {
     let tl = timeline.export();
     timelineExportBtn.blur();
@@ -807,10 +870,12 @@ async function onProcessAudio(evt, args) {
 function bindListeners() {
     dropArea = document.getElementById('dragOverlay');
     fileSourceProxy = document.getElementById('fileSourceProxy');
+    clickSelect = document.getElementById('clickSelect');
     vFileSourceProxy = document.getElementById('vFileSourceProxy');
     sonifyFrameBtn = document.getElementById('sonifyFrame');
     sonifyVideo = document.getElementById('sonifyVideo');
     sonifyBtn = document.getElementById('sonifyBtn');
+    syncBtn = document.getElementById('sync');
     visualizeBtn = document.getElementById('visualizeBtn');
     sonifyVisualizeBtn = document.getElementById('sonifyVisualizeBtn');
     visualizeExportBtn = document.getElementById('visualizeExportBtn');
@@ -823,12 +888,13 @@ function bindListeners() {
     visualizeExportBtn.addEventListener('click', visualizeExport, false);
     timelineBtn.addEventListener('click', function () { ui.page('timeline'); }, false);
     timelineExportBtn.addEventListener('click', timelineExport, false);
-    fileSourceProxy.addEventListener('click', f.select.bind(f), false);
+    clickSelect.addEventListener('click', f.select.bind(f), false);
     vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);
     cancelBtn.addEventListener('click', confirmCancel, false);
+    syncBtn.addEventListener('click', onSync, false);
     ipcRenderer.on('sonify_complete', onSonifyComplete);
     ipcRenderer.on('sonify_sonify', onStartSonify);
     ipcRenderer.on('sonify_progress', onSonifyProgress);
@@ -837,6 +903,7 @@ function bindListeners() {
     ipcRenderer.on('info', onInfo);
     ipcRenderer.on('preview_progress', onPreviewProgress);
     ipcRenderer.on('preview', onPreview);
+    ipcRenderer.on('sync_preview', onSyncPreview);
     ipcRenderer.on('process_audio', onProcessAudio);
     ipcRenderer.on('progress_audio_progress', onProcessAudioProgress, false);
     ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
@@ -861,7 +928,6 @@ function bindListeners() {
     //@ts-ignore
     ui = new UI(state);
     video = new Video(state, ui);
-    camera = new Camera(video);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
     visualize = new Visualize(state, audioContext);
     timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);

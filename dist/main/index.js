@@ -149,7 +149,7 @@ async function sonify(args) {
         if (CANCEL) {
             mainWindow.webContents.send('cancel', {});
             CANCEL = false;
-            return false;
+            return;
         }
     }
     console.log(`All frames exported and sonified for ${args.state.filePath}`);
@@ -236,7 +236,25 @@ electron_1.app.on('activate', async () => {
         mainWindow = await createMainWindow();
     }
 });
+/**
+ * COMMON FUNCTIONS
+ **/
+electron_1.ipcMain.on('save', async (evt, args) => {
+    if (args.savePath && !args.savePath.canceled) {
+        try {
+            await (0, fs_extra_1.copyFile)(args.filePath, args.savePath.filePath);
+            console.log(`Saved file as ${args.savePath.filePath}`);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+});
+/**
+ * SONIFY FUNCTIONS
+ **/
 electron_1.ipcMain.on('sonify', async (evt, args) => {
+    ;
     return sonify(args);
 });
 electron_1.ipcMain.on('cancel', async (evt, args) => {
@@ -301,7 +319,7 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
         return;
     }
     try {
-        await ffmpeg_1.ffmpeg.exportPreview(args.filePath, tmpVideo, { width, height }, onProgress);
+        await ffmpeg_1.ffmpeg.exportPreview(args.filePath, tmpVideo, { width, height, forceScale: true }, onProgress);
         success = true;
     }
     catch (err) {
@@ -310,17 +328,54 @@ electron_1.ipcMain.on('preview', async (evt, args) => {
     }
     mainWindow.webContents.send('preview', { tmpVideo, success });
 });
-electron_1.ipcMain.on('save', async (evt, args) => {
-    if (args.savePath && !args.savePath.canceled) {
-        try {
-            await (0, fs_extra_1.copyFile)(args.filePath, args.savePath.filePath);
-            console.log(`Saved file as ${args.savePath.filePath}`);
-        }
-        catch (err) {
-            console.error(err);
-        }
+electron_1.ipcMain.on('sync_preview', async (evt, args) => {
+    const filePath = args.filePath;
+    const pathHash = hashStr(filePath);
+    const tmpVideo = (0, path_1.join)((0, os_1.tmpdir)(), `${pathHash}_tmp_sync_video.mkv`);
+    const frameStart = +new Date();
+    const width = args.width;
+    const height = args.height;
+    let tmpExists = false;
+    let info = {};
+    let success = false;
+    let tmpAudio;
+    function onProgress(obj) {
+        const ms = ((+new Date()) - frameStart) / obj.frame;
+        mainWindow.webContents.send('preview_progress', { ms, frameNumber: obj.frame });
     }
+    TMP.files.push(tmpVideo);
+    try {
+        tmpExists = await (0, fs_extra_1.pathExists)(tmpVideo);
+    }
+    catch (err) {
+        console.error(err);
+    }
+    if (tmpExists) {
+        success = true;
+        mainWindow.webContents.send('sync_preview', { tmpVideo, success });
+        return;
+    }
+    try {
+        tmpAudio = await sonify(args);
+    }
+    catch (err) {
+        console.error(err);
+        success = false;
+    }
+    TMP.files.push(tmpAudio);
+    try {
+        await ffmpeg_1.ffmpeg.exportPreview(args.filePath, tmpVideo, { width, height, forceScale: true, audio: tmpAudio }, onProgress);
+        success = true;
+    }
+    catch (err) {
+        console.error(err);
+        success = false;
+    }
+    mainWindow.webContents.send('sync_preview', { tmpVideo, success });
 });
+/**
+ * VISUALIZE FUNCTIONS
+ **/
 electron_1.ipcMain.on('process_audio', async (evt, args) => {
     const tmpAudio = (0, path_1.join)((0, os_1.tmpdir)(), `${(0, uuid_1.v4)()}_tmp_audio.wav`);
     const frameStart = +new Date();
@@ -425,6 +480,9 @@ electron_1.ipcMain.on('visualize_preview_end', async (evt, args) => {
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_preview_end', { success, tmpVideo });
 });
+/**
+ * TIMELINE FUNCTIONS
+ **/
 electron_1.ipcMain.on('bin', async (evt, args) => {
     const { bi, image } = args;
     const ms = +new Date();

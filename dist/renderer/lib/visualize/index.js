@@ -52,12 +52,10 @@ class Visualize {
         this.trackNo = 0;
         this.tracksWithNotes = [];
         this.previewState = {
-            hash: 0,
             displaying: false,
             rendered: false,
             rendering: false,
-            playing: false,
-            loop: false
+            playing: false
         };
         const visualizeState = {
             get: function () { return false; }
@@ -372,6 +370,9 @@ class Visualize {
         let lines;
         let offsetLines;
         this.resetPreview();
+        if (this.previewState.rendered) {
+            this.preview.currentTime = this.preview.duration * (frameNumber / this.frames.length);
+        }
         if (frameNumber < this.frames.length && typeof this.frames[frameNumber] !== 'undefined') {
             if (this.type === 'midi') {
                 this.frameNumber = frameNumber;

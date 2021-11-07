@@ -13,7 +13,7 @@ class Video {
     constructor(state, ui) {
         this.element = document.getElementById('video');
         this.canvas = document.getElementById('canvas');
-        this.playButton = document.getElementById('play');
+        this.sync = document.getElementById('sync');
         this.prev = document.getElementById('prevFrame');
         this.next = document.getElementById('nextFrame');
         this.current = document.getElementById('currentFrame');
@@ -37,18 +37,19 @@ class Video {
         this.framerate = 24;
         this.frames = 0;
         this.samplerate = 48000;
+        this.displayWidth = 996;
+        this.displayHeight = 560;
         this.type = 'video';
         this.frameArr = [];
         this.interval = null;
         this.playing = false;
-        this.streaming = false;
         this.state = state;
         this.ui = ui;
         this.element.setAttribute('playsinline', 'true');
         this.element.setAttribute('webkit-playsinline', 'true');
         this.element.setAttribute('muted', 'true');
         this.element.muted = true;
-        this.playButton.addEventListener('click', this.playButtonOnClick.bind(this), false);
+        this.element.addEventListener('ended', this.pause.bind(this), false);
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -81,9 +82,17 @@ class Video {
             this.sonifyVideoBtn.removeAttribute('disabled');
         }
     }
+    /**
+     * Set the scrubbing state boolean to true
+     */
     beginScrubbing() {
         this.scrubbing = true;
     }
+    /**
+     * Invoked on mousemove event when scrubbing video
+     *
+     * @param {object} evt     MouseEvent of the mouse moving
+     */
     moveScrubbing(evt) {
         let cursor;
         let leftX;
@@ -101,6 +110,9 @@ class Video {
             this.cursor.style.left = `${cursor}%`;
         }
     }
+    /**
+     * Invoked on mouseup while scrubbing video
+     */
     endScrubbing() {
         let percent;
         let frame;
@@ -113,6 +125,11 @@ class Video {
             this.editFrame();
         }
     }
+    /**
+     * Invocked when mouse clicks on timeline, scrubs video to point
+     *
+     * @param {object} evt     Click event
+     */
     clickScrub(evt) {
         const leftX = this.cursor.parentElement.offsetLeft;
         const width = this.cursor.parentElement.clientWidth;
@@ -123,6 +140,11 @@ class Video {
         this.current.value = String(frame);
         this.editFrame();
     }
+    /**
+     * Find the closest framerate to a set of values in the class
+     *
+     * @param {number} framerate     Framerate to match to preset values
+     */
     closestFramerate(framerate) {
         const closest = this.framerates.reduce((a, b) => {
             return Math.abs(b - framerate) < Math.abs(a - framerate) ? b : a;
@@ -130,7 +152,11 @@ class Video {
         return closest;
     }
     /**
-     *    Display the timecode in the two inputs on top of the screen
+     * Display the start and end timecode in the two inputs on top of the screen
+     *
+     * @param {number} startFrame     Starting frame (usually 0)
+     * @param {number} endFrame       Ending frame number
+     * @param {number} framerate      Video framerate in FPS
      **/
     updateTimecodes(startFrame, endFrame, framerate) {
         framerate = this.closestFramerate(framerate);
@@ -146,18 +172,11 @@ class Video {
         }
     }
     /**
-     * Attach stream to video element and Canvas
-     *
-     * @param {Object} stream MediaStream from camera/live source
-     */
-    stream(stream) {
-        this.element.srcObject = stream;
-        //this.element.load();
-    }
-    /**
-     *
+     * Called when a file is loaded to be added as a video
+     * or image as necessary.
      *
      * @param {string} filePath Path to video file
+     * @param {type} string     Type of file loaded (video/still)
      */
     file(filePath, type) {
         if (type === 'video') {
@@ -191,7 +210,14 @@ class Video {
             }
         }
     }
-    previewFile(filePath) {
+    /**
+     * Invoked when preview video is used to supplant a video file
+     * that isn't readable in an HTML video element.
+     *
+     * @param {string} filePath   Path to video file
+     * @param {boolean} sound     Whether video has sound
+     */
+    previewFile(filePath, sound = false) {
         this.preview = true;
         this.previewPath = filePath;
         this.source = document.createElement('source');
@@ -208,7 +234,18 @@ class Video {
         catch (err) {
             console.error(err);
         }
+        if (sound) {
+            this.element.removeAttribute('muted');
+            this.element.muted = false;
+        }
+        else {
+            this.element.setAttribute('muted', 'true');
+            this.element.muted = true;
+        }
     }
+    /**
+     * Called when a still is loaded
+     */
     onloadstart() {
         this.width = this.element.videoWidth;
         this.height = this.element.videoHeight;
@@ -216,7 +253,6 @@ class Video {
         this.canvas.height = this.height;
         setTimeout(this.draw.bind(this), 100);
         this.element.removeEventListener('loadeddata', this.onloadstart.bind(this));
-        document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
         setTimeout((function () {
@@ -229,8 +265,6 @@ class Video {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         this.ui.updateSliders(this.width, this.height);
-        //document.getElementById('play').setAttribute('disabled', 'disabled');
-        //document.getElementById('play').removeAttribute('disabled');
         this.sonifyFrameBtn.removeAttribute('disabled');
         this.sonifyVideoBtn.removeAttribute('disabled');
         //no delay needed?
@@ -309,12 +343,13 @@ class Video {
         this.updateTimecodes(0, this.frames, this.framerate);
         try {
             document.querySelector('#sonify .optionWrapper .info').classList.remove('hide');
+            document.getElementById('dropMessage').classList.add('hide');
         }
         catch (err) {
             console.error(err);
         }
         try {
-            document.getElementById('fileSourceProxy').value = this.displayName;
+            document.getElementById('fileSourceProxy').innerHTML = this.displayName;
         }
         catch (err) {
             console.error(err);
@@ -326,26 +361,32 @@ class Video {
     drawStill() {
         this.ctx.drawImage(this.stillLoader, 0, 0, this.width, this.height);
     }
+    playInterval() {
+        const time = this.element.currentTime / this.element.duration;
+        const left = time * 100.0;
+        let x = Math.floor(time * this.frames);
+        x = x === -0 ? 0 : x;
+        this.current.value = String(x);
+        this.cursor.style.left = `${left}%`;
+    }
     play() {
         let frame;
-        if (!this.playing) {
-            this.element.play();
-            this.interval = setInterval(this.draw.bind(this), Math.round(1000 / this.framerate));
-            this.playing = true;
-            this.playButton.innerHTML = 'Pause Muted';
-        }
-        else {
-            clearInterval(this.interval);
-            this.interval = null;
-            this.element.pause();
-            this.playing = false;
-            this.playButton.innerHTML = 'Play Muted';
-        }
+        this.interval = setInterval(this.playInterval.bind(this), Math.round(1000 / this.framerate));
+        this.playing = true;
+        this.sync.classList.add('playing');
         frame = this.currentFrame();
         this.current.value = String(frame);
+        this.element.play();
     }
-    playButtonOnClick(evt) {
-        this.play();
+    pause() {
+        let frame;
+        this.element.pause();
+        clearInterval(this.interval);
+        this.interval = null;
+        this.playing = false;
+        this.sync.classList.remove('playing');
+        frame = this.currentFrame();
+        this.current.value = String(frame);
     }
     set(filePath, type) {
         const displayName = basename(filePath);
