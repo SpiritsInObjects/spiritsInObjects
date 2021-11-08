@@ -36,6 +36,13 @@ async function spawnAsync(bin, args) {
     });
 }
 exports.spawnAsync = spawnAsync;
+/**
+ * Kill a subprocess when cancelling an operation
+ *
+ * @param {object} sub     Subprocess from another context to kill
+ *
+ * @returns {object}     Null response when process is closed
+ **/
 async function killSubprocess(sub) {
     return new Promise((resolve, reject) => {
         sub.on('close', () => {

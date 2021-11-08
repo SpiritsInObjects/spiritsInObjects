@@ -9,18 +9,32 @@ import type { NdArray } from 'ndarray';
 import { WaveFile } from 'wavefile';
 import { v4 as uuid } from 'uuid';
 
+/* class representing Timeline composer features */
 export class Timeline{
 	private ffmpeg : any;
 	public tmpDir : string = join(tmpdir(), 'siotimeline');
 	public binDir : string = join(tmpdir(), 'siobin');
 	private cancelled : boolean = false;
 
+	/**
+	 * @constructor
+	 * 
+	 * Create Timeline class and assign ffmpeg as private member class
+	 * 
+	 * @param {object} ffmpeg 	ffmpeg class
+	 **/
 	constructor (ffmpeg : any) {
 		this.ffmpeg = ffmpeg;
 		this.initDirs();
 	}
 
-	private async initDirs () {
+	/**
+	 * Initialize temporary directories used by Timeline class
+	 * for storing exported frames, audio and video.
+	 * 
+	 * @returns {boolean} Whether initialization process is successful
+	 **/
+	private async initDirs () : Promise<boolean> {
 		let dirs : string[] = [ this.tmpDir, this.binDir ];
 
 		for (let dir of dirs) {
@@ -38,17 +52,35 @@ export class Timeline{
 				return false;
 			}
 		}
+
+		return true;
 	}
 
-	private async makeTmp (dir : string) {
+	/**
+	 * Creates a temporary directory.
+	 * 
+	 * @param {string} dir 		Path of directory
+	 * 
+	 * @returns {boolean} 	Wheter creation is successful
+	 **/
+	private async makeTmp (dir : string) : Promise<boolean> {
 		try {
 			await mkdir(dir, { recursive: true });
 		} catch (err) {
 			console.error(err);
+			return false;
 		}
+		return true;
 	}
 
-	private async emptyTmp (dir : string) {
+	/**
+	 * Erase all files in a directory.
+	 * 
+	 * @param {string} dir 		Path of dir to empty
+	 * 
+	 * @returns {boolean} Whether erasing directory was successful
+	 **/
+	private async emptyTmp (dir : string) : Promise<boolean> {
 		let files : string[];
 
 		try {
@@ -60,14 +92,27 @@ export class Timeline{
 
 		for (const file of files) {
 			try {
-				//await unlink( join(dir, file) );
+				await unlink( join(dir, file) );
 			} catch (err) {
 				throw err;
 				return false;
 			}
 		}
+		return true;
 	}
 
+	/**
+	 * Export a frame using data from the canvas in the renderer process.
+	 * This is used to normalize JPEG files as PNG so the export
+	 * is done using all of the same file type.
+	 * 
+	 * @param {string} id 		UUID of file to export
+	 * @param {array} data 		Raw pixel data of the image
+	 * @param {number} width 	Width of image to create
+	 * @param {number} height   Height of image to create
+	 * 
+	 * @returns {string} Path of newly-created file
+	 **/
 	public async exportFrame (id : string, data : any[], width : number, height : number) : Promise<string> {
 		const framePath : string = join(this.binDir, `${id}.png`);
 		const nd : NdArray = ndarray(data, [width, height, 4], [4, width * 4, 1]);
@@ -94,6 +139,18 @@ export class Timeline{
 		});
 	}
 
+	/**
+	 * Copy frame from original location to a tmp directory.
+	 * This ensures that files are accessible for Timeline export
+	 * even if original drive is disconnected. Also makes the 
+	 * stitching process simpler by having all files named by UUID
+	 * rather than original path name.
+	 * 
+	 * @param {string} id  			UUID of file to copy
+	 * @param {string} filePath 	Path of original file
+	 * 
+	 * @returns {string} Path of newly-copied file
+	 **/
 	public async copyFrame (id : string, filePath : string) : Promise<string> {
 		const framePath : string = join(this.binDir, `${id}.png`);
 		try {
@@ -104,6 +161,14 @@ export class Timeline{
 		return framePath;
 	}
 
+	/**
+	 * Export audio from a sonified image as a standard 96kHz sample.
+	 * 
+	 * @param {string} id 		UUID of file that was sampled
+	 * @param {array} samples   Samples to create WAVE file from
+	 * 
+	 * @returns {string} Path to new audio file
+	 **/
 	public async exportAudio (id : string, samples: Float32Array) : Promise<string> {
 		const audioPath : string = join(this.binDir, `${id}-raw.wav`);
 		const resamplePath : string = join(this.binDir, `${id}.wav`);
@@ -124,7 +189,7 @@ export class Timeline{
 		}
 
 		try {
-			//await unlink(audioPath);
+			await unlink(audioPath);
 		} catch (err) {
 			console.error(err);
 		}
@@ -132,6 +197,15 @@ export class Timeline{
 		return resamplePath;
 	}
 
+	/**
+	 * Populates directory with frames in the order
+	 * that they appear in the timeline sequence. Copies
+	 * images from bin to a numbered temporary file.
+	 * 
+	 * @param {array} timeline 		List of UUIDs of frames
+	 * 
+	 * @returns {boolean} Whether files were successfully copied
+	 **/
 	public async images ( timeline: string[] ) : Promise <boolean> {
 		let frameNumber : number = 0;
 		let paddedNum : string;
@@ -164,6 +238,15 @@ export class Timeline{
 		return true;
 	}
 
+	/**
+	 * Populates directory with audio samples in the order they
+	 * are to be stitched together. Copies samples from bin similar to
+	 * images() method.
+	 * 
+	 * @param {array} timeline 	List of UUIDs of samples
+	 *  
+	 * @returns {boolean} Whether files were successfully copied
+	 **/
 	public async audio ( timeline: string[] ) : Promise <string[]> {
 		let frameNumber : number = 0;
 		let paddedNum : string;
@@ -199,6 +282,15 @@ export class Timeline{
 		return fileList;
 	}
 
+	/**
+	 * Exports Timeline as a prores video with audio.
+	 * 
+	 * @param {array} timeline 			List of UUIDs representing the timeline sequence
+	 * @param {string} tmpVideo 		Path of video to create
+	 * @param {Function} onProgress 	Callback for export progress
+	 * 
+	 * @returns {boolean} Whether export process was successful
+ 	 **/
 	public async export (timeline : string[], tmpVideo : string, onProgress : Function) : Promise <boolean> {
 		const id : string = uuid();
 		const tmpAudio : string = join(this.tmpDir, `${id}.wav`);
@@ -226,12 +318,20 @@ export class Timeline{
 
 		await this.ffmpeg.exportVideo(framesPath, tmpVideo, tmpAudio, 'prores3', onProgress);
 
-		//await unlink(tmpAudio);
+		await unlink(tmpAudio);
 
 		return success;
 
 	}
 
+	/**
+	 * Generate a preview of a timeline for playback within the app.
+	 * 
+	 * @param {object} args 	Arguments from ipc containing timeline
+	 * @param {string} tmpVideo	Path to temporary video
+	 * 
+	 * @returns {boolean} Whether preview generation was successful
+	 **/
 	public async preview (args : any, tmpVideo : string) : Promise <boolean> {
 		const id : string = uuid();
 		const timeline : string[] = args.timeline;
@@ -265,7 +365,7 @@ export class Timeline{
 
 		await this.ffmpeg.concatAudio(audioList, tmpAudio, () => {});
 
-		await this.ffmpeg.exportPreview (framesPath, tmpVideo, options);
+		await this.ffmpeg.exportPreview(framesPath, tmpVideo, options);
 
 		//await unlink(tmpAudio);
 
@@ -273,6 +373,9 @@ export class Timeline{
 
 	}
 
+	/**
+	 * Cancel timeline generation
+	 **/
 	public cancel () {
 		this.cancelled = true;
 	}

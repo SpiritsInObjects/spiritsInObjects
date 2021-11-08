@@ -11,7 +11,6 @@ import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
  * 
  * @returns {object} Standard outputs or just error
  **/
-
 export async function spawnAsync (bin : string, args : string[]) : Promise<any> {
 	return new Promise((resolve : Function, reject : Function) => {
         const child : ChildProcessWithoutNullStreams = spawn(bin, args);
@@ -36,6 +35,13 @@ export async function spawnAsync (bin : string, args : string[]) : Promise<any> 
 	});
 }
 
+/**
+ * Kill a subprocess when cancelling an operation
+ * 
+ * @param {object} sub     Subprocess from another context to kill
+ * 
+ * @returns {object}     Null response when process is closed
+ **/
 export async function killSubprocess (sub : any) {
     return new Promise(( resolve : Function, reject : Function) => {
         sub.on('close', () => {
