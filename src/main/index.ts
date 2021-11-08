@@ -38,7 +38,15 @@ if (is.development && process.argv.indexOf('--prod') === -1) {
 
 app.setAppUserModelId('spiritsinobjects');
 
-async function pixels (filePath : string) {
+/**
+ * Extract raw pixel data from an image using get-pixels.
+ * Put into an async/await wrapper using Promises
+ * 
+ * @param {string} filePath 	Path to image being extracted
+ * 
+ * @returns {object} Data from get-pixels module
+ **/
+async function pixels (filePath : string) : Promise<any> {
 	return new Promise((resolve : Function, reject : Function ) => {
 		return getPixels(filePath, (err : Error, imageData : any) => {
 			if (err) {
@@ -49,10 +57,27 @@ async function pixels (filePath : string) {
 	});
 }
 
+/**
+ * Create a SHA1 hash.
+ * 
+ * @param {string} str 		Input data
+ * 
+ * @returns {string} Hash in hex format
+ **/
 function hashStr (str : string) : string {
 	return createHash('sha1').update(str).digest('hex');
 }
 
+/**
+ * Sonification process used for both export, preview
+ * in the Sonify workspace. Exports all frames from a video
+ * and sonifies them individually while placing all samples in
+ * a single array.
+ * 
+ * @param {object} args 	Options provided by ipc
+ * 
+ * @returns {string} Path to resulting audio file
+ **/
 async function sonify (args : any) : Promise<string>  {
 	const startTime : number = +new Date();
 
@@ -229,6 +254,11 @@ const BrowserOptions = {
 	}
 };
 
+/**
+ * Create the main window of the application.
+ * 
+ * @returns {object} The BrowserWindow class
+ **/
 const createMainWindow = async () => {
 	const win = new BrowserWindow(BrowserOptions);
 
@@ -612,6 +642,11 @@ ipcMain.on('timeline_preview', async (evt : Event, args : any) => {
 	mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo })
 });
 
+
+/**
+ * Function that gets called on exit events that can be caught by the
+ * main process. Deletes files and directories listed in the TMP object.
+ **/
 nodeCleanup((exitCode : any, signal : string) => {
 	let exists : boolean = false;
 	console.log(`Cleaning up on exit code ${exitCode}...`);

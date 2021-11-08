@@ -34,6 +34,14 @@ if (electron_util_1.is.development && process.argv.indexOf('--prod') === -1) {
     (0, electron_debug_1.default)();
 }
 electron_1.app.setAppUserModelId('spiritsinobjects');
+/**
+ * Extract raw pixel data from an image using get-pixels.
+ * Put into an async/await wrapper using Promises
+ *
+ * @param {string} filePath 	Path to image being extracted
+ *
+ * @returns {object} Data from get-pixels module
+ **/
 async function pixels(filePath) {
     return new Promise((resolve, reject) => {
         return (0, get_pixels_1.default)(filePath, (err, imageData) => {
@@ -44,9 +52,26 @@ async function pixels(filePath) {
         });
     });
 }
+/**
+ * Create a SHA1 hash.
+ *
+ * @param {string} str 		Input data
+ *
+ * @returns {string} Hash in hex format
+ **/
 function hashStr(str) {
     return (0, crypto_1.createHash)('sha1').update(str).digest('hex');
 }
+/**
+ * Sonification process used for both export, preview
+ * in the Sonify workspace. Exports all frames from a video
+ * and sonifies them individually while placing all samples in
+ * a single array.
+ *
+ * @param {object} args 	Options provided by ipc
+ *
+ * @returns {string} Path to resulting audio file
+ **/
 async function sonify(args) {
     const startTime = +new Date();
     let wav = new wavefile_1.WaveFile();
@@ -199,6 +224,11 @@ const BrowserOptions = {
         contextIsolation: false
     }
 };
+/**
+ * Create the main window of the application.
+ *
+ * @returns {object} The BrowserWindow class
+ **/
 const createMainWindow = async () => {
     const win = new electron_1.BrowserWindow(BrowserOptions);
     win.on('ready-to-show', () => {
@@ -537,6 +567,10 @@ electron_1.ipcMain.on('timeline_preview', async (evt, args) => {
     }
     mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo });
 });
+/**
+ * Function that gets called on exit events that can be caught by the
+ * main process. Deletes files and directories listed in the TMP object.
+ **/
 (0, node_cleanup_1.default)((exitCode, signal) => {
     let exists = false;
     console.log(`Cleaning up on exit code ${exitCode}...`);
