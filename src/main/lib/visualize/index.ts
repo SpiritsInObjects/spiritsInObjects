@@ -8,16 +8,36 @@ import { mkdir, rmdir, createWriteStream, unlink } from 'fs-extra';
 import ndarray from 'ndarray';
 import type { NdArray } from 'ndarray';
 
+/* class representing visualization features */
 export class Visualize {
 	private ffmpeg : any;
 	private tmp : string;
 	private format : string;
 
+	/**
+	 * @constructor
+	 * 
+	 * Initialize the Visualize class with ffmpeg included 
+	 * as member class.
+	 * 
+	 * @param {object} ffmpeg 		ffmpeg class
+	 **/
 	constructor (ffmpeg : any) {
 		this.ffmpeg = ffmpeg;
 	}
 
-	public async processAudio (state : any, info : any, tmpAudio : string, onProgress : Function) {
+	/**
+	 * Resample audio file for a specific height. Multiply the height by
+	 * the framerate for the samplerate.
+	 * 
+	 * @param {object} state 			Options provided by ipc
+	 * @param {object} info 			Info provided by ffprobe
+	 * @param {string} tmpAudio     	Target audio file to create
+	 * @param {Function} onProgress 	Callback on progress
+	 * 
+	 * @returns {boolean} Whether audio was successfully processed
+	 **/
+	public async processAudio (state : any, info : any, tmpAudio : string, onProgress : Function) : Promise<boolean> {
 		const filePath   : string = state.filePath;
 		const fps        : number = typeof state.fps !== 'undefined' ? state.fps : 24;
 		const height     : number = state.vHeight;
@@ -40,10 +60,20 @@ export class Visualize {
 			throw err;
 		}
 
-		return true
+		return true;
 	}
 
-	public async exportFrame (frameNumber : number, data : any[], width : number, height : number) {
+	/**
+	 * Create a new image from raw image data created in Canvas on the renderer.
+	 * 
+	 * @param {number} frameNumber 		Frame to assign to new image
+	 * @param {array} data 				Raw image data
+	 * @param {number} width 			Width of image
+	 * @param {number} height 			Height of image
+	 * 
+	 * @returns {boolean} Whether export was successful
+	 **/
+	public async exportFrame (frameNumber : number, data : any[], width : number, height : number) : Promise<boolean> {
 		const paddedNum = `${frameNumber}`.padStart(8, '0');
 		const framePath = pathJoin(this.tmp, `${paddedNum}.png`);
 		const nd : NdArray = ndarray(data, [width, height, 4], [4, width*4, 1]);
@@ -65,32 +95,59 @@ export class Visualize {
 				}
 				reject(err);
 			});
+
 			savePixels(nd, 'PNG').pipe(stream);
 		});
 	}
 
-	public async startExport (format : string) {
+	/**
+	 * Create a directory to save new frames in and set the
+	 * format of the video being created.
+	 * 
+	 * @param {string} format		Format of video
+	 * 
+	 * @returns {boolean} Whether directory was created
+	 **/
+	public async startExport (format : string) : Promise<boolean> {
 		this.tmp = pathJoin(tmpdir(), uuid());
 		this.format = format;
+
 		try {
 			await mkdir(this.tmp);
 		} catch (err) {
 			throw err;
 		}
+
 		return true;
 	}
 
-	public async startPreview () {
+	/**
+	 * Create a directory to save new frames in for a 
+	 * preview
+	 * 
+	 * @returns {boolean} Whether directory was created
+	 **/
+	public async startPreview () : Promise<boolean> {
 		this.tmp = pathJoin(tmpdir(), uuid());
+
 		try {
 			await mkdir(this.tmp);
 		} catch (err) {
 			throw err;
 		}
+
 		return true;
 	}
 
-	public async endExport (onProgress : Function) {
+	/**
+	 * Invoked at the end of the export process to stitch
+	 * frames into new video.
+	 * 
+	 * @param {Function} onProgress 	Callback for export process
+	 * 
+	 * @returns {string} Path to created video
+	 **/
+	public async endExport (onProgress : Function) : Promise<string> {
 		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
 		let tmpVideo : string;
 		let ext : string;
@@ -121,6 +178,15 @@ export class Visualize {
 		return tmpVideo;
 	}
 
+	/**
+	 * Invoked at the end of the preview export process to stitch
+	 * frames into new video.
+	 * 
+	 * @param {object} options			Options required by the ffmpeg.exportPreview() method
+	 * @param {Function} onProgress 	Callback for export process
+	 * 
+	 * @returns {string} Path to created preview video
+	 **/
 	public async endPreview (options : any, onProgress : Function) {
 		const inputPath : string = pathJoin(this.tmp, `%8d.png`);
 		const ext : string = 'mp4';
