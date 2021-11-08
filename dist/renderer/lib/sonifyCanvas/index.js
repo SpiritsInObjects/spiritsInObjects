@@ -6,8 +6,9 @@ class Sonify {
      *
      * Creates Sonify class using a canvas element
      *
-     * @param {Object} state  State object containing video information
-     * @param {Object} canvas Canvas to sonify
+     * @param {Object} state            State object containing video information
+     * @param {Object} canvas           Canvas to sonify
+     * @param {Object} audioContext     HTML Audio Context class shared with render process
      */
     constructor(state, canvas, audioContext) {
         this.framerate = 24;
@@ -46,7 +47,7 @@ class Sonify {
     /**
      * Sonify pixel data stored in an rgba array [r, g, b, a] = 1px
      *
-     * @param {array} imageData Pixel data stored in typed uint8 clamped array
+     * @param {array} imageData     Pixel data stored in typed uint8 clamped array
      *
      * @returns {array} Sound data as typed float32 array
      */
@@ -82,7 +83,7 @@ class Sonify {
      * @param {number} low2 Low of target scale
      * @param {number} high2 High of target scale
      *
-     * @returns {number}
+     * @returns {number} Mapped value
      */
     map_range(value, low1, high1, low2, high2) {
         return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
@@ -90,7 +91,9 @@ class Sonify {
     /**
      * Turn a row of image data into a single audio sample
      *
-     * @param {array} row Single row of image (1px section across width)
+     * @param {array} row     Single row of image (1px section across width)
+     *
+     * @returns {number} Mapped total value of row
      */
     getSample(row) {
         let luminance = 0;
@@ -104,8 +107,10 @@ class Sonify {
     /**
      * Envelope an array of sample data in and out by n samples
      *
-     * @param {array} original Audio sample data to fade
-     * @param {number} envLen Length of envelope on either end
+     * @param {array} original     Audio sample data to fade
+     * @param {number} envLen     Length of envelope on either end
+     *
+     * @returns {array} Altered array with envelope applied
      */
     envelope(original, envLen = 30) {
         const len = original.length;

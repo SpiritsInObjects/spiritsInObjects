@@ -14,12 +14,13 @@
 **Kind**: global class  
 <a name="new_Creates Sonify class using a canvas element_new"></a>
 
-### new Creates Sonify class using a canvas element(state, canvas)
+### new Creates Sonify class using a canvas element(state, canvas, audioContext)
 
 | Param | Type | Description |
 | --- | --- | --- |
 | state | <code>Object</code> | State object containing video information |
 | canvas | <code>Object</code> | Canvas to sonify |
+| audioContext | <code>Object</code> | HTML Audio Context class shared with render process |
 
 <a name="Sonify"></a>
 
@@ -33,8 +34,8 @@ class representing image sonification of a canvas element
     * [.sonify(imageData)](#Sonify+sonify) ⇒ <code>array</code>
     * [.brightness(r, g, b)](#Sonify+brightness) ⇒ <code>number</code>
     * [.map_range(value, low1, high1, low2, high2)](#Sonify+map_range) ⇒ <code>number</code>
-    * [.getSample(row)](#Sonify+getSample)
-    * [.envelope(original, envLen)](#Sonify+envelope)
+    * [.getSample(row)](#Sonify+getSample) ⇒ <code>number</code>
+    * [.envelope(original, envLen)](#Sonify+envelope) ⇒ <code>array</code>
 
 <a name="Sonify+sonifyCanvas"></a>
 
@@ -76,6 +77,7 @@ Map a value from one range to a target range, implemented to mimic
 Processing map() function
 
 **Kind**: instance method of [<code>Sonify</code>](#Sonify)  
+**Returns**: <code>number</code> - Mapped value  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -87,10 +89,11 @@ Processing map() function
 
 <a name="Sonify+getSample"></a>
 
-### sonify.getSample(row)
+### sonify.getSample(row) ⇒ <code>number</code>
 Turn a row of image data into a single audio sample
 
 **Kind**: instance method of [<code>Sonify</code>](#Sonify)  
+**Returns**: <code>number</code> - Mapped total value of row  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -98,10 +101,11 @@ Turn a row of image data into a single audio sample
 
 <a name="Sonify+envelope"></a>
 
-### sonify.envelope(original, envLen)
+### sonify.envelope(original, envLen) ⇒ <code>array</code>
 Envelope an array of sample data in and out by n samples
 
 **Kind**: instance method of [<code>Sonify</code>](#Sonify)  
+**Returns**: <code>array</code> - Altered array with envelope applied  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |

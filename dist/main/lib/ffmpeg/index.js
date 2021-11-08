@@ -171,8 +171,10 @@ class ffmpeg {
     /**
      * Export a single frame from a video.
      *
-     * @param filePath
-     * @param frameNum
+     * @param {string} filePath     Path to original file
+     * @param {string} frameNum     Frame number to be padded
+     *
+     * @returns {string} Path to outputted frame
      */
     static async exportFrame(filePath, frameNum) {
         const padded = `${frameNum}`.padStart(8, '0');
