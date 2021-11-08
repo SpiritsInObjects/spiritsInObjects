@@ -12,7 +12,15 @@ const ffprobe = require('ffprobe-static').path;
 let tmp;
 let subprocess = null;
 let background = null;
+/* static class representing all video exporting features using ffmpeg and ffprobe */
 class ffmpeg {
+    /**
+     * Return an object describing a file from ffprobe
+     *
+     * @param {string} filePath     File to generate info about
+     *
+     * @returns {object} Parsed JSON object containing info
+     **/
     static async info(filePath) {
         const args = [
             '-v', 'quiet',
@@ -31,9 +39,26 @@ class ffmpeg {
         //console.dir(JSON.parse(res.stdout));
         return JSON.parse(res.stdout);
     }
+    /**
+     * Generate a SHA1 hash of a file. Used for determining
+     * if preview files have already been generated for unique
+     * files.
+     *
+     * @param {string} data       Data to hash (file path, mostly)
+     *
+     * @returns {string} Hash in hex format
+     **/
     static hash(data) {
         return (0, crypto_1.createHash)('sha1').update(data).digest('hex');
     }
+    /**
+     * Callback for parsing lines of stderr output from ffmpeg.
+     * Used for determining progress of import/exports.
+     *
+     * @param {string} line     Line from ffmpeg stderr
+     *
+     * @returns {obj}  Object of the StdErr type
+     **/
     static parseStderr(line) {
         //frame= 6416 fps= 30 q=31.0 size=   10251kB time=00:03:34.32 bitrate= 391.8kbits/s speed=   1x
         let obj = {};
@@ -58,6 +83,13 @@ class ffmpeg {
         }
         return obj;
     }
+    /**
+     * Creates a temporary directory for sio data if
+     * it does not exist. Returns the location, which will
+     * differ based on OS.
+     *
+     * @returns {string} Path to sio temporary directory
+     **/
     static async exportPath() {
         tmp = (0, path_1.join)((0, os_1.tmpdir)(), 'sio');
         try {
@@ -74,6 +106,14 @@ class ffmpeg {
         }
         return tmp;
     }
+    /**
+     * Export all frames from a video in an image sequence.
+     *
+     * @param {string} filePath         Path to file to export
+     * @param {Function} onProgress     (Optional) Callback on progress
+     *
+     * @returns {object} Result of process
+     **/
     static async exportFrames(filePath, onProgress = () => { }) {
         const hash = this.hash(filePath);
         const input = {};
@@ -116,6 +156,14 @@ class ffmpeg {
             return subprocess;
         });
     }
+    /**
+     * Path to export a single frame to.
+     *
+     * @param {string} hash         Hash of the file being exported
+     * @param {number} frameNum     Frame number to be padded
+     *
+     * @returns {string} Path to use for frame
+     **/
     static exportFramePath(hash, frameNum) {
         const padded = `${frameNum}`.padStart(8, '0');
         return (0, path_1.join)(tmp, `${hash}-export-${padded}.png`);
@@ -149,6 +197,18 @@ class ffmpeg {
         }
         return output;
     }
+    /**
+     * Export a final version of a video, stitched from individual frames.
+     * Used by Visualize and Timeline modules.
+     *
+     * @param {string} inputPath     Path template of input files
+     * @param {string} outputPath    Path of output video
+     * @param {string} audio         (Optional) Path to audio file to assign to video
+     * @param {string} format        (Optional) Format of exported video (prores/h264)
+     * @param {Function} onProgress  (Optional) Callback on progress
+     *
+     * @returns {string} Path of resulting video (equal to outputPath)
+     **/
     static async exportVideo(inputPath, outputPath, audio = null, format = 'prores3', onProgress = () => { }) {
         let args = [
             '-framerate', '24',
@@ -188,7 +248,7 @@ class ffmpeg {
             subprocess.on('exit', (code) => {
                 subprocess = null;
                 if (code === 0) {
-                    return resolve(tmp);
+                    return resolve(outputPath);
                 }
                 else {
                     console.error(`Process exited with code: ${code}`);
@@ -210,6 +270,18 @@ class ffmpeg {
             return subprocess;
         });
     }
+    /**
+     * Resample an audio file to a new samplerate. Used because of the
+     * odd samplerates created by the sonify methods.
+     *
+     * @param {string} input         Path to input audio file
+     * @param {string} output        Path to output audio file
+     * @param {number} sampleRate    Target samplerate of new file
+     * @param {number} channels      Number of channels in new file (unused currently)
+     * @param {Function} onProgress  (Optional) Callback on progress
+     *
+     * @returns {string} Path to new audio file (equal to output)
+     **/
     static async resampleAudio(input, output, sampleRate, channels, onProgress = () => { }) {
         const args = [
             '-i', input,
@@ -249,9 +321,19 @@ class ffmpeg {
             return subprocess;
         });
     }
+    /**
+     * Concatinate multiple audio files into a single file.
+     * Used to join samples quickly for the Timeline module.
+     *
+     * @param {array} audioTimeline     Array of paths to files to join
+     * @param {string} tmpAudio            Output audio file to create
+     * @param {Function} onProgress        (Optional) Callback on progress
+     *
+     * @returns {boolean}  Whether process is successful
+     **/
     static async concatAudio(audioTimeline, tmpAudio, onProgress = () => { }) {
+        const tmpList = (0, path_1.join)(tmp, 'sioaudiofilelist.txt');
         let fileList;
-        let tmpList = (0, path_1.join)((0, os_1.tmpdir)(), 'sioaudiofilelist.txt');
         fileList = audioTimeline.map((file) => {
             return `file '${file}'`;
         });
@@ -278,6 +360,16 @@ class ffmpeg {
         }
         return true;
     }
+    /**
+     * Executes the ffmpeg command which concatinates audio files using
+     * the list of files created with method concatAudio().
+     *
+     * @param {string} fileList         Path of list of audio files
+     * @param {string} output           Path of output audio file
+     * @param {Function} onProgress     Callback on progress
+     *
+     * @returns {string} output         Path of output file
+     **/
     static async concatAudioExec(fileList, output, onProgress) {
         const args = [
             '-y',
@@ -324,9 +416,12 @@ class ffmpeg {
      * option.height settings. Optionally add an audio file as the sondtrack of the
      * preview video.
      *
-     * @param {string} inputPath
-     * @param {string} outputPath
-     * @param {object} options Preview Options
+     * @param {string} inputPath       Path of input file
+     * @param {string} outputPath      Path of output file
+     * @param {object} options         PreviewOptions type containing options
+     * @param {Function} onProgress    (Optional) Callback on progress
+     *
+     * @returns {string} Path of output file
      **/
     static async exportPreview(inputPath, outputPath, options, onProgress = () => { }) {
         const width = options.width;
@@ -370,7 +465,7 @@ class ffmpeg {
             subprocess.on('exit', (code) => {
                 subprocess = null;
                 if (code === 0) {
-                    return resolve(tmp);
+                    return resolve(outputPath);
                 }
                 else {
                     console.error(`Process exited with code: ${code}`);
@@ -394,6 +489,7 @@ class ffmpeg {
     /**
      * Cancel the subprocess that is currently running in spawn mode.
      *
+     * @returns {boolean} Whether process has been successfully cancelled
      **/
     static async cancel() {
         let cancelled = false;
@@ -412,6 +508,7 @@ class ffmpeg {
     /**
      * Cancel the background process that is currently running in spawn mode.
      *
+     * @returns {boolean} Whether process has been successfully cancelled
      **/
     static async cancelBackground() {
         let cancelled = false;
