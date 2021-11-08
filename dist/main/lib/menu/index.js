@@ -4,7 +4,6 @@ exports.createMenu = void 0;
 //const path = require('path'); //need for icon
 const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
-const config = require('../config');
 const showPreferences = () => {
     // Show the app's preferences here
 };
@@ -44,39 +43,6 @@ if (!is.macos) {
         text: 'Created by'
     }));
 }
-const debugSubmenu = [
-    {
-        label: 'Show Settings',
-        click() {
-            config.openInEditor();
-        }
-    },
-    {
-        label: 'Show App Data',
-        click() {
-            shell.openPath(app.getPath('userData'));
-        }
-    },
-    {
-        type: 'separator'
-    },
-    {
-        label: 'Delete Settings',
-        click() {
-            config.clear();
-            app.relaunch();
-            app.quit();
-        }
-    },
-    {
-        label: 'Delete App Data',
-        async click() {
-            await shell.trashItem(app.getPath('userData'));
-            app.relaunch();
-            app.quit();
-        }
-    }
-];
 const macosTemplate = [
     appMenu([
         {
@@ -153,12 +119,6 @@ const otherTemplate = [
     }
 ];
 const template = process.platform === 'darwin' ? macosTemplate : otherTemplate;
-if (is.development) {
-    template.push({
-        label: 'Debug',
-        submenu: debugSubmenu
-    });
-}
 function createMenu() {
     return Menu.buildFromTemplate(template);
 }

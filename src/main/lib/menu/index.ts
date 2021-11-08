@@ -10,7 +10,6 @@ const {
 	openNewGitHubIssue,
 	debugInfo
 } = require('electron-util');
-const config = require('../config');
 
 const showPreferences = () => {
 	// Show the app's preferences here
@@ -57,40 +56,6 @@ if (!is.macos) {
 		})
 	);
 }
-
-const debugSubmenu = [
-	{
-		label: 'Show Settings',
-		click() {
-			config.openInEditor();
-		}
-	},
-	{
-		label: 'Show App Data',
-		click() {
-			shell.openPath(app.getPath('userData'));
-		}
-	},
-	{
-		type: 'separator'
-	},
-	{
-		label: 'Delete Settings',
-		click() {
-			config.clear();
-			app.relaunch();
-			app.quit();
-		}
-	},
-	{
-		label: 'Delete App Data',
-		async click() {
-			await shell.trashItem(app.getPath('userData'));
-			app.relaunch();
-			app.quit();
-		}
-	}
-];
 
 const macosTemplate = [
 	appMenu([
@@ -170,13 +135,6 @@ const otherTemplate = [
 ];
 
 const template = process.platform === 'darwin' ? macosTemplate : otherTemplate;
-
-if (is.development) {
-	template.push({
-		label: 'Debug',
-		submenu: debugSubmenu
-	});
-}
 
 export function createMenu () {
 	return Menu.buildFromTemplate(template);
