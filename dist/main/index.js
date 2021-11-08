@@ -18,7 +18,6 @@ const uuid_1 = require("uuid");
 const node_cleanup_1 = __importDefault(require("node-cleanup"));
 const ffmpeg_1 = require("./lib/ffmpeg");
 const sonifyNode_1 = require("./lib/sonifyNode");
-//import config from './lib/config';
 const menu_1 = require("./lib/menu");
 const visualize_1 = require("./lib/visualize");
 const timeline_1 = require("./lib/timeline");

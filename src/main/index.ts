@@ -16,9 +16,7 @@ import nodeCleanup from 'node-cleanup';
 
 import { ffmpeg } from './lib/ffmpeg';
 import { SonifyNode } from './lib/sonifyNode';
-import { fluidsynth } from './lib/fluidsynth';
 
-//import config from './lib/config';
 import { createMenu } from './lib/menu';
 import { Visualize } from './lib/visualize';
 import { Timeline } from './lib/timeline';
