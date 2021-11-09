@@ -373,15 +373,25 @@ textarea:active,
 select:active {
   background: #f6f6f7;
 }
-.info {
+.info,
+#vInfo {
   padding: 20px;
 }
 .info div,
-.info div span {
+#vInfo div,
+.info div span,
+#vInfo div span {
   font-family: monospace;
 }
-.info:active {
+.info:active,
+#vInfo:active {
   background: #cbcccf;
+}
+#vInfo {
+  padding-left: 0;
+}
+#vSelect {
+  padding: 10px 20px;
 }
 select {
   text-align-last: center;
@@ -901,4 +911,5 @@ textarea {
   font-size: 30px;
   color: #868484;
   text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+  cursor: pointer;
 }
