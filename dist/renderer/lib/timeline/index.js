@@ -4,7 +4,18 @@ const uuid = require('uuid').v4;
 const { lstat, readdir } = require('fs-extra');
 const { platform } = require('os');
 const Swal = require('../contrib/sweetalert2.min.js');
+/* class representing Timeline features */
 class Timeline {
+    /**
+     * @constructor
+     *
+     * Initialize the Timeline class with a member class and
+     * callbacks to integrate UI behavior with the renderer process.
+     *
+     * @param {object} ui 			UI class
+     * @param {Function} onBin 		Callback when item is added to bin
+     * @param {Function} onPreview  Callback when preview is created
+     **/
     constructor(ui, onBin, onPreview) {
         this.canvas = document.getElementById('tCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -74,6 +85,9 @@ class Timeline {
         };
         this.bindListeners();
     }
+    /**
+     * Bind all listeners to Timeline elements.
+     **/
     bindListeners() {
         this.bindListener('click', this.binElement, this.openBin);
         this.bindListener('click', this.importBtn, this.open);
@@ -109,9 +123,24 @@ class Timeline {
         /** Selection UI **/
         this.bindGlobal('.frame', 'click', this.clickSelect.bind(this));
     }
+    /**
+     * Wrapper function for binding to events with a shortened format.
+     *
+     * @param {string} event 		Name of event to bind
+     * @param {object} element 		Element to bind to
+     * @param {Function} func 		Function invoked on event
+     **/
     bindListener(event, element, func) {
         element.addEventListener(event, func.bind(this), false);
     }
+    /**
+     * Wrapper function for binding to global (document-wide) events and
+     * apply to elements that are dynamically created.
+     *
+     * @param {string} selector 		Selector query of elements to bind to
+     * @param {string} event 			Name of event
+     * @param {Function} handler 		Function invoked on event
+     **/
     bindGlobal(selector, event, handler) {
         const rootElement = document.querySelector('body');
         rootElement.addEventListener(event, function (evt) {
@@ -125,6 +154,11 @@ class Timeline {
             }
         }, true);
     }
+    /**
+     * Update the progress of an export by highlighting a frame.
+     *
+     * @param {number} percent 		Percent of render complete
+     **/
     progress(percent) {
         let index;
         if (this.timeline && this.timeline.length > 0) {
@@ -135,6 +169,12 @@ class Timeline {
             }
         }
     }
+    /**
+     * Create a hash of the current timeline to differentiate between
+     * the timeline's state after changes in order or length.
+     *
+     * @returns {number} Hash in integer form
+     **/
     hash() {
         let str = '';
         let hash = 0;
@@ -160,6 +200,13 @@ class Timeline {
         }
         return hash;
     }
+    /**
+     * Wrapper method to add a class to an element and ignore errors if
+     * not possible.
+     *
+     * @param {object} elem 		Element to assign class to
+     * @param {string} className 	Name of class to add
+     **/
     addClass(elem, className) {
         try {
             elem.classList.add(className);
@@ -168,12 +215,26 @@ class Timeline {
             //
         }
     }
+    /**
+     * Wrapper method to add class to all elements that a query selector
+     * describes.
+     *
+     * @param {string} selector 	Query selector of elements
+     * @param {string} className 	Name of class to add
+     **/
     addClassAll(selector, className) {
         const elems = document.querySelectorAll(selector);
         [].forEach.call(elems, (el) => {
             this.addClass(el, className);
         });
     }
+    /**
+     * Wrapper method to remove a class from an element and ignore errors if
+     * not possible.
+     *
+     * @param {object} elem 		Element to remove class from
+     * @param {string} className 	Name of class to remove
+     **/
     removeClass(elem, className) {
         try {
             elem.classList.remove(className);
@@ -182,12 +243,23 @@ class Timeline {
             //
         }
     }
+    /**
+     * Wrapper method to remove class from all elements that a query selector
+     * describes.
+     *
+     * @param {string} selector 	Query selector of elements
+     * @param {string} className 	Name of class to remove
+     **/
     removeClassAll(selector, className) {
         const elems = document.querySelectorAll(selector);
         [].forEach.call(elems, (el) => {
             this.removeClass(el, className);
         });
     }
+    /**
+     * Alter the size of the "steps" which are groups of frames added to timeline
+     * at one time.
+     **/
     changeStepSize() {
         let val = parseInt(this.stepSizeElement.value, 10);
         if (val < 1) {
@@ -197,6 +269,12 @@ class Timeline {
         this.stepSize = val;
         this.addTimelineBtn.innerHTML = `Add ${val} Frame${val === 1 ? '' : 's'} to Timeline`;
     }
+    /**
+     * Callback for when a frame is clicked. Will select the image from the Bin
+     * and display the frame. Updates other UI elements as well.
+     *
+     * @param {object} evt 		Click event
+     **/
     clickFrame(evt) {
         const x = parseInt(evt.target.getAttribute('x'), 10);
         let bi = null;
@@ -217,6 +295,12 @@ class Timeline {
             this.clearSelect();
         }
     }
+    /**
+     * Callback for when frame is double clicked. Displays frame and
+     * plays its associated sample.
+     *
+     * @param {object} evt 		Double click event
+     **/
     dblclickFrame(evt) {
         const x = parseInt(evt.target.getAttribute('x'), 10);
         let bi = null;
@@ -234,6 +318,12 @@ class Timeline {
             this.stopDisplay();
         }
     }
+    /**
+     * Callback for when image within bin is clicked.
+     * Displays the image.
+     *
+     * @param {object} evt 		Click event object
+     **/
     clickBinImage(evt) {
         let id;
         let tr = evt.target;
@@ -248,6 +338,12 @@ class Timeline {
             this.displayFrame(bi.file);
         }
     }
+    /**
+     * Callback for when image within bin is double clicked.
+     * Displays the image and adds to timeline.
+     *
+     * @param {object} evt 		Double click event object
+     **/
     dblclickBinImage(evt) {
         let id;
         let tr = evt.target;
@@ -279,16 +375,33 @@ class Timeline {
             this.clearSelect();
         }
     }
+    /**
+     * Select a bin image by id.
+     *
+     * @param {string} id 		UUID of bin image
+     **/
     selectBinImage(id) {
         this.removeClassAll('#tBin tbody tr.selected', 'selected');
         this.addClass(document.getElementById(id), 'selected');
         this.selectedBin = id;
     }
+    /**
+     * Select frame by index.
+     *
+     * @param {number} x 		Index of frame
+     **/
     selectFrame(x) {
         this.removeClassAll('.frame.selected', 'selected');
         this.addClass(document.querySelector(`.frame[x="${x}"]`), 'selected');
         this.changeSelected(x);
     }
+    /**
+     * Select multiple frames and optionally apply a visual label to them
+     *
+     * @param {number} x 		Index of starting frame
+     * @param {number} size 	Number of frames
+     * @param {string} id 		(Optional) UUID of bin to apply
+     **/
     selectFrameGroup(x, size, id = null) {
         let bi = null;
         let frame;
@@ -317,6 +430,9 @@ class Timeline {
             }
         }
     }
+    /**
+     * Advance to next frame in timeline.
+     **/
     nextFrame() {
         let bi = null;
         let id;
@@ -335,6 +451,9 @@ class Timeline {
             }
         }
     }
+    /**
+     * Rewind to previous frame in timeline.
+     **/
     prevFrame() {
         let bi = null;
         let id;
@@ -353,13 +472,18 @@ class Timeline {
             }
         }
     }
+    /**
+     * Callback on keydown event.
+     *
+     * @param {object} evt 		Keyboard event object
+     **/
     keyDown(evt) {
         let key = null;
         if (this.ui.currentPage !== 'timeline') {
             return false;
         }
         //console.dir(evt);
-        console.log(evt.code);
+        //console.log(evt.code);
         if (evt.ctrlKey || evt.metaKey) {
             if (evt.code === 'KeyC') {
                 return this.copy();
@@ -391,6 +515,11 @@ class Timeline {
             this.playFrame(key, true);
         }
     }
+    /**
+     * Callback for keyup event.
+     *
+     * @param {object} evt 		Keyboard event object
+     **/
     keyUp(evt) {
         let key = null;
         if (this.ui.currentPage !== 'timeline') {
@@ -404,6 +533,15 @@ class Timeline {
             this.stopFrame(key);
         }
     }
+    /**
+     * Convert a keycode to a normalized key value based on
+     * shift key.
+     *
+     * @param {string} code 		Original keycode value
+     * @param {boolean} shiftKey    Whether shift key is activated
+     *
+     * @returns {string} Normalized key value
+     **/
     codeToKey(code, shiftKey) {
         let key = null;
         if (code.indexOf('Key') === 0) {
@@ -417,12 +555,18 @@ class Timeline {
         }
         return key;
     }
+    /**
+     * Open the file dialog if bin is empty.
+     **/
     openBin() {
         if (this.bin.length === 0) {
             return this.open();
         }
         return false;
     }
+    /**
+     * Open the file selection dialog for the Bin.
+     **/
     async open() {
         const properties = platform() === 'darwin' ? ['openFile', 'openDirectory', 'multiSelections'] : ['multiSelections'];
         const options = {
@@ -438,12 +582,21 @@ class Timeline {
         }
         catch (err) {
             console.error(err);
+            return false;
         }
         if (!files || !files.filePaths || files.filePaths.length === 0) {
             return false;
         }
         this.addToBin(files.filePaths);
     }
+    /**
+     * Validate a list of files to determine if they are able to be added to the
+     * Bin.
+     *
+     * @param {array} files 	Files to validate
+     *
+     * @returns {boolean} Whether files are valid
+     **/
     validate(files) {
         let valid = false;
         let fileName;
@@ -463,6 +616,11 @@ class Timeline {
         }
         return valid;
     }
+    /**
+     * Add a list of files to the Bin.
+     *
+     * @param {array} files 		Files to add
+     **/
     async addToBin(files) {
         let bi;
         let key;
@@ -545,6 +703,13 @@ class Timeline {
         this.ui.overlay.progress(1.0, `Cleaning up...`);
         this.layoutBin();
     }
+    /**
+     * Determine whether a file is already in Bin.
+     *
+     * @param {string} filePath 		Path to file
+     *
+     * @returns {boolean} Whether file is already in Bin
+     **/
     inBin(filePath) {
         let match = this.bin.find((item) => {
             if (item.file === filePath) {
@@ -554,6 +719,13 @@ class Timeline {
         });
         return match != null;
     }
+    /**
+     * Get an image from the bin by key.
+     *
+     * @param {string} key 		Key to search
+     *
+     * @returns {object} Bin Image if matched
+     **/
     getByKey(key) {
         let match = this.bin.find((item) => {
             if (item.key === key) {
@@ -563,6 +735,13 @@ class Timeline {
         });
         return match;
     }
+    /**
+     * Get an image from the bin by UUID.
+     *
+     * @param {string} id 		UUID to find
+     *
+     * @returns {object} Bin Image if matched
+     **/
     getById(id) {
         let match = this.bin.find((item) => {
             if (item.id === id) {
@@ -572,6 +751,13 @@ class Timeline {
         });
         return match;
     }
+    /**
+     * Get image by index of Bin.
+     *
+     * @param {number} x 		Index of image in Bin
+     *
+     * @returns {object} Bin Image if matched
+     **/
     getByIndex(x) {
         let match = this.bin.find((el) => {
             if (el.index === x) {
@@ -581,6 +767,10 @@ class Timeline {
         });
         return match;
     }
+    /**
+     * Draw or re-draw the UI of the Bin using the list stored in the
+     * bin member variable.
+     **/
     layoutBin() {
         const container = this.binElement.querySelector('table tbody');
         let row;
@@ -607,6 +797,9 @@ class Timeline {
         }
         this.ui.overlay.hide();
     }
+    /**
+     * Create a new timeline of a length set in a popup input dialog.
+     **/
     async create() {
         const options = {
             title: 'New Timeline',
@@ -657,6 +850,13 @@ class Timeline {
         this.removeClass(this.removeBtn, 'hide');
         this.layout();
     }
+    /**
+     * Prompt user for an input using the SweetAlert2 library.
+     *
+     * @params {object} options 	PromptConfig type options
+     *
+     * @returns {string} Response from prompt input
+     **/
     async prompt(options) {
         let res;
         try {
@@ -668,6 +868,11 @@ class Timeline {
         }
         return res.value;
     }
+    /**
+     * Confirm creating a new timeline if one already exists.
+     *
+     * @returns {object} Response from confirmation dialog
+     **/
     async confirm() {
         const options = {
             type: 'question',
@@ -680,10 +885,20 @@ class Timeline {
         //@ts-ignore
         return dialog.showMessageBox(null, options);
     }
+    /**
+     * Display an error dialog with a message.
+     *
+     * @param {string} title 		Title of error box
+     * @param {string} message 		Error message
+     **/
     error(title, message) {
         //@ts-ignore
         dialog.showErrorBox(title, message);
     }
+    /**
+     * Draw or re-draw the Timeline UI based on the timeline
+     * member variable storing the state of the sequence.
+     **/
     layout() {
         const len = this.timeline.length;
         const container = document.getElementById('tWrapper');
@@ -718,6 +933,13 @@ class Timeline {
             container.appendChild(between);
         }
     }
+    /**
+     * Pre-process an image by loading it and sonifying it.
+     *
+     * @param {string} filePath 	Path to image
+     *
+     * @returns {array} Buffer containing sonified audio data
+     **/
     async preProcess(filePath) {
         return new Promise(async (resolve, reject) => {
             this.stillLoader = new Image();
@@ -735,6 +957,14 @@ class Timeline {
             this.stillLoader.setAttribute('src', filePath);
         });
     }
+    /**
+     * Get the raw image data of an image so that it can be stored
+     * in PNG format.
+     *
+     * @param {string} filePath 		Path to image file
+     *
+     * @returns {object} Object containing image data and dimensions
+     **/
     async imageData(filePath) {
         return new Promise(async (resolve, reject) => {
             this.stillLoader = new Image();
@@ -751,6 +981,12 @@ class Timeline {
             this.stillLoader.setAttribute('src', filePath);
         });
     }
+    /**
+     * Play a frame after finding it via key.
+     *
+     * @param {string} key 		Key of image
+     * @param {boolean} loop 	Whether to loop sample
+     **/
     playFrame(key, loop = false) {
         let bi;
         let buf;
@@ -774,6 +1010,11 @@ class Timeline {
             this.playing[key].start();
         }
     }
+    /**
+     * Stop playing a looping frame.
+     *
+     * @param {string} key 		Key of image to stop
+     **/
     stopFrame(key) {
         if (typeof this.playing[key] !== 'undefined') {
             this.playing[key].stop();
@@ -782,6 +1023,11 @@ class Timeline {
         //this.stopDisplay();
         return false;
     }
+    /**
+     * Display a single frame in place of a canvas.
+     *
+     * @param {string} filePath
+     **/
     displayFrame(filePath) {
         if (this.previewState.displaying) {
             this.addClass(this.previewVideo, 'hide');
@@ -790,10 +1036,16 @@ class Timeline {
         this.display.setAttribute('src', filePath);
         this.removeClass(this.display, 'hide');
     }
+    /**
+     * Stop displaying video.
+     **/
     stopDisplay() {
         this.addClass(this.display, 'hide');
         this.display.setAttribute('src', '#');
     }
+    /**
+     * Add an image to timeline at current position.
+     **/
     addTimeline() {
         let bi;
         this.addTimelineBtn.blur();
@@ -810,8 +1062,15 @@ class Timeline {
         if (!this.selectState.active && this.selectState.start !== -1) {
             this.clearSelect();
         }
-        //console.log(`${this.selected} = ${bi.id}`)
     }
+    /**
+     * Assign a BinImage to one or multiple frames in the timeline
+     * using the UUID.
+     *
+     * @param {string} id 		UUID of Bin image
+     * @param {number} x 		Starting frame to timeline
+     * @param {number} count 	Number of frames to add
+     **/
     assignFrame(id, x, count = 1) {
         for (let i = 0; i < count; i++) {
             if (typeof this.timeline[x + i] !== 'undefined') {
@@ -825,6 +1084,9 @@ class Timeline {
         }
         this.layout();
     }
+    /**
+     * Delete frame at current position in the Timeline.
+     **/
     deleteFrame() {
         if (this.timeline.length === 0) {
             return false;
@@ -833,12 +1095,22 @@ class Timeline {
         this.changeSelected(this.selected - 1);
         this.layout();
     }
+    /**
+     * Add one or multiple steps to the Timeline.
+     *
+     * @param {number} steps 	Number of frames to add
+     **/
     expandTimeline(steps = 1) {
         for (let i = 0; i < steps; i++) {
             this.timeline.push(null);
         }
         this.layout();
     }
+    /**
+     * Remove one or multiple frames from Timeline.
+     *
+     * @param {number} steps 	Number of frames to remove
+     **/
     contractTimeline(steps = 1) {
         for (let i = 0; i < steps; i++) {
             if (this.timeline.length > 0) {
@@ -847,6 +1119,12 @@ class Timeline {
         }
         this.layout();
     }
+    /**
+     * Generate a blank frame of dimensions provided.
+     *
+     * @param {number} width 		Width of blank image
+     * @param {number} height 		Height of blank image
+     **/
     generateBlank(width, height) {
         const blank = {
             id: 'blank',
@@ -871,6 +1149,11 @@ class Timeline {
         this.blank.height = height;
         this.onBin(blank, image);
     }
+    /**
+     * Generate a silent sample of a set length.
+     *
+     * @param {number} sampleLength 		Length of sample
+     **/
     generateSilence(sampleLength) {
         const silence = {
             id: 'silence',
@@ -887,22 +1170,30 @@ class Timeline {
         this.silence.sampleRate = sampleLength * 24;
         this.onBin(silence, image);
     }
-    moveFrame() {
-    }
-    expandFrame() {
-    }
-    contractFrame() {
-    }
+    /**
+     * Export the internal Timeline array for external uses.
+     *
+     * @returns {array} Mapped array
+     **/
     export() {
         const timeline = this.timeline.map((step) => (step && step.id) ? step.id : null);
         return timeline;
     }
+    /**
+     * Export the internal Timeline array and current theatre size for
+     * generating a preview.
+     *
+     * @returns {object} Object containing mapped array and image dimensions
+     **/
     preview() {
         const timeline = this.timeline.map((step) => (step && step.id) ? step.id : null);
         const width = this.theatre.clientWidth;
         const height = this.theatre.clientHeight;
         return { timeline, width, height };
     }
+    /**
+     * Play or pause preview depending on state.
+     **/
     playPreview() {
         if (this.previewState.playing) {
             this.pause();
@@ -911,6 +1202,10 @@ class Timeline {
             this.checkPreview();
         }
     }
+    /**
+     * Pause the preview at the end of the video, when ended event
+     * occurs
+     **/
     previewEnded() {
         this.pause();
     }
@@ -936,6 +1231,11 @@ class Timeline {
             }
         }
     }
+    /**
+     * Called when the preview has been fully-generated.
+     *
+     * @param {object} args 	Arguments from IPC message
+     **/
     onPreviewComplete(args) {
         const source = document.createElement('source');
         this.previewState.rendering = false;
@@ -948,6 +1248,9 @@ class Timeline {
         this.removeClass(this.playBtn, 'rendering');
         this.play();
     }
+    /**
+     * Turn on and off preview loop.
+     **/
     toggleLoop() {
         this.loopBtn.blur();
         if (this.previewState.loop) {
@@ -961,9 +1264,15 @@ class Timeline {
             this.previewVideo.setAttribute('loop', 'loop');
         }
     }
+    /**
+     * Create interval when playing preview
+     **/
     startInterval() {
         this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
     }
+    /**
+     * Function called on interval that tracks progress of playing video
+     **/
     previewIntervalFunction() {
         const time = this.previewVideo.currentTime / this.previewVideo.duration;
         let x = Math.floor(time * this.timeline.length);
@@ -972,6 +1281,9 @@ class Timeline {
         this.addClass(document.querySelector(`.frame[x="${x}"]`), 'playing');
         this.counter.value = String(x);
     }
+    /**
+     * Play preview and begin displaying video element if not in view.
+     **/
     play() {
         if (!this.previewState.displaying) {
             this.stopDisplay();
@@ -983,6 +1295,9 @@ class Timeline {
         this.previewVideo.play();
         this.startInterval();
     }
+    /**
+     * Pause playing preview
+     **/
     pause() {
         this.previewVideo.pause();
         this.previewState.playing = false;
@@ -996,6 +1311,11 @@ class Timeline {
         this.removeClassAll('.frame.playing', 'playing');
         this.counter.value = String(this.selected);
     }
+    /**
+     * Event called on dragstart event from bin element
+     *
+     * @param {object} evt 		Drag event object
+     **/
     binDragStart(evt) {
         const id = evt.target.getAttribute('id');
         const bi = this.getById(id);
@@ -1012,28 +1332,42 @@ class Timeline {
         this.displayFrame(bi.file);
         this.dragState.dragging = true;
     }
+    /**
+     * Callback for dragenter event on frames.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     binDragEnter(evt) {
         let x;
         if (this.dragState.dragging) {
             x = parseInt(evt.target.getAttribute('x'), 10);
             this.dragState.target = x;
             if (this.dragState.group) {
+                //
             }
             else {
                 this.selectFrameGroup(x, this.stepSize, this.selectedBin);
             }
         }
     }
+    /**
+     * Callback for dragleave event on frames in Timeline.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     binDragLeave(evt) {
         if (evt.target.id === 'tWrapper' && this.dragState.dragging) {
             this.dragState.target = null;
             this.layout();
         }
     }
+    /**
+     * Callback for dragend event. Cancels selection if not on element.
+     **/
     binDragEnd(evt) {
         let selectAfter = 0;
         if (this.dragState.dragging && this.dragState.target != null) {
-            console.log('binDragEnd');
+            //console.log('binDragEnd');
             selectAfter = this.dragState.target + this.stepSize;
             if (selectAfter >= this.timeline.length) {
                 selectAfter = this.timeline.length - 1;
@@ -1044,10 +1378,14 @@ class Timeline {
         this.dragState.target = null;
         this.dragState.dragging = false;
     }
+    /**
+     * Begin selection workflow for shift-selecting multiple frames
+     * in the Timeline.
+     **/
     startSelect() {
         if (typeof this.timeline[this.selected] !== 'undefined') {
-            console.log('startSelect');
-            console.log(this.selected);
+            //console.log('startSelect')
+            //console.log(this.selected);
             this.selectState.start = this.selected;
             this.selectState.end = this.selected;
             this.selectState.active = true;
@@ -1057,11 +1395,16 @@ class Timeline {
         }
         this.layout();
     }
+    /**
+     * Callback for click event on frames in Timeline.
+     *
+     * @param {object} evt 		Click event object
+     **/
     clickSelect(evt) {
         let target;
         let x;
         if (this.selectState.active && this.selectState.start !== -1) {
-            console.log('clickSelect');
+            //console.log('clickSelect')
             target = evt.target;
             x = parseInt(target.getAttribute('x'), 10);
             if (x !== this.selectState.start) {
@@ -1080,22 +1423,31 @@ class Timeline {
             this.layout();
         }
     }
+    /**
+     * End the selection workflow
+     **/
     endSelect() {
-        console.log('endSelect');
+        //console.log('endSelect');
         this.selectState.active = false;
         if (this.selectState.end !== -1) {
             this.layout();
         }
     }
+    /**
+     * Remove selection UI and wipe state.
+     **/
     clearSelect() {
-        console.log('clearSelect');
+        //console.log('clearSelect');
         this.selectState.start = -1;
         this.selectState.end = -1;
         this.selectState.active = false;
         this.layout();
     }
+    /**
+     * Copy selected frames on ctrl-c and apple-c.
+     **/
     copy() {
-        console.log('copy');
+        //console.log('copy');
         this.copyState.cut = false;
         if (this.selectState.start !== -1) {
             //copy selected 
@@ -1108,10 +1460,13 @@ class Timeline {
             //copy single selected frame
             this.copyState.timeline = [this.timeline[this.selected]];
         }
-        console.log(this.copyState.timeline);
+        //console.log(this.copyState.timeline);
     }
+    /**
+     * Cut selected frames on ctrl-x and apple-x.
+     **/
     cut() {
-        console.log('cut');
+        //console.log('cut');
         let stepSize;
         this.copy();
         this.copyState.cut = true;
@@ -1126,8 +1481,11 @@ class Timeline {
         }
         this.layout();
     }
+    /**
+     * Paste copied or cut frames on ctrl-p or apple-p.
+     **/
     paste() {
-        console.log('paste');
+        //console.log('paste');
         let startFrame = 0;
         let frame;
         if (this.selectState.start !== -1) {
@@ -1145,6 +1503,12 @@ class Timeline {
         }
         this.clearSelect();
     }
+    /**
+     * Callback for the beginning of the frame dragging workflow.
+     * Cancels if frame is part of a selected group.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     frameDragStart(evt) {
         const target = evt.target;
         let x;
@@ -1160,7 +1524,12 @@ class Timeline {
         this.copyState.cutLocation = x;
         this.copyState.timeline = [this.timeline[x]];
     }
-    //override frame select
+    /**
+     * Callback for the beginning of a group dragging workflow.
+     * Overrides frame drag if frame has a group class.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     groupDragStart(evt) {
         const target = evt.target;
         let x;
@@ -1179,6 +1548,11 @@ class Timeline {
             this.copyState.timeline.push(this.timeline[i]);
         }
     }
+    /**
+     * End of the frame dragging workflow.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     frameDragEnd(evt) {
         const target = evt.target;
         let x;
@@ -1200,6 +1574,11 @@ class Timeline {
             this.copyState.timeline = [];
         }
     }
+    /**
+     * Callback on dragenter event on groups of selected frames.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     groupDragEnter(evt) {
         const target = evt.target;
         let x;
@@ -1212,6 +1591,11 @@ class Timeline {
             }
         }
     }
+    /**
+     * Callback on dragleave event called from groups of selected frames.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     groupDragLeave(evt) {
         //const target : HTMLElement = evt.target as HTMLElement;
         //let x : number;
@@ -1220,6 +1604,11 @@ class Timeline {
             this.removeClassAll('.frame.selected', 'selected');
         }
     }
+    /**
+     * Callback on dragend event from groups of selected frames.
+     *
+     * @param {object} evt 		Drag event object
+     **/
     groupDragEnd(evt) {
         const target = evt.target;
         let x;
@@ -1242,6 +1631,10 @@ class Timeline {
             this.copyState.timeline = [];
         }
     }
+    /**
+     * Change the currently selected frame and display frame number in
+     * counter input element.
+     **/
     changeSelected(x) {
         this.selected = x;
         this.counter.value = String(x);
