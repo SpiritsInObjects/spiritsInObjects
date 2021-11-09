@@ -56,8 +56,9 @@ let syncBtn : HTMLButtonElement;
 /**
  * Bind an event to an element whether or not it exists yet.
  * 
- * @param {string} selector Query selector of the element
- * @param {string}
+ * @param {string} selector     Query selector of the element
+ * @param {string} event         Name of event
+ * @param {Function} handler     Callback function bound to element
  **/
 function bindGlobal (selector : string, event : string, handler : Function) {
     const rootElement : HTMLElement = document.querySelector('body');
@@ -75,7 +76,14 @@ function bindGlobal (selector : string, event : string, handler : Function) {
     );
 }
 
-async function confirm (message : string) {
+/**
+ * Display a confirm dialog with a yes or no selection.
+ * 
+ * @param {string} message     Message to confirm
+ * 
+ * @returns {boolean} Whether or not user selected to confirm
+ **/
+async function confirm (message : string) : Promise<boolean> {
     const config = {
         buttons : ['Yes', 'No'],
         message
@@ -84,18 +92,25 @@ async function confirm (message : string) {
     return res.response === 0;
 }
 
-/**
- * class representing the Drag and Drop functionality
- **/
-
+/* class representing the Drag and Drop functionality */
 class DragDrop {
     private active : boolean = false;
     private overlay : HTMLElement;
 
+    /**
+     * @constructor
+     * 
+     * Assigns dragOverlay element to member overlay
+     **/
     constructor () {
         this.overlay = document.getElementById('dragOverlay');
     }
 
+    /**
+     * Called when a file is dragged into the dragOverlay element
+     * 
+     * @param {object} evt     Drag event object
+     **/
     public enter (evt: DragEvent) {
         let files : any[];
         evt.preventDefault();
@@ -105,10 +120,20 @@ class DragDrop {
         }
     }
 
+    /**
+     * Called when file is dragged over element
+     * 
+     * @param {object} evt     Drag event object
+     **/
     public over (evt: DragEvent) {
         evt.preventDefault();
     }
 
+    /**
+     * Called when file leaves drag area
+     * 
+     * @param {object} evt     Drag event object
+     **/
     public leave (evt: Event) {
         if (this.active) this.active = false;
         try {
@@ -118,6 +143,11 @@ class DragDrop {
         }
     }
 
+    /**
+     * Called when file is dropped over element
+     * 
+     * @param {object} evt     Drag event object
+     **/
     public async drop (evt: DragEvent) {
         let files : any[];
         let loadFiles : any[] = [];
@@ -150,7 +180,14 @@ class DragDrop {
         this.leave(evt);
     }
 
-    private containsFiles (evt : DragEvent) {
+    /**
+     * Determines if files were dragged into element
+     * 
+     * @param {object} evt     Drag event object
+     * 
+     * @returns {boolean} Whether or not dropped event contains files
+     **/
+    private containsFiles (evt : DragEvent) : boolean {
         if (evt.dataTransfer.types) {
             for (var i = 0; i < evt.dataTransfer.types.length; i++) {
                 if (evt.dataTransfer.types[i] == "Files") {
@@ -163,11 +200,13 @@ class DragDrop {
     }
 }
 
-/** 
- * class representing File i/o functionality
- **/
-
+/* class representing File i/o functionality */
 class Files {
+    /**
+     * Display the file selection dialog for the sonify and visualize
+     * workspaces. Timeline uses its own process because the file 
+     * workflow is different.
+     **/
     public async select () {
         const options : any = {
             title: `Select video, image or audio file`,
@@ -198,7 +237,13 @@ class Files {
         this.determineProcess(filePath);
     }
 
-
+    /**
+     * Differentiates between files intended for sonify or 
+     * visualize workspace based on type. Looks at extention
+     * and then applies file to the appropriate workspace.
+     * 
+     * @param {string} filePath         Path of file to determine process for
+     **/
     public async determineProcess (filePath : string) {
         let valid : boolean = true;
         let type : string = 'video';
@@ -234,6 +279,13 @@ class Files {
         lastDir = dirname(filePath);      
     }
 
+    /**
+     * Sets the UI and state to sonify based on the image input
+     * as determined by method determineProcess().
+     * 
+     * @param {string} filePath     Path of file to sonify
+     * @param {string} type         Type of file (video/still)
+     **/
     public async setSonify (filePath : string, type : string ) {
         const elem : HTMLElement = fileSourceProxy;
         let displayName : string;
@@ -244,11 +296,16 @@ class Files {
         state.set('filePath', filePath );
         state.set('type', type );
 
-
-
         elem.innerHTML = displayName;
     }
 
+    /**
+     * Set the UI and state to visualize based on the audio file
+     * input as determines by method determineProcess().
+     * 
+     * @param {string} filePath     Path of audio file to visualize
+     * @param {string} type         Type of file to visualize
+     **/
     public async setVisualize (filePath : string, type : string) {
         const elem : HTMLInputElement = vFileSourceProxy;
         let displayName : string;
@@ -264,6 +321,12 @@ class Files {
         visualizeStart();
     }
 
+    /**
+     * Save an audio file after it has been exported from the sonification
+     * process.
+     * 
+     * @param {string} filePath         Path of temporary audio file to save
+     **/
     public async saveAudio (filePath : string) {
         const options : any = {
             defaultPath: lastDir === '' ? homedir() : lastDir,
@@ -283,6 +346,14 @@ class Files {
         }
     }
 
+    /**
+     * Validate the path and filename of an audio file being saved.
+     * Enforce the .wav extension but allow the user to override.
+     * 
+     * @param {string} savePath         Path to save the file to
+     * 
+     * @returns {string} Final path to save file to
+     **/
     public async validatePathAudio (savePath : string) {
         const saveExt : string = '.wav';
         const ext : string = extname(savePath);
@@ -306,6 +377,11 @@ class Files {
         return savePath;
     }
 
+    /**
+     * Save a video file from the visualization process.
+     * 
+     * @param {string} filePath      Path to temporary video file
+     **/
     public async saveVideo (filePath : string) {
         const options : any = {
             defaultPath: lastDir === '' ? homedir() : lastDir
@@ -325,6 +401,14 @@ class Files {
         }
     }
 
+    /**
+     * Validate the path and filename of an video file being saved.
+     * Enforce the correct extension but allow the user to override.
+     * 
+     * @param {string} savePath         Path to save the file to
+     * 
+     * @returns {string} Final path to save file to
+     **/
     public async validatePathVideo (savePath : string) {
         const saveExt : string = videoFormatMap[visualize.format];
         const ext : string = extname(savePath);
@@ -365,11 +449,23 @@ const syncPreviewState = {
  * COMMON FUNCTIONS
  **/
 
+/**
+ * Cancel any process that has a blocking UI overlay.
+ * Bound to the "Cancel" button. Sends IPC message to
+ * main process to cancel background jobs and subprocesses.
+ **/
 function cancel () {
     CANCEL = true;
     ipcRenderer.send('cancel', { });
 }
 
+/**
+ * Called when cancellation message has been received from
+ * IPC.
+ * 
+ * @param {object} evt     IPC event object
+ * @param {object} args    IPC arguments object
+ **/
 function onCancel (evt : Event, args : any) {
     console.log('Cancellation confirmed');
     avgMs = -1;
@@ -378,6 +474,9 @@ function onCancel (evt : Event, args : any) {
     CANCEL = false;
 }
 
+/**
+ * Display a confirm dialog before cancelling.
+ **/
 async function confirmCancel () {
     let proceed : boolean = false;
     
@@ -1017,7 +1116,8 @@ function bindListeners () {
     timelineExportBtn.addEventListener('click', timelineExport, false);
 
     clickSelect.addEventListener('click', f.select.bind(f), false);
-    vFileSourceProxy.addEventListener('click', f.select.bind(f), false);
+    document.getElementById('vDropMessage').addEventListener('click', f.select.bind(f), false);
+    document.getElementById('vInfo').addEventListener('click', f.select.bind(f), false);
     sonifyFrameBtn.addEventListener('click', sonifyFrame, false);
     sonifyVideo.addEventListener('click', sonifyStart, false);
     document.addEventListener('keydown', keyDown, false);

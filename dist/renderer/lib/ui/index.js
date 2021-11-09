@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 /* class representation features of UI overlay element */
 class Overlay {
+    /**
+     * @constructor
+     **/
     constructor() {
         this.elem = document.getElementById('overlay');
         this.msg = document.getElementById('overlayMsg');
@@ -60,9 +63,11 @@ class Overlay {
 /* class representing select UI features that fall outside the scope of other classes */
 class UI {
     /**
-     * Construct the UI class
+     * @constructor
      *
-     * @param {object} state The shared State object
+     * Initialize the UI class
+     *
+     * @param {object} state     The shared State object
      **/
     constructor(state) {
         this.startSelect = document.getElementById('startSelect');
@@ -94,7 +99,7 @@ class UI {
     /**
      * Callback of the mousedown event on the start element
      *
-     * @param {object} evt MouseEvent of mousedown action
+     * @param {object} evt     MouseEvent of mousedown action
      **/
     beginMoveStart(evt) {
         this.startMoving = true;
@@ -103,7 +108,7 @@ class UI {
     /**
      * Callback of the mouseup event on the document element (for start element)
      *
-     * @param {object} evt MouseEvent of mouseup action
+     * @param {object} evt     MouseEvent of mouseup action
      **/
     endMoveStart(evt) {
         const scale = this.height / this.theatreHeight;
@@ -126,7 +131,7 @@ class UI {
     /**
      * Callback of the mousemove event on the document element (for start element)
      *
-     * @param {object} evt MouseEvent of mousemove action
+     * @param {object} evt     MouseEvent of mousemove action
      **/
     moveStart(evt) {
         let width;
@@ -158,7 +163,7 @@ class UI {
     /**
      * Callback of the mousedown event on the end element
      *
-     * @param {object} evt MouseEvent of mousedown action
+     * @param {object} evt     MouseEvent of mousedown action
      **/
     beginMoveEnd(evt) {
         this.endMoving = true;
@@ -290,7 +295,7 @@ class UI {
      * Move the start slider to position and add text to
      * display element
      *
-     * @param {float} ratio Ratio of theatre element to move start slider to
+     * @param {number} ratio     Ratio of theatre element to move start slider to
      **/
     setStartSelect(ratio) {
         this.startSelect.style.left = `${ratio * 100}%`;
@@ -300,7 +305,7 @@ class UI {
      * Move the end slider to position and add text to
      * display element
      *
-     * @param {float} ratio Ratio of theatre element to move end slider to
+     * @param {number} ratio     Ratio of theatre element to move end slider to
      **/
     setEndSelect(ratio) {
         this.endSelect.style.left = `${ratio * 100}%`;
