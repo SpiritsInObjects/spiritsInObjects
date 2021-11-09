@@ -99,6 +99,16 @@ class Visualize {
     };
     private previewInterval : any;
 
+    /**
+     * @constructor
+     * 
+     * Initialize the Visuzlize class with state and audiocontext member
+     * classes.
+     * 
+     * @param {object} state          State class
+     * @param {object} audioContext   Shared audio contect from renderer 
+     **/ 
+
     constructor (state : State, audioContext : AudioContext) {
         const visualizeState = {
             get : function () { return false }
@@ -117,6 +127,9 @@ class Visualize {
         this.bindListeners();
     }
 
+    /**
+     * Bind all events on member elements.
+     **/
     private bindListeners () {
         this.tracksSelect.addEventListener('change', this.changeTrack.bind(this));
         this.typesSelect.addEventListener('change', this.changeType.bind(this));
@@ -137,6 +150,13 @@ class Visualize {
         this.preview.addEventListener('ended', this.previewEnded.bind(this), false);
     }
 
+    /**
+     * Wrapper method to add a class to an element and ignore errors if
+     * not possible.
+     * 
+     * @param {object} elem         Element to assign class to
+     * @param {string} className     Name of class to add
+     **/
     private addClass ( elem : HTMLElement, className : string ) {
         try{
             elem.classList.add(className);
@@ -145,6 +165,13 @@ class Visualize {
         }
     }
 
+    /**
+     * Wrapper method to add class to all elements that a query selector
+     * describes.
+     * 
+     * @param {string} selector     Query selector of elements
+     * @param {string} className     Name of class to add
+     **/
     private addClassAll ( selector : string, className : string) {
         const elems : NodeListOf<Element> = document.querySelectorAll(selector);
         [].forEach.call(elems, (el : HTMLElement) => {
@@ -152,6 +179,13 @@ class Visualize {
         });
     }
 
+    /**
+     * Wrapper method to remove a class from an element and ignore errors if
+     * not possible.
+     * 
+     * @param {object} elem         Element to remove class from
+     * @param {string} className     Name of class to remove
+     **/
     private removeClass ( elem : HTMLElement, className : string ) {
         try{
             elem.classList.remove(className);
@@ -160,6 +194,13 @@ class Visualize {
         }
     }
 
+    /**
+     * Wrapper method to remove class from all elements that a query selector
+     * describes.
+     * 
+     * @param {string} selector     Query selector of elements
+     * @param {string} className     Name of class to remove
+     **/
     private removeClassAll ( selector : string, className : string) {
         const elems : NodeListOf<Element> = document.querySelectorAll(selector);
         [].forEach.call(elems, (el : HTMLElement) => {
@@ -167,6 +208,14 @@ class Visualize {
         });
     }
 
+    /**
+     * Set the file for visualzation.
+     * 
+     * @param {string} filePath     Path of file to visualize
+     * @param {string} type         Type of file to visualize
+     * 
+     * @returns {string} Name of file (excluding rest of path)
+     **/
     public set (filePath : string, type : string) : string {
         this.filePath = filePath;
         this.type = type;
@@ -174,6 +223,9 @@ class Visualize {
         return this.displayName;
     }
 
+    /**
+     * Clear tracks in tracks member array.
+     **/
     private clearTracks () {
         const length : number = this.tracksSelect.options.length;
         for (let i : number = length - 1; i >= 0; i--) {
@@ -181,6 +233,9 @@ class Visualize {
         }
     }
 
+    /**
+     * Show the midi options for user selection.
+     **/
     private showMidi () {
         this.removeClass(this.tracksSelect, 'hide');
         this.removeClass(this.wavesSelect, 'hide');
@@ -190,6 +245,9 @@ class Visualize {
         this.addClass(this.typesSelect, 'hide');
     }
 
+    /**
+     * Show the audio options for user selection.
+     **/
     private showAudio () {
         this.addClass(this.tracksSelect, 'hide');
         this.addClass(this.wavesSelect, 'hide');
@@ -199,6 +257,10 @@ class Visualize {
         this.removeClass(this.typesSelect, 'hide');
     }
 
+    /**
+     * Edit the frame number selected on the change event
+     * of the counter input element.
+     **/
     private editFrame () {
         let frame : number = parseInt(this.current.value);
         if (frame < 0) {
@@ -210,26 +272,41 @@ class Visualize {
         this.displayFrame(frame);
     }
 
+    /**
+     * Change the selected track and re-decode file.
+     **/
     private changeTrack () {
         const val : string = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
     }
 
+    /**
+     * Change the waves (sine/square).
+     **/
     private changeWaves () {
         this.waves = this.wavesSelect.value;
         this.decodeMidi(this.trackIndex);
     }
 
+    /**
+     * Change the style of display.
+     **/
     private changeStyle () {
         this.style = this.stylesSelect.value;
         this.decodeMidi(this.trackIndex);
     }
 
+    /**
+     * Change the type of display and re-decode audio (dep).
+     **/
     private changeType () {
         this.soundtrackType = this.typesSelect.value;
         this.decodeAudio();
     }
 
+    /**
+     * Alternately render file with or without 26 frame offset.
+     **/
     private changeOffset () {
         this.offset = this.offsetSelect.value === 'true';
         if (this.type === 'midi') {
@@ -239,6 +316,9 @@ class Visualize {
         }
     }
 
+    /**
+     * Change the format of the video generated (dimensions).
+     **/
     private changeFormat () {
         const format : string = this.formatSelect.value;
         const width : number = this.formats[format].width;
@@ -246,6 +326,10 @@ class Visualize {
         this.setFormat(width, height);
     }
 
+    /**
+     * Process the midi file into notes and store them 
+     * per-track.
+     **/
     public async processMidi () {
         let midi : any;
         let trackStr : string;
@@ -275,6 +359,11 @@ class Visualize {
         this.showMidi();
     }
 
+    /**
+     * Decode the midi file's notes and convert them to individual frames
+     * 
+     * @param {number} trackIndex     Track to decode
+     **/
     public async decodeMidi (trackIndex : number = 0) {
         let midi : any;
         let msMultiplier : number;
@@ -376,6 +465,14 @@ class Visualize {
         this.displayFrame(firstNote);
     }
 
+    /**
+     * Convert an individual note into frames.
+     * 
+     * @param {number} track        Track number note exists on
+     * @param {object} midiNote     Parsed note object to convert to frames
+     * 
+     * @returns {object} Parsed note
+     **/
     private buildNote (track : number, midiNote : any) : any {
         const pitch = Math.round(Frequency(midiNote.name) / this.fps);
         const ms = Math.floor(1000.0 * parseFloat(midiNote.duration));
@@ -395,10 +492,19 @@ class Visualize {
         return note;
     }
 
+    /**
+     * Set scrubbing to active.
+     **/
     private beginScrubbing () {
         this.scrubbing = true;
     }
 
+    /**
+     * Callback for mousemove event while scrubbing is active.
+     * Sets counter as mouse moves.
+     * 
+     * @param {object} evt         Mouse event object
+     **/
     private moveScrubbing (evt : MouseEvent) {
         let cursor : number;
         let leftX : number;
@@ -416,6 +522,10 @@ class Visualize {
         }
     }
 
+    /**
+     * Callback for mouseup event, stopping scrubbing and
+     * setting the counter finally.
+     **/
     private endScrubbing () {
         let percent : number;
         let frame : number;
@@ -429,6 +539,11 @@ class Visualize {
         }
     }
 
+    /**
+     * Callback on click event to scrub count to single point.
+     * 
+     * @param {object} evt     Click event object
+     **/
     private clickScrub (evt : MouseEvent) {
         const leftX : number = this.cursor.parentElement.offsetLeft;
         const width : number = this.cursor.parentElement.clientWidth;
@@ -440,12 +555,19 @@ class Visualize {
         this.displayFrame(frame);
     }
 
+    /**
+     * Advance to next frame.
+     **/
     public nextFrame () {
         if (this.frameNumber < this.frames.length) {
             this.frameNumber++;
         }
         this.displayFrame(this.frameNumber);
     }
+
+    /**
+     * Rewind to previous frame.
+     **/
     public prevFrame () {
         if (this.frameNumber > 0) {
             this.frameNumber--;
@@ -453,6 +575,13 @@ class Visualize {
         this.displayFrame(this.frameNumber);
     }
 
+    /**
+     * Display a particular frame by referencing timeline and 
+     * rendering image in canvas based on the number of lines
+     * determined to represent particular frequency.
+     * 
+     * @param {number} frameNumber     Frame to display
+     **/
     public displayFrame (frameNumber : number) {
         const cursor : number = (frameNumber / this.frames.length) * 100.0;
         let lines : number;
@@ -486,10 +615,26 @@ class Visualize {
         this.cursor.style.left = `${cursor}%`;
     }
 
+    /**
+     * Generate a sinewave to replace square-wave lines
+     * 
+     * @param {number} y         Value of Y axis
+     * @param {number} segment   Size of wave  
+     * 
+     * @returns {number} Brightness at position (0-255)
+     **/
     private sineWave (y : number, segment : number) : number {
         return Math.round(Math.sin((y / segment) * Math.PI) * 255.0);
     }
 
+    /**
+     * Draw a line representing a square wave at a position on the
+     * canvas.
+     * 
+     * @param {number} thickness     Size of line
+     * @param {number} position      Position on Y axis
+     * @param {number} w             Width of line
+     **/
     private frameMidiSquare (thickness : number, position : number, w : number) {
         this.ctx.lineWidth = thickness;
         this.ctx.beginPath();
@@ -498,6 +643,13 @@ class Visualize {
         this.ctx.stroke();
     }
 
+    /**
+     * Draw a sine wave in varying brightness at a position on the canvas.
+     * 
+     * @param {number} brightness     Brightness of line to draw
+     * @param {number} y              Position on Y axis
+     * @param {number} w              Width of line
+     **/
     private frameMidiSine (brightness : number, y : number, w : number) {
         this.ctx.strokeStyle = `rgba(${brightness},${brightness},${brightness},1.0)`;
         this.ctx.beginPath();
@@ -506,6 +658,13 @@ class Visualize {
         this.ctx.stroke();
     }
 
+    /**
+     * Draw a single frame using either square or sine wave style using
+     * parsed note data to represent a particular frequency on the frame.
+     * 
+     * @param {number} lines         Number of lines to draw
+     * @param {number} offsetLines   Offset to start drawing lines at
+     **/
     private frameMidi ( lines : number, offsetLines : number = -1) {
         const segment : number = this.height / lines;
         const thickness : number = Math.floor(segment / 2);
@@ -553,6 +712,12 @@ class Visualize {
         this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
     } 
 
+    /**
+     * Set the format (dimensions) of the video to generate
+     * 
+     * @param {number} width      Width of video
+     * @param {number} height     Height of video
+     **/
     public setFormat (width : number, height : number) {
         this.width = width;
         this.height = height;
@@ -565,12 +730,19 @@ class Visualize {
         this.samplerate = this.height * this.fps;
     }
 
+    /**
+     * Callback for when audio is processed.
+     **/
     public async onProcessAudio (evt : Event, args : any) {
         this.tmpAudio = args.tmpAudio;
         this.showAudio();
         await this.decodeAudio();
     }
 
+    /**
+     * Decode audio file using the SoundtrackOptical library.
+     * Store data to be represented across multiple frames.
+     **/
     public async decodeAudio () {
         const dpi : number = Math.round((this.height / 7.605) * 25.4);
         const soundtrackTypeParts : string[] = this.soundtrackType.split(' full');
@@ -710,6 +882,11 @@ class Visualize {
         }
     }
 
+    /**
+     * Callaback for when video preview has been generated.
+     * 
+     * @param {string} tmpVideo     Video file for preview
+     **/
     public onPreview (tmpVideo : string) {
         const now : number = (new Date()).getTime();
         const videoPath : string = `${tmpVideo}?cache=${now}`;
@@ -728,6 +905,10 @@ class Visualize {
         this.play();
     }
 
+    /**
+     * Begin playing preview video and display video element if it is
+     * not currently in view. Start interval for tracking progress.
+     **/
     public play () {
         if (!this.previewState.displaying) {
             this.setPreview();
@@ -739,6 +920,9 @@ class Visualize {
         this.startInterval();
     }
 
+    /**
+     * Pause playing the preview video and remove progress tracking interval.
+     **/
     public pause () {
         this.preview.pause();
         this.previewState.playing = false;
@@ -750,14 +934,24 @@ class Visualize {
         }
     }
 
+    /**
+     * Callback for ended event on preview video element.
+     **/
     private previewEnded () {
         this.pause();
     }
 
+    /**
+     * Begin the interval that tracks the video state.
+     **/
     private startInterval () {
         this.previewInterval = setInterval(this.previewIntervalFunction.bind(this), 41);
     }
 
+    /**
+     * Function called on interval that tracks progress of video and 
+     * displays it in the UI.
+     **/
     private previewIntervalFunction () {
         const time : number = this.preview.currentTime / this.preview.duration;
         const left : number = time * 100.0;
