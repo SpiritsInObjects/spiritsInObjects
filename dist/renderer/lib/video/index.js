@@ -7,8 +7,8 @@ class Video {
      * @constructor
      * Create Video class, initialize UI elements and bind listeners
      *
-     * @param {Object} state State class
-     * @param {Object} ui UI class
+     * @param {Object} state     State class
+     * @param {Object} ui        UI class
      */
     constructor(state, ui) {
         this.element = document.getElementById('video');
@@ -259,6 +259,9 @@ class Video {
             this.ui.updateSliders(this.width, this.height);
         }).bind(this), 101);
     }
+    /**
+     * Called after loaddata event
+     **/
     onloadstartstill() {
         this.width = this.stillLoader.naturalWidth;
         this.height = this.stillLoader.naturalHeight;
@@ -270,6 +273,13 @@ class Video {
         //no delay needed?
         this.drawStill();
     }
+    /**
+     * Parse string of FPS value from ffprobe info object.
+     *
+     * @param {string} line     FPS as a fractional value represented in text
+     *
+     * @returns {number} Normalized FPS value
+     **/
     parseFps(line) {
         let fps;
         const parts = line.split('/');
@@ -281,6 +291,17 @@ class Video {
         }
         return fps;
     }
+    /**
+     * Called after info is returned from ffprobe on
+     * the main process over ipc. Determines whether file
+     * is viewable in the HTML Video element or needs to
+     * be transcoded into a preview.
+     *
+     * @param {object} evt      IPC event object
+     * @param {object} args     Arguments from IPC event
+     *
+     * @returns {boolean} Whether or not video needs a preview rendered for display
+     **/
     onInfo(evt, args) {
         let fpsRaw;
         let videoStream;
@@ -326,6 +347,10 @@ class Video {
         this.sonifyVideoBtn.disabled = false;
         return preview;
     }
+    /**
+     * Displays information about the video or image in the
+     * UI
+     **/
     displayInfo() {
         const start = this.state.get('start');
         const end = this.state.get('end');
@@ -355,12 +380,24 @@ class Video {
             console.error(err);
         }
     }
+    /**
+     * Draws the current frame, from the active video, into the canvas
+     * element so that it can be sonified.
+     **/
     draw() {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
     }
+    /**
+     * Draws the current active image into the canvas element so that it
+     * can be sonified.
+     **/
     drawStill() {
         this.ctx.drawImage(this.stillLoader, 0, 0, this.width, this.height);
     }
+    /**
+     * Function called on an interval at current FPS Hz which will display the
+     * current frame count and position the cursor in the timeline.
+     **/
     playInterval() {
         const time = this.element.currentTime / this.element.duration;
         const left = time * 100.0;
@@ -369,6 +406,10 @@ class Video {
         this.current.value = String(x);
         this.cursor.style.left = `${left}%`;
     }
+    /**
+     * Starts playing the active synced video preview and begins
+     * the interval for tracking video progress in the UI.
+     **/
     play() {
         let frame;
         this.interval = setInterval(this.playInterval.bind(this), Math.round(1000 / this.framerate));
@@ -378,6 +419,10 @@ class Video {
         this.current.value = String(frame);
         this.element.play();
     }
+    /**
+     * Pauses playing the active synced video and removes the interval
+     * tracking progress.
+     **/
     pause() {
         let frame;
         this.element.pause();
@@ -388,6 +433,12 @@ class Video {
         frame = this.currentFrame();
         this.current.value = String(frame);
     }
+    /**
+     * Sets the active file after it is selected by the user.
+     *
+     * @param {string} filePath     Path of file
+     * @param {string} type         Type of file (video/still)
+     **/
     set(filePath, type) {
         const displayName = basename(filePath);
         console.log(`Selected file ${displayName}`);
@@ -396,10 +447,21 @@ class Video {
         this.displayName = displayName;
         return displayName;
     }
+    /**
+     * Gets the current frame of the active video from the video element.
+     *
+     * @returns {number} Current frame (rounded)
+     **/
     currentFrame() {
         const seconds = this.element.currentTime;
         return Math.round(seconds * this.framerate);
     }
+    /**
+     * Sets the current frame to a specific value, positioning the
+     * video element to the time as it is calculated from the frame.
+     *
+     * @param {number} frame     Frame number
+     **/
     setFrame(frame) {
         const seconds = frame / this.framerate;
         const cursor = (frame / this.frames) * 100.0;
@@ -408,6 +470,9 @@ class Video {
         this.cursor.style.left = `${cursor}%`;
         setTimeout(this.draw.bind(this), 100);
     }
+    /**
+     * Advances video forward 1 frame.
+     **/
     nextFrame() {
         let frame = this.currentFrame();
         if (this.type === 'video') {
@@ -418,6 +483,9 @@ class Video {
             this.setFrame(frame);
         }
     }
+    /**
+     * Reverses video backwars 1 frame.
+     **/
     prevFrame() {
         let frame = this.currentFrame();
         if (this.type === 'video') {
@@ -428,6 +496,10 @@ class Video {
             this.setFrame(frame);
         }
     }
+    /**
+     * Sets video to frame that is set from the input of the
+     * current member element.
+     **/
     editFrame() {
         let frame = parseInt(this.current.value);
         if (frame < 0) {
@@ -438,6 +510,9 @@ class Video {
         }
         this.setFrame(frame);
     }
+    /**
+     * Display an error by removing hide class
+     **/
     errorShow() {
         try {
             this.errorDisplay.classList.remove('hide');
@@ -446,10 +521,11 @@ class Video {
             console.error(err);
         }
     }
+    /**
+     * Hide error by adding hide class
+     **/
     errorHide() {
         this.errorDisplay.classList.add('hide');
-    }
-    frameToTimecode(frame) {
     }
 }
 //# sourceMappingURL=index.js.map

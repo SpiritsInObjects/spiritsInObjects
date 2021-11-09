@@ -64,8 +64,8 @@ class Video {
      * @constructor
      * Create Video class, initialize UI elements and bind listeners
      * 
-     * @param {Object} state State class
-     * @param {Object} ui UI class
+     * @param {Object} state     State class
+     * @param {Object} ui        UI class
      */
     constructor (state : State, ui : any) {
         this.state = state;
@@ -300,6 +300,9 @@ class Video {
         }).bind(this), 101);
     }
 
+    /**
+     * Called after loaddata event
+     **/
     private onloadstartstill () {
         this.width = this.stillLoader.naturalWidth;
         this.height = this.stillLoader.naturalHeight;
@@ -314,6 +317,13 @@ class Video {
         this.drawStill();
     }
 
+    /**
+     * Parse string of FPS value from ffprobe info object.
+     * 
+     * @param {string} line     FPS as a fractional value represented in text
+     * 
+     * @returns {number} Normalized FPS value
+     **/
     private parseFps (line : string) {
         let fps : number;
         const parts = line.split('/');
@@ -325,6 +335,17 @@ class Video {
         return fps;
     }
 
+    /**
+     * Called after info is returned from ffprobe on
+     * the main process over ipc. Determines whether file
+     * is viewable in the HTML Video element or needs to
+     * be transcoded into a preview.
+     * 
+     * @param {object} evt      IPC event object
+     * @param {object} args     Arguments from IPC event
+     * 
+     * @returns {boolean} Whether or not video needs a preview rendered for display
+     **/
     public onInfo (evt : Event, args : any) : boolean {
         let fpsRaw : string;
         let videoStream : any;
@@ -379,6 +400,10 @@ class Video {
         return preview;
     }
 
+    /**
+     * Displays information about the video or image in the
+     * UI
+     **/
     private displayInfo () {
         const start : number = this.state.get('start');
         const end : number = this.state.get('end');
@@ -411,14 +436,26 @@ class Video {
         }
     }
 
+    /**
+     * Draws the current frame, from the active video, into the canvas
+     * element so that it can be sonified.
+     **/
     public draw () {
         this.ctx.drawImage(this.element, 0, 0, this.width, this.height);
     }
 
+    /**
+     * Draws the current active image into the canvas element so that it
+     * can be sonified.
+     **/
     public drawStill () {
         this.ctx.drawImage(this.stillLoader, 0, 0, this.width, this.height);
     }
 
+    /**
+     * Function called on an interval at current FPS Hz which will display the
+     * current frame count and position the cursor in the timeline.
+     **/
     private playInterval () {
         const time : number = this.element.currentTime / this.element.duration;
         const left : number = time * 100.0;
@@ -428,6 +465,10 @@ class Video {
         this.cursor.style.left = `${left}%`;
     }
 
+    /**
+     * Starts playing the active synced video preview and begins
+     * the interval for tracking video progress in the UI.
+     **/
     public play () {
         let frame : number;
         this.interval = setInterval(this.playInterval.bind(this), Math.round(1000 / this.framerate));
@@ -438,6 +479,10 @@ class Video {
         this.element.play();
     }
 
+    /**
+     * Pauses playing the active synced video and removes the interval
+     * tracking progress.
+     **/
     public pause () {
         let frame : number;
         this.element.pause();
@@ -450,6 +495,12 @@ class Video {
         this.current.value = String(frame);
     }
 
+    /**
+     * Sets the active file after it is selected by the user.
+     * 
+     * @param {string} filePath     Path of file
+     * @param {string} type         Type of file (video/still)
+     **/
     public set (filePath : string, type : string) : string {
         const displayName : string = basename(filePath);
         console.log(`Selected file ${displayName}`);
@@ -459,11 +510,22 @@ class Video {
         return displayName;
     }
 
+    /**
+     * Gets the current frame of the active video from the video element.
+     * 
+     * @returns {number} Current frame (rounded)
+     **/
     public currentFrame () {
         const seconds : number = this.element.currentTime;
         return Math.round(seconds * this.framerate);
     }
 
+    /**
+     * Sets the current frame to a specific value, positioning the
+     * video element to the time as it is calculated from the frame.
+     * 
+     * @param {number} frame     Frame number
+     **/
     public setFrame (frame : number) {
         const seconds : number = frame / this.framerate;
         const cursor : number = (frame / this.frames) * 100.0;
@@ -474,6 +536,9 @@ class Video {
         setTimeout(this.draw.bind(this), 100);
     }
 
+    /**
+     * Advances video forward 1 frame.
+     **/
     public nextFrame () {
         let frame : number = this.currentFrame();
         if (this.type === 'video') {
@@ -484,6 +549,10 @@ class Video {
             this.setFrame(frame);
         }
     }
+
+    /**
+     * Reverses video backwars 1 frame.
+     **/
     public prevFrame () {
         let frame : number = this.currentFrame();
         if (this.type === 'video') {
@@ -494,6 +563,11 @@ class Video {
             this.setFrame(frame);
         }
     }
+
+    /**
+     * Sets video to frame that is set from the input of the
+     * current member element.
+     **/
     public editFrame () {
         let frame : number = parseInt(this.current.value);
         if (frame < 0) {
@@ -505,6 +579,9 @@ class Video {
         this.setFrame(frame);
     }
 
+    /**
+     * Display an error by removing hide class
+     **/
     public errorShow () {
         try {
             this.errorDisplay.classList.remove('hide');
@@ -512,11 +589,11 @@ class Video {
             console.error(err);
         }
     }
+
+    /**
+     * Hide error by adding hide class
+     **/
     public errorHide () {
         this.errorDisplay.classList.add('hide');
-    }
-
-    private frameToTimecode (frame : number) {
-        
     }
 }
