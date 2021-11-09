@@ -7,8 +7,11 @@ class Overlay {
     private cancel : HTMLElement = document.getElementById('cancel');
     private progressBar : HTMLElement = document.getElementById('overlayProgressBar');
     private progressMsg : HTMLElement = document.getElementById('overlayProgressMsg');
-    constructor () {
 
+    /**
+     * @constructor
+     **/
+    constructor () {
     }
 
     /**
@@ -34,6 +37,7 @@ class Overlay {
             }
         }
     }
+
     /**
      * Hide the overlay element
      **/
@@ -90,9 +94,11 @@ export default class UI {
     public currentPage : string = 'timeline';
 
     /**
-     * Construct the UI class
+     * @constructor
      * 
-     * @param {object} state The shared State object
+     * Initialize the UI class
+     * 
+     * @param {object} state     The shared State object
      **/
     constructor (state : State) {
         this.state = state;
@@ -114,7 +120,7 @@ export default class UI {
     /**
      * Callback of the mousedown event on the start element
      * 
-     * @param {object} evt MouseEvent of mousedown action
+     * @param {object} evt     MouseEvent of mousedown action
      **/
     private beginMoveStart (evt: MouseEvent) {
         this.startMoving = true;
@@ -124,7 +130,7 @@ export default class UI {
     /**
      * Callback of the mouseup event on the document element (for start element)
      * 
-     * @param {object} evt MouseEvent of mouseup action
+     * @param {object} evt     MouseEvent of mouseup action
      **/
     private endMoveStart (evt: MouseEvent) {
         const scale : number = this.height / this.theatreHeight;
@@ -148,7 +154,7 @@ export default class UI {
     /**
      * Callback of the mousemove event on the document element (for start element)
      * 
-     * @param {object} evt MouseEvent of mousemove action
+     * @param {object} evt     MouseEvent of mousemove action
      **/
     private moveStart (evt : MouseEvent) {
         let width : number;
@@ -187,7 +193,7 @@ export default class UI {
     /**
      * Callback of the mousedown event on the end element
      * 
-     * @param {object} evt MouseEvent of mousedown action
+     * @param {object} evt     MouseEvent of mousedown action
      **/
     private beginMoveEnd (evt: MouseEvent) {
         this.endMoving = true;
@@ -339,7 +345,7 @@ export default class UI {
      * Move the start slider to position and add text to
      * display element
      * 
-     * @param {float} ratio Ratio of theatre element to move start slider to
+     * @param {number} ratio     Ratio of theatre element to move start slider to
      **/
     public setStartSelect (ratio : number) {
         this.startSelect.style.left = `${ratio * 100}%`;
@@ -350,7 +356,7 @@ export default class UI {
      * Move the end slider to position and add text to
      * display element
      * 
-     * @param {float} ratio Ratio of theatre element to move end slider to
+     * @param {number} ratio     Ratio of theatre element to move end slider to
      **/
     public setEndSelect (ratio : number) {
         this.endSelect.style.left = `${ratio * 100}%`;
