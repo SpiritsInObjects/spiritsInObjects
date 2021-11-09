@@ -2,7 +2,13 @@
 const { homedir } = require('os');
 const { join } = require('path');
 const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra');
+/* class representing the state class */
 class State {
+    /**
+     * @constructor
+     *
+     * Initializes the State class
+     **/
     constructor() {
         this.localFile = join(homedir(), '.spiritsInObjects/state.sio');
         this.storage = {
@@ -61,6 +67,8 @@ class State {
     }
     /**
      * Restore the state from the saved JSON file to the state class
+     *
+     * @returns {boolean} Whether file is restored from state
      */
     async restore() {
         let raw;
@@ -97,7 +105,9 @@ class State {
     /**
      * Get the current state of a key or the entire storage object.
      *
-     * @param key Name of key to retrieve.
+     * @param {string} key     Name of key to retrieve.
+     *
+     * @returns {object} Return all storage data or null
      */
     get(key) {
         if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
@@ -110,8 +120,9 @@ class State {
     }
     /**
      * Set a value on the storage object.
-     * @param key Name of key in storage object
-     * @param value Value of key
+     *
+     * @param {string} key     Name of key in storage object
+     * @param {any} value      Value of key
      */
     async set(key, value) {
         this.storage[key] = value;
@@ -120,8 +131,9 @@ class State {
     }
     /**
      * Validate input and set to defaults or erase if invalid.
-     * @param key Name of key in storage object
-     * @param value Value of key
+     *
+     * @param {string} key     Name of key in storage object
+     * @param {any} value      Value of key
      **/
     validate(key, value) {
         if (key === 'start') {

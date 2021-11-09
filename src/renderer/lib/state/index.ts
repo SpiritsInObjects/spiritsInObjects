@@ -23,6 +23,7 @@ interface StateStorage {
     page? : string;
 }
 
+/* class representing the state class */
 class State {
     private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' );
     private storage : StateStorage = {
@@ -31,6 +32,11 @@ class State {
     } as StateStorage;
     private lock : boolean = false;
     
+    /**
+     * @constructor
+     * 
+     * Initializes the State class
+     **/
     constructor () {
         
     }
@@ -82,8 +88,10 @@ class State {
 
     /**
      * Restore the state from the saved JSON file to the state class
+     * 
+     * @returns {boolean} Whether file is restored from state
      */
-    public async restore () {
+    public async restore () : Promise<boolean> {
         let raw : string;
         let fileExists : boolean = false;
 
@@ -119,7 +127,9 @@ class State {
     /**
      * Get the current state of a key or the entire storage object.
      * 
-     * @param key Name of key to retrieve.
+     * @param {string} key     Name of key to retrieve.
+     * 
+     * @returns {object} Return all storage data or null
      */
     public get (key? : string) : any {
         if (typeof key !== 'undefined' && typeof this.storage[key] !== 'undefined') {
@@ -132,8 +142,9 @@ class State {
 
     /**
      * Set a value on the storage object.
-     * @param key Name of key in storage object
-     * @param value Value of key
+     * 
+     * @param {string} key     Name of key in storage object
+     * @param {any} value      Value of key
      */
     public async set (key: string, value : any) {
         this.storage[key] = value;
@@ -143,8 +154,9 @@ class State {
 
     /**
      * Validate input and set to defaults or erase if invalid.
-     * @param key Name of key in storage object
-     * @param value Value of key
+     * 
+     * @param {string} key     Name of key in storage object
+     * @param {any} value      Value of key
      **/
      private validate (key: string, value: any) {
         if (key === 'start') {
