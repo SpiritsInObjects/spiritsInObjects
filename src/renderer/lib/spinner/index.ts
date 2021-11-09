@@ -45,7 +45,12 @@ const spinnerTypes : any = {
     }
 }
 
-
+/**
+ * Display a spinner in a select element of a select type.
+ * 
+ * @param {string} id     HTML id of element to create spinner within
+ * @param {string} type   Type of spinner (default/small)
+ **/
 function showSpinner (id : string, type : string = 'default') {
     const SpinnerOptions : any = spinnerTypes[type];
     const target : HTMLElement = document.getElementById(id);
@@ -56,6 +61,11 @@ function showSpinner (id : string, type : string = 'default') {
     Spinners[id].spin(target);
 }
 
+/**
+ * Stop spinner using spin.js method stop().
+ * 
+ * @param {string} id     HTML id of element with spinner to stop
+ **/
 function hideSpinner (id : string) {
     try {
         Spinners[id].stop()
