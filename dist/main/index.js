@@ -34,14 +34,6 @@ if (electron_util_1.is.development && process.argv.indexOf('--prod') === -1) {
     (0, electron_debug_1.default)();
 }
 electron_1.app.setAppUserModelId('spiritsinobjects');
-/**
- * Extract raw pixel data from an image using get-pixels.
- * Put into an async/await wrapper using Promises
- *
- * @param {string} filePath 	Path to image being extracted
- *
- * @returns {object} Data from get-pixels module
- **/
 async function pixels(filePath) {
     return new Promise((resolve, reject) => {
         return (0, get_pixels_1.default)(filePath, (err, imageData) => {
@@ -52,26 +44,9 @@ async function pixels(filePath) {
         });
     });
 }
-/**
- * Create a SHA1 hash.
- *
- * @param {string} str 		Input data
- *
- * @returns {string} Hash in hex format
- **/
 function hashStr(str) {
     return (0, crypto_1.createHash)('sha1').update(str).digest('hex');
 }
-/**
- * Sonification process used for both export, preview
- * in the Sonify workspace. Exports all frames from a video
- * and sonifies them individually while placing all samples in
- * a single array.
- *
- * @param {object} args 	Options provided by ipc
- *
- * @returns {string} Path to resulting audio file
- **/
 async function sonify(args) {
     const startTime = +new Date();
     let wav = new wavefile_1.WaveFile();
@@ -105,7 +80,6 @@ async function sonify(args) {
         hash = hashStr(args.state.filePath + `_${args.state.start}_${args.state.end}`);
         fileHash = hashStr(args.state.filePath);
         if (typeof CACHE[hash] !== 'undefined') {
-            //return cached audio
             endTime = +new Date();
             mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio: CACHE[hash] });
             return;
@@ -128,7 +102,6 @@ async function sonify(args) {
         frameStart = +new Date();
         if (args.state.type === 'video') {
             try {
-                //filePath = await ffmpeg.exportFrame(args.state.filePath, i);
                 filePath = ffmpeg_1.ffmpeg.exportFramePath(fileHash, i + 1);
             }
             catch (err) {
@@ -189,8 +162,6 @@ async function sonify(args) {
         console.error(err);
     }
     try {
-        //await sox.postProcess(tmpAudio, normalAudio);
-        //console.log(`Normalized audio file to ${normalAudio}`);
     }
     catch (err) {
         console.error(err);
@@ -200,7 +171,7 @@ async function sonify(args) {
     TMP.files.push(tmpAudio);
     endTime = +new Date();
     if (args.save) {
-        mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio }); // : normalAudio 
+        mainWindow.webContents.send('sonify_complete', { time: endTime - startTime, tmpAudio });
     }
     else {
         console.log(`Sonification complete: ${endTime - startTime}ms`);
@@ -224,11 +195,6 @@ const BrowserOptions = {
         contextIsolation: false
     }
 };
-/**
- * Create the main window of the application.
- *
- * @returns {object} The BrowserWindow class
- **/
 const createMainWindow = async () => {
     const win = new electron_1.BrowserWindow(BrowserOptions);
     win.on('ready-to-show', () => {
@@ -238,12 +204,10 @@ const createMainWindow = async () => {
         mainWindow = undefined;
         electron_1.app.quit();
     });
-    //for linux
     win.setResizable(false);
     await win.loadFile((0, path_1.join)(__dirname, '../views/index.html'));
     return win;
 };
-// Prevent multiple instances of the app
 if (!electron_1.app.requestSingleInstanceLock()) {
     electron_1.app.quit();
 }
@@ -265,9 +229,6 @@ electron_1.app.on('activate', async () => {
         mainWindow = await createMainWindow();
     }
 });
-/**
- * COMMON FUNCTIONS
- **/
 electron_1.ipcMain.on('save', async (evt, args) => {
     if (args.savePath && !args.savePath.canceled) {
         try {
@@ -279,9 +240,6 @@ electron_1.ipcMain.on('save', async (evt, args) => {
         }
     }
 });
-/**
- * SONIFY FUNCTIONS
- **/
 electron_1.ipcMain.on('sonify', async (evt, args) => {
     ;
     return sonify(args);
@@ -311,7 +269,7 @@ electron_1.ipcMain.on('info', async (evt, args) => {
     }
     else if (args.type === 'still') {
         try {
-            res = await ffmpeg_1.ffmpeg.info(args.filePath); //for now
+            res = await ffmpeg_1.ffmpeg.info(args.filePath);
         }
         catch (err) {
             console.error(err);
@@ -402,9 +360,6 @@ electron_1.ipcMain.on('sync_preview', async (evt, args) => {
     }
     mainWindow.webContents.send('sync_preview', { tmpVideo, success });
 });
-/**
- * VISUALIZE FUNCTIONS
- **/
 electron_1.ipcMain.on('process_audio', async (evt, args) => {
     const tmpAudio = (0, path_1.join)((0, os_1.tmpdir)(), `${(0, uuid_1.v4)()}_tmp_audio.wav`);
     const frameStart = +new Date();
@@ -509,9 +464,6 @@ electron_1.ipcMain.on('visualize_preview_end', async (evt, args) => {
     TMP.files.push(tmpVideo);
     mainWindow.webContents.send('visualize_preview_end', { success, tmpVideo });
 });
-/**
- * TIMELINE FUNCTIONS
- **/
 electron_1.ipcMain.on('bin', async (evt, args) => {
     const { bi, image } = args;
     const ms = +new Date();
@@ -567,10 +519,6 @@ electron_1.ipcMain.on('timeline_preview', async (evt, args) => {
     }
     mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo });
 });
-/**
- * Function that gets called on exit events that can be caught by the
- * main process. Deletes files and directories listed in the TMP object.
- **/
 (0, node_cleanup_1.default)((exitCode, signal) => {
     let exists = false;
     console.log(`Cleaning up on exit code ${exitCode}...`);

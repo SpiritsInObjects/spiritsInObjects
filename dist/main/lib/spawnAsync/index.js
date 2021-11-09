@@ -2,15 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.killSubprocess = exports.spawnAsync = void 0;
 const child_process_1 = require("child_process");
-/**
- * Execute a command asyncronously using a Promise so that it can
- * be awaited without the same locking behavior that execSync does.
- *
- * @param {string} bin Path to binary
- * @param {array} args Array of arguments for command
- *
- * @returns {object} Standard outputs or just error
- **/
 async function spawnAsync(bin, args) {
     return new Promise((resolve, reject) => {
         const child = (0, child_process_1.spawn)(bin, args);
@@ -36,13 +27,6 @@ async function spawnAsync(bin, args) {
     });
 }
 exports.spawnAsync = spawnAsync;
-/**
- * Kill a subprocess when cancelling an operation
- *
- * @param {object} sub     Subprocess from another context to kill
- *
- * @returns {object}     Null response when process is closed
- **/
 async function killSubprocess(sub) {
     return new Promise((resolve, reject) => {
         sub.on('close', () => {

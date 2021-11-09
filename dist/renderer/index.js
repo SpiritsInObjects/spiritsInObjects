@@ -28,7 +28,6 @@ let timeAvg = -1;
 let dnd;
 let f;
 let CANCEL = false;
-/* ELEMENTS */
 let dropArea;
 let fileSourceProxy;
 let clickSelect;
@@ -43,13 +42,6 @@ let visualizeExportBtn;
 let timelineBtn;
 let timelineExportBtn;
 let syncBtn;
-/**
- * Bind an event to an element whether or not it exists yet.
- *
- * @param {string} selector     Query selector of the element
- * @param {string} event         Name of event
- * @param {Function} handler     Callback function bound to element
- **/
 function bindGlobal(selector, event, handler) {
     const rootElement = document.querySelector('body');
     rootElement.addEventListener(event, function (evt) {
@@ -63,13 +55,6 @@ function bindGlobal(selector, event, handler) {
         }
     }, true);
 }
-/**
- * Display a confirm dialog with a yes or no selection.
- *
- * @param {string} message     Message to confirm
- *
- * @returns {boolean} Whether or not user selected to confirm
- **/
 async function confirm(message) {
     const config = {
         buttons: ['Yes', 'No'],
@@ -78,22 +63,11 @@ async function confirm(message) {
     const res = await dialog.showMessageBox(config);
     return res.response === 0;
 }
-/* class representing the Drag and Drop functionality */
 class DragDrop {
-    /**
-     * @constructor
-     *
-     * Assigns dragOverlay element to member overlay
-     **/
     constructor() {
         this.active = false;
         this.overlay = document.getElementById('dragOverlay');
     }
-    /**
-     * Called when a file is dragged into the dragOverlay element
-     *
-     * @param {object} evt     Drag event object
-     **/
     enter(evt) {
         let files;
         evt.preventDefault();
@@ -102,19 +76,9 @@ class DragDrop {
             this.overlay.classList.add('show');
         }
     }
-    /**
-     * Called when file is dragged over element
-     *
-     * @param {object} evt     Drag event object
-     **/
     over(evt) {
         evt.preventDefault();
     }
-    /**
-     * Called when file leaves drag area
-     *
-     * @param {object} evt     Drag event object
-     **/
     leave(evt) {
         if (this.active)
             this.active = false;
@@ -125,25 +89,20 @@ class DragDrop {
             console.error(err);
         }
     }
-    /**
-     * Called when file is dropped over element
-     *
-     * @param {object} evt     Drag event object
-     **/
     async drop(evt) {
         let files;
         let loadFiles = [];
         let paths = [];
         if (this.active) {
             evt.preventDefault();
-            files = evt.dataTransfer.files; //squashes ts error
+            files = evt.dataTransfer.files;
             for (let file of files) {
                 loadFiles.push(new Promise((resolve, reject) => {
                     let fileReader = new FileReader();
                     fileReader.onload = (function (file) {
                         paths.push(file.path);
                         return resolve(file);
-                    })(file); //dirty ts hack
+                    })(file);
                     fileReader.readAsDataURL(file);
                 }));
             }
@@ -162,18 +121,10 @@ class DragDrop {
         }
         this.leave(evt);
     }
-    /**
-     * Determines if files were dragged into element
-     *
-     * @param {object} evt     Drag event object
-     *
-     * @returns {boolean} Whether or not dropped event contains files
-     **/
     containsFiles(evt) {
         if (evt.dataTransfer.types) {
             for (var i = 0; i < evt.dataTransfer.types.length; i++) {
                 if (evt.dataTransfer.types[i] == "Files") {
-                    //console.dir(evt.dataTransfer.files.length)
                     return true;
                 }
             }
@@ -181,13 +132,7 @@ class DragDrop {
         return false;
     }
 }
-/* class representing File i/o functionality */
 class Files {
-    /**
-     * Display the file selection dialog for the sonify and visualize
-     * workspaces. Timeline uses its own process because the file
-     * workflow is different.
-     **/
     async select() {
         const options = {
             title: `Select video, image or audio file`,
@@ -214,13 +159,6 @@ class Files {
         filePath = files.filePaths[0];
         this.determineProcess(filePath);
     }
-    /**
-     * Differentiates between files intended for sonify or
-     * visualize workspace based on type. Looks at extention
-     * and then applies file to the appropriate workspace.
-     *
-     * @param {string} filePath         Path of file to determine process for
-     **/
     async determineProcess(filePath) {
         let valid = true;
         let type = 'video';
@@ -252,13 +190,6 @@ class Files {
         }
         lastDir = (0, path_1.dirname)(filePath);
     }
-    /**
-     * Sets the UI and state to sonify based on the image input
-     * as determined by method determineProcess().
-     *
-     * @param {string} filePath     Path of file to sonify
-     * @param {string} type         Type of file (video/still)
-     **/
     async setSonify(filePath, type) {
         const elem = fileSourceProxy;
         let displayName;
@@ -268,13 +199,6 @@ class Files {
         state.set('type', type);
         elem.innerHTML = displayName;
     }
-    /**
-     * Set the UI and state to visualize based on the audio file
-     * input as determines by method determineProcess().
-     *
-     * @param {string} filePath     Path of audio file to visualize
-     * @param {string} type         Type of file to visualize
-     **/
     async setVisualize(filePath, type) {
         const elem = vFileSourceProxy;
         let displayName;
@@ -285,12 +209,6 @@ class Files {
         document.getElementById('vInfo').classList.remove('hide');
         visualizeStart();
     }
-    /**
-     * Save an audio file after it has been exported from the sonification
-     * process.
-     *
-     * @param {string} filePath         Path of temporary audio file to save
-     **/
     async saveAudio(filePath) {
         const options = {
             defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir,
@@ -308,14 +226,6 @@ class Files {
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
-    /**
-     * Validate the path and filename of an audio file being saved.
-     * Enforce the .wav extension but allow the user to override.
-     *
-     * @param {string} savePath         Path to save the file to
-     *
-     * @returns {string} Final path to save file to
-     **/
     async validatePathAudio(savePath) {
         const saveExt = '.wav';
         const ext = (0, path_1.extname)(savePath);
@@ -340,11 +250,6 @@ class Files {
         }
         return savePath;
     }
-    /**
-     * Save a video file from the visualization process.
-     *
-     * @param {string} filePath      Path to temporary video file
-     **/
     async saveVideo(filePath) {
         const options = {
             defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir
@@ -362,14 +267,6 @@ class Files {
             ipcRenderer.send('save', { filePath, savePath });
         }
     }
-    /**
-     * Validate the path and filename of an video file being saved.
-     * Enforce the correct extension but allow the user to override.
-     *
-     * @param {string} savePath         Path to save the file to
-     *
-     * @returns {string} Final path to save file to
-     **/
     async validatePathVideo(savePath) {
         const saveExt = videoFormatMap[visualize.format];
         const ext = (0, path_1.extname)(savePath);
@@ -400,25 +297,10 @@ const syncPreviewState = {
     rendered: false,
     rendering: false
 };
-/**
- * COMMON FUNCTIONS
- **/
-/**
- * Cancel any process that has a blocking UI overlay.
- * Bound to the "Cancel" button. Sends IPC message to
- * main process to cancel background jobs and subprocesses.
- **/
 function cancel() {
     CANCEL = true;
     ipcRenderer.send('cancel', {});
 }
-/**
- * Called when cancellation message has been received from
- * IPC.
- *
- * @param {object} evt     IPC event object
- * @param {object} args    IPC arguments object
- **/
 function onCancel(evt, args) {
     console.log('Cancellation confirmed');
     avgMs = -1;
@@ -426,9 +308,6 @@ function onCancel(evt, args) {
     ui.overlay.hide();
     CANCEL = false;
 }
-/**
- * Display a confirm dialog before cancelling.
- **/
 async function confirmCancel() {
     let proceed = false;
     try {
@@ -442,16 +321,12 @@ async function confirmCancel() {
     }
     cancel();
 }
-/**
- * SONIFY FUNCTIONS
- **/
 function onInfo(evt, args) {
     let preview = video.onInfo(evt, args);
     if (!preview) {
         sonify = new Sonify(state, video.canvas, audioContext);
     }
     else {
-        //generate preview for sonify, if needed
         previewStart();
     }
     syncBtn.removeAttribute('disabled');
@@ -539,7 +414,6 @@ function syncPreviewStart() {
     ipcRenderer.send('sync_preview', args);
     syncPreviewState.rendering = true;
     syncPreviewState.rendered = false;
-    //@ts-ignore
     showSpinner('syncSpinner', 'small');
     syncBtn.classList.add('rendering');
 }
@@ -605,7 +479,6 @@ function sonifyFrame() {
     tmp = sonify.sonifyCanvas();
     tmp = sonify.envelope(tmp, 100);
     mono.set(tmp, 0);
-    //console.dir(tmp)
     source.buffer = buf;
     source.connect(audioContext.destination);
     source.start();
@@ -614,13 +487,9 @@ function sonifyFrame() {
             sonifyFrameBtn.classList.remove('active');
         }
         catch (err) {
-            //
         }
     }, 42);
 }
-/**
- * VISUALIZE FUNCTIONS
- **/
 async function visualizeStart() {
     let type = state.get('type');
     sonifyVisualizeBtn.removeAttribute('disabled');
@@ -651,7 +520,6 @@ function sonifyVisualizeFrame() {
             sonifyVisualizeBtn.classList.remove('active');
         }
         catch (err) {
-            //
         }
     }, 42);
 }
@@ -871,9 +739,6 @@ function processAudioProgress(frameNumber, ms) {
 function onProcessAudioProgress(evt, args) {
     processAudioProgress(args.frameNumber, args.ms);
 }
-/**
- * TIMELINE FUNCTIONS
- **/
 function timelineExport() {
     let tl = timeline.export();
     timelineExportBtn.blur();
@@ -917,7 +782,6 @@ function onTimelineExportComplete(evt, args) {
 function keyDown(evt) {
     if (ui.currentPage === 'sonify') {
         if (evt.code === 'Space') {
-            //video.play();
         }
         else if (evt.code === 'ArrowLeft') {
             video.prevFrame();
@@ -945,7 +809,6 @@ function keyDown(evt) {
         }
     }
     else if (ui.currentPage === 'timeline') {
-        //timeline key commands handled by Timeline class
         return false;
     }
     console.log(evt.code);
@@ -1015,14 +878,10 @@ function bindListeners() {
     ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
     ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
 }
-/**
- * VISUALIZE
- **/
 (async function main() {
     dnd = new DragDrop();
     f = new Files();
     audioContext = new AudioContext();
-    //@ts-ignore why are you like this
     state = new State();
     try {
         await state.start();
@@ -1030,10 +889,9 @@ function bindListeners() {
     catch (err) {
         console.error(err);
     }
-    //@ts-ignore
     ui = new UI(state);
     video = new Video(state, ui);
-    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
+    sonify = new Sonify(state, video.canvas, audioContext);
     visualize = new Visualize(state, audioContext);
     timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);
     bindListeners();

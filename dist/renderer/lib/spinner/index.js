@@ -42,32 +42,19 @@ const spinnerTypes = {
         position: 'absolute'
     }
 };
-/**
- * Display a spinner in a select element of a select type.
- *
- * @param {string} id     HTML id of element to create spinner within
- * @param {string} type   Type of spinner (default/small)
- **/
 function showSpinner(id, type = 'default') {
     const SpinnerOptions = spinnerTypes[type];
     const target = document.getElementById(id);
     if (typeof Spinners[id] === 'undefined') {
-        //@ts-ignore
         Spinners[id] = new Spinner(SpinnerOptions);
     }
     Spinners[id].spin(target);
 }
-/**
- * Stop spinner using spin.js method stop().
- *
- * @param {string} id     HTML id of element with spinner to stop
- **/
 function hideSpinner(id) {
     try {
         Spinners[id].stop();
     }
     catch (err) {
-        //
     }
 }
 //# sourceMappingURL=index.js.map

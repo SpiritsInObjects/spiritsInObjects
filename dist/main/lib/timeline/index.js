@@ -11,15 +11,7 @@ const save_pixels_1 = __importDefault(require("save-pixels"));
 const ndarray_1 = __importDefault(require("ndarray"));
 const wavefile_1 = require("wavefile");
 const uuid_1 = require("uuid");
-/* class representing Timeline composer features */
 class Timeline {
-    /**
-     * @constructor
-     *
-     * Create Timeline class and assign ffmpeg as private member class
-     *
-     * @param {object} ffmpeg 	ffmpeg class
-     **/
     constructor(ffmpeg) {
         this.tmpDir = (0, path_1.join)((0, os_1.tmpdir)(), 'siotimeline');
         this.binDir = (0, path_1.join)((0, os_1.tmpdir)(), 'siobin');
@@ -27,12 +19,6 @@ class Timeline {
         this.ffmpeg = ffmpeg;
         this.initDirs();
     }
-    /**
-     * Initialize temporary directories used by Timeline class
-     * for storing exported frames, audio and video.
-     *
-     * @returns {boolean} Whether initialization process is successful
-     **/
     async initDirs() {
         let dirs = [this.tmpDir, this.binDir];
         for (let dir of dirs) {
@@ -53,13 +39,6 @@ class Timeline {
         }
         return true;
     }
-    /**
-     * Creates a temporary directory.
-     *
-     * @param {string} dir 		Path of directory
-     *
-     * @returns {boolean} 	Wheter creation is successful
-     **/
     async makeTmp(dir) {
         try {
             await (0, fs_extra_1.mkdir)(dir, { recursive: true });
@@ -70,13 +49,6 @@ class Timeline {
         }
         return true;
     }
-    /**
-     * Erase all files in a directory.
-     *
-     * @param {string} dir 		Path of dir to empty
-     *
-     * @returns {boolean} Whether erasing directory was successful
-     **/
     async emptyTmp(dir) {
         let files;
         try {
@@ -97,18 +69,6 @@ class Timeline {
         }
         return true;
     }
-    /**
-     * Export a frame using data from the canvas in the renderer process.
-     * This is used to normalize JPEG files as PNG so the export
-     * is done using all of the same file type.
-     *
-     * @param {string} id 		UUID of file to export
-     * @param {array} data 		Raw pixel data of the image
-     * @param {number} width 	Width of image to create
-     * @param {number} height   Height of image to create
-     *
-     * @returns {string} Path of newly-created file
-     **/
     async exportFrame(id, data, width, height) {
         const framePath = (0, path_1.join)(this.binDir, `${id}.png`);
         const nd = (0, ndarray_1.default)(data, [width, height, 4], [4, width * 4, 1]);
@@ -131,18 +91,6 @@ class Timeline {
             (0, save_pixels_1.default)(nd, 'PNG').pipe(stream);
         });
     }
-    /**
-     * Copy frame from original location to a tmp directory.
-     * This ensures that files are accessible for Timeline export
-     * even if original drive is disconnected. Also makes the
-     * stitching process simpler by having all files named by UUID
-     * rather than original path name.
-     *
-     * @param {string} id  			UUID of file to copy
-     * @param {string} filePath 	Path of original file
-     *
-     * @returns {string} Path of newly-copied file
-     **/
     async copyFrame(id, filePath) {
         const framePath = (0, path_1.join)(this.binDir, `${id}.png`);
         try {
@@ -153,14 +101,6 @@ class Timeline {
         }
         return framePath;
     }
-    /**
-     * Export audio from a sonified image as a standard 96kHz sample.
-     *
-     * @param {string} id 		UUID of file that was sampled
-     * @param {array} samples   Samples to create WAVE file from
-     *
-     * @returns {string} Path to new audio file
-     **/
     async exportAudio(id, samples) {
         const audioPath = (0, path_1.join)(this.binDir, `${id}-raw.wav`);
         const resamplePath = (0, path_1.join)(this.binDir, `${id}.wav`);
@@ -186,15 +126,6 @@ class Timeline {
         }
         return resamplePath;
     }
-    /**
-     * Populates directory with frames in the order
-     * that they appear in the timeline sequence. Copies
-     * images from bin to a numbered temporary file.
-     *
-     * @param {array} timeline 		List of UUIDs of frames
-     *
-     * @returns {boolean} Whether files were successfully copied
-     **/
     async images(timeline) {
         let frameNumber = 0;
         let paddedNum;
@@ -223,15 +154,6 @@ class Timeline {
         }
         return true;
     }
-    /**
-     * Populates directory with audio samples in the order they
-     * are to be stitched together. Copies samples from bin similar to
-     * images() method.
-     *
-     * @param {array} timeline 	List of UUIDs of samples
-     *
-     * @returns {boolean} Whether files were successfully copied
-     **/
     async audio(timeline) {
         let frameNumber = 0;
         let paddedNum;
@@ -262,15 +184,6 @@ class Timeline {
         }
         return fileList;
     }
-    /**
-     * Exports Timeline as a prores video with audio.
-     *
-     * @param {array} timeline 			List of UUIDs representing the timeline sequence
-     * @param {string} tmpVideo 		Path of video to create
-     * @param {Function} onProgress 	Callback for export progress
-     *
-     * @returns {boolean} Whether export process was successful
-     **/
     async export(timeline, tmpVideo, onProgress) {
         const id = (0, uuid_1.v4)();
         const tmpAudio = (0, path_1.join)(this.tmpDir, `${id}.wav`);
@@ -297,14 +210,6 @@ class Timeline {
         await (0, fs_extra_1.unlink)(tmpAudio);
         return success;
     }
-    /**
-     * Generate a preview of a timeline for playback within the app.
-     *
-     * @param {object} args 	Arguments from ipc containing timeline
-     * @param {string} tmpVideo	Path to temporary video
-     *
-     * @returns {boolean} Whether preview generation was successful
-     **/
     async preview(args, tmpVideo) {
         const id = (0, uuid_1.v4)();
         const timeline = args.timeline;
@@ -336,12 +241,8 @@ class Timeline {
         }
         await this.ffmpeg.concatAudio(audioList, tmpAudio, () => { });
         await this.ffmpeg.exportPreview(framesPath, tmpVideo, options);
-        //await unlink(tmpAudio);
         return success;
     }
-    /**
-     * Cancel timeline generation
-     **/
     cancel() {
         this.cancelled = true;
     }

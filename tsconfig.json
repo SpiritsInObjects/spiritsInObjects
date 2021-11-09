@@ -7,7 +7,7 @@
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
-        "removeComments" : false,
+        "removeComments" : true,
         "baseUrl" : "./dist/",
         "outDir": "./dist/main/",
         "rootDir" : "./src/main/",

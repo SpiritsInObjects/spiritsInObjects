@@ -1,11 +1,9 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createMenu = void 0;
-//const path = require('path'); //need for icon
 const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
 const showPreferences = () => {
-    // Show the app's preferences here
 };
 const helpSubmenu = [
     openUrlMenuItem({
@@ -39,7 +37,6 @@ if (!is.macos) {
     helpSubmenu.push({
         type: 'separator'
     }, aboutMenuItem({
-        //icon: path.join(__dirname, 'static', 'icon.png'),
         text: 'Created by'
     }));
 }
@@ -81,7 +78,6 @@ const macosTemplate = [
         submenu: helpSubmenu
     }
 ];
-// Linux and Windows
 const otherTemplate = [
     {
         role: 'fileMenu',

@@ -5,7 +5,7 @@
         "target": "ES2018",
         "noImplicitAny": true,
         "sourceMap": true,
-        "removeComments" : false,
+        "removeComments" : true,
         "skipLibCheck": true,
         "baseUrl" : "./dist/",
         "outDir": "./dist/renderer/",
