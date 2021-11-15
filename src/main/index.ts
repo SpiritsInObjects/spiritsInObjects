@@ -633,13 +633,13 @@ ipcMain.on('timeline_preview', async (evt : Event, args : any) => {
 		success = await timeline.preview(args, tmpVideo);
 	} catch (err) {
 		console.error(err);
-		return mainWindow.webContents.send('timeline_export_complete', { success })
+		return mainWindow.webContents.send('timeline_export_complete', { success });
 	}
 
 	if (TMP.files.indexOf(tmpVideo) === -1) {
 		TMP.files.push(tmpVideo);
 	}
-	mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo })
+	mainWindow.webContents.send('timeline_preview_complete', { success, tmpVideo });
 });
 
 
@@ -676,8 +676,22 @@ nodeCleanup((exitCode : any, signal : string) => {
 	console.log(`Exiting spiritsInObjects...`)
 });
 
+/**
+ * Save a file storing current state to be restored.
+ **/
+async function saveState () {
+	mainWindow.webContents.send('save_state', { });
+}
+
+/**
+ * Load state from file.
+ **/
+async function restoreState () {
+	mainWindow.webContents.send('restore_state', { });
+}
+
 (async () => {
-	const menu = createMenu();
+	const menu = createMenu(saveState, restoreState);
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();

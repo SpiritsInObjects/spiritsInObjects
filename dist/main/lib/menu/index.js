@@ -5,6 +5,8 @@ const { app, Menu, shell } = require('electron');
 const { is, appMenu, aboutMenuItem, openUrlMenuItem, openNewGitHubIssue, debugInfo } = require('electron-util');
 const showPreferences = () => {
 };
+let save;
+let restore;
 const helpSubmenu = [
     openUrlMenuItem({
         label: 'Website',
@@ -54,7 +56,18 @@ const macosTemplate = [
         role: 'fileMenu',
         submenu: [
             {
-                label: 'Custom'
+                label: 'Save',
+                accelerator: 'CommandOrControl+S',
+                click() {
+                    save();
+                }
+            },
+            {
+                label: 'Open',
+                accelerator: 'CommandOrControl+O',
+                click() {
+                    restore();
+                }
             },
             {
                 type: 'separator'
@@ -83,7 +96,18 @@ const otherTemplate = [
         role: 'fileMenu',
         submenu: [
             {
-                label: 'Custom'
+                label: 'Save',
+                accelerator: 'CommandOrControl+S',
+                click() {
+                    save();
+                }
+            },
+            {
+                label: 'Open',
+                accelerator: 'CommandOrControl+O',
+                click() {
+                    restore();
+                }
             },
             {
                 type: 'separator'
@@ -115,7 +139,9 @@ const otherTemplate = [
     }
 ];
 const template = process.platform === 'darwin' ? macosTemplate : otherTemplate;
-function createMenu() {
+function createMenu(saveState, restoreState) {
+    save = saveState;
+    restore = restoreState;
     return Menu.buildFromTemplate(template);
 }
 exports.createMenu = createMenu;

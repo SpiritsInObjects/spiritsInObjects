@@ -10,6 +10,7 @@ class State {
             end: 1.0
         };
         this.lock = false;
+        console.log(this.storage);
     }
     async start() {
         const stateDir = join(homedir(), '.spiritsInObjects');
@@ -41,6 +42,7 @@ class State {
         }
     }
     async save() {
+        console.log('save');
         if (!this.lock) {
             this.lock = true;
             try {

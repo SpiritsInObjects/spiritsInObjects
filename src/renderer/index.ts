@@ -497,6 +497,13 @@ async function confirmCancel () {
  * SONIFY FUNCTIONS
  **/
 
+/**
+ * Callback for info IPC message. Either create sonification
+ * class
+ * 
+ * @param {object} evt     IPC event object
+ * @param {object} args    
+ **/
 function onInfo  (evt : Event, args : any) {
     let preview : boolean = video.onInfo(evt, args);
 
@@ -509,6 +516,13 @@ function onInfo  (evt : Event, args : any) {
     syncBtn.removeAttribute('disabled');
 }
 
+/**
+ * Display progress of preview generation step. Calculates an
+ * estimation of time left based on the average time per frame.
+ * 
+ * @param {number} frameNumber     Frames complete
+ * @param {number} ms              Time per frame
+ **/
 function previewProgress (frameNumber : number, ms : number) {
     let timeLeft : number;
     let timeStr : string;
@@ -1090,6 +1104,57 @@ async function onProcessAudio (evt : Event, args : any) {
     ui.overlay.hide();
 }
 
+/**
+ * Save current state to file.
+ **/
+ async function saveState () {
+    const options : any = {
+        defaultPath: lastDir === '' ? homedir() : lastDir
+    };
+    let savePath : string;
+
+
+
+    try {
+        savePath = await dialog.showSaveDialog(null, options)
+    } catch (err) {
+        console.error(err);
+    }
+ }
+
+/**
+ * Restore current state from file.
+ **/
+ async function restoreState () {
+    const options : any = {
+        title: `Select a .sio save file`,
+        properties: [`openFile`],
+        defaultPath: lastDir === '' ? homedir() : lastDir,
+        filters: [
+            {
+                name: 'All Files',
+                extensions: ['*']
+            },
+        ]
+    };
+    let files : any;
+    let filePath : string;
+    
+    try {
+        files = await dialog.showOpenDialog(options);
+    } catch (err ) {
+        console.error(err);
+    }
+
+    if (!files || !files.filePaths || files.filePaths.length === 0) {
+        return false;
+    }
+
+    filePath = files.filePaths[0];
+
+    this.determineProcess(filePath);
+ }
+
 function bindListeners () {
     dropArea         = document.getElementById('dragOverlay');
     fileSourceProxy  = document.getElementById('fileSourceProxy');
@@ -1146,12 +1211,14 @@ function bindListeners () {
     ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
 
     ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
+
+    ipcRenderer.on('save_state', saveState, false);
+    ipcRenderer.on('restore_state', restoreState, false)
 }
 
 /**
  * VISUALIZE
  **/
-
 
 (async function main () {
 
@@ -1173,7 +1240,7 @@ function bindListeners () {
     video = new Video(state, ui);
     sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
     visualize = new Visualize(state, audioContext);
-    timeline = new Timeline(ui, onTimelineBin, onTimelinePreview);
+    timeline = new Timeline(state, ui, onTimelineBin, onTimelinePreview);
 
     bindListeners();
 

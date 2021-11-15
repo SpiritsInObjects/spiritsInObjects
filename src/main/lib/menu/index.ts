@@ -15,6 +15,9 @@ const showPreferences = () => {
 	// Show the app's preferences here
 };
 
+let save : Function;
+let restore : Function;
+
 const helpSubmenu = [
 	openUrlMenuItem({
 		label: 'Website',
@@ -71,7 +74,18 @@ const macosTemplate = [
 		role: 'fileMenu',
 		submenu: [
 			{
-				label: 'Custom'
+				label: 'Save',
+				accelerator: 'CommandOrControl+S',
+				click () {
+					save();
+				}
+			},
+			{
+				label: 'Open',
+				accelerator: 'CommandOrControl+O',
+				click () {
+					restore();
+				}
 			},
 			{
 				type: 'separator'
@@ -102,7 +116,18 @@ const otherTemplate = [
 		role: 'fileMenu',
 		submenu: [
 			{
-				label: 'Custom'
+				label: 'Save',
+				accelerator: 'CommandOrControl+S',
+				click () {
+					save();
+				}
+			},
+			{
+				label: 'Open',
+				accelerator: 'CommandOrControl+O',
+				click () {
+					restore();
+				}
 			},
 			{
 				type: 'separator'
@@ -136,7 +161,9 @@ const otherTemplate = [
 
 const template = process.platform === 'darwin' ? macosTemplate : otherTemplate;
 
-export function createMenu () {
+export function createMenu (saveState : Function, restoreState : Function) {
+	save = saveState;
+	restore = restoreState;
 	return Menu.buildFromTemplate(template);
 }
 

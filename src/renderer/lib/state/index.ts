@@ -38,7 +38,7 @@ class State {
      * Initializes the State class
      **/
     constructor () {
-        
+        console.log(this.storage)
     }
 
     /**
@@ -75,6 +75,7 @@ class State {
      * Save the state as JSON to local file in the home directory
      */
     public async save () {
+        console.log('save')
         if (!this.lock) {
             this.lock = true;
             try {

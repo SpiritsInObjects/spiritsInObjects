@@ -5,7 +5,9 @@ const { lstat, readdir } = require('fs-extra');
 const { platform } = require('os');
 const Swal = require('../contrib/sweetalert2.min.js');
 class Timeline {
-    constructor(ui, onBin, onPreview) {
+    constructor(state, ui, onBin, onPreview) {
+        this.audioContext = new AudioContext();
+        this.sonifyState = {};
         this.canvas = document.getElementById('tCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.display = document.getElementById('tCanvasDisplay');
@@ -29,7 +31,6 @@ class Timeline {
         this.bin = [];
         this.lastDir = '';
         this.stepSize = 1;
-        this.audioContext = new AudioContext();
         this.exts = ['.png', '.jpeg', '.jpg'];
         this.keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
@@ -69,7 +70,8 @@ class Timeline {
         this.ui = ui;
         this.onBin = onBin;
         this.onPreview = onPreview;
-        this.state = {
+        this.state = state;
+        this.sonifyState = {
             get: () => { return false; }
         };
         this.bindListeners();
@@ -454,7 +456,7 @@ class Timeline {
         }
         return valid;
     }
-    async addToBin(files) {
+    async addToBin(files, ids = []) {
         let bi;
         let key;
         let index;
@@ -463,6 +465,7 @@ class Timeline {
         let stat;
         let baseDir;
         let dirFiles;
+        let file;
         if (files.length === 1) {
             baseDir = files[0];
             try {
@@ -495,7 +498,8 @@ class Timeline {
             return false;
         }
         this.ui.overlay.show(`Importing ${files.length} images to Bin...`);
-        for (let file of files) {
+        for (let i = 0; i < files.length; i++) {
+            file = files[i];
             this.ui.overlay.progress(count / files.length, `${basename(file)}`);
             count++;
             if (this.inBin(file)) {
@@ -504,7 +508,7 @@ class Timeline {
             index = this.bin.length;
             key = typeof this.keys[index] !== 'undefined' ? this.keys[index] : null;
             bi = {
-                id: uuid(),
+                id: typeof ids[i] !== 'undefined' ? ids[i] : uuid(),
                 file,
                 name: basename(file),
                 index,
@@ -715,7 +719,7 @@ class Timeline {
                 this.canvas.width = width;
                 this.canvas.height = height;
                 this.ctx.drawImage(this.stillLoader, 0, 0, width, height);
-                this.sonify = new Sonify(this.state, this.canvas, this.audioContext);
+                this.sonify = new Sonify(this.sonifyState, this.canvas, this.audioContext);
                 buffer = this.sonify.sonifyCanvas();
                 return resolve(buffer);
             }).bind(this);

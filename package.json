@@ -47,7 +47,7 @@
   },
   "scripts": {
     "start": "sh scripts/start.sh",
-    "dev": "npm run compile && npm run docs && npm run test && sh scripts/start_dev.sh",
+    "dev": "npm run compile && npm run test && sh scripts/start_dev.sh",
     "compile": "sh scripts/compile.sh",
     "docs": "sh scripts/docs.sh",
     "manual": "bash scripts/manual.sh",
