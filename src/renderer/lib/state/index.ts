@@ -21,6 +21,7 @@ interface StateStorage {
     vWidth? : number;
 
     page? : string;
+    saveFile? : string;
 }
 
 /* class representing the state class */
