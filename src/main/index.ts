@@ -706,6 +706,12 @@ async function restoreState () {
 	visualize = new Visualize(ffmpeg);
 	timeline = new Timeline(ffmpeg);
 
+	try {
+		await ffmpeg.exportPath();
+	} catch (err) {
+		console.error(err);
+	}
+
 	TMP.dirs.push(timeline.tmpDir);
 	TMP.dirs.push(timeline.binDir);
 })();

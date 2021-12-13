@@ -566,6 +566,12 @@ async function restoreState() {
     mainWindow = await createMainWindow();
     visualize = new visualize_1.Visualize(ffmpeg_1.ffmpeg);
     timeline = new timeline_1.Timeline(ffmpeg_1.ffmpeg);
+    try {
+        await ffmpeg_1.ffmpeg.exportPath();
+    }
+    catch (err) {
+        console.error(err);
+    }
     TMP.dirs.push(timeline.tmpDir);
     TMP.dirs.push(timeline.binDir);
 })();
