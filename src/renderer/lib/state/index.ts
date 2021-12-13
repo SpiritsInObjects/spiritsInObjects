@@ -2,7 +2,7 @@
 
 const { homedir } = require('os');
 const { join } = require('path');
-const { writeFile, readFile, pathExists, ensureDir } = require('fs-extra')
+const { writeFile, readFile, pathExists, ensureDir, copy } = require('fs-extra')
 
 interface StateStorage {
     [key: string]: any;
@@ -21,17 +21,20 @@ interface StateStorage {
     vWidth? : number;
 
     page? : string;
-    saveFile? : string;
 }
 
 /* class representing the state class */
 class State {
     private localFile : string = join( homedir(), '.spiritsInObjects/state.sio' );
+    public saveFile : string = null;
     private storage : StateStorage = {
         start : 0.81,
         end : 1.0
     } as StateStorage;
+    public timeline : any = { bin : [], timeline : [] };
+    public visualize : any = {};
     private lock : boolean = false;
+    private unsaved : boolean = true;
     
     /**
      * @constructor
@@ -39,7 +42,7 @@ class State {
      * Initializes the State class
      **/
     constructor () {
-        console.log(this.storage)
+        this.start();
     }
 
     /**
@@ -65,6 +68,7 @@ class State {
                 throw err;
             }
         }
+        //check for error
         try {
             //await this.restore();
         } catch (err) {
@@ -73,17 +77,40 @@ class State {
     }
 
     /**
+     * Retrieve a stringified object containing all
+     * state data for saving to disk.
+     **/
+    private getData () {
+        const data : any = {
+            storage : this.storage,
+            visualize : this.visualize,
+            timeline : this.timeline
+        };
+        return JSON.stringify(data, null, '\t');
+    }
+
+    /**
      * Save the state as JSON to local file in the home directory
      */
-    public async save () {
-        console.log('save')
+    public async save ( writeSave : boolean = false) {
         if (!this.lock) {
             this.lock = true;
             try {
-                await writeFile(this.localFile, JSON.stringify(this.storage, null, '\t'), 'utf8');
+                await writeFile(this.localFile, this.getData(), 'utf8');
             } catch (err) {
                 console.error(err);
             }
+            this.unsaved = true;
+
+            if (writeSave && this.saveFile != null) {
+                try {
+                    await copy(this.localFile, this.saveFile);
+                } catch (err) {
+                    console.error(err);
+                }
+                this.unsaved = false;
+            }
+
             this.lock = false;
         }
     }
@@ -94,11 +121,13 @@ class State {
      * @returns {boolean} Whether file is restored from state
      */
     public async restore () : Promise<boolean> {
+        let stateFile : string = this.saveFile != null ? this.saveFile : this.localFile;
         let raw : string;
         let fileExists : boolean = false;
+        let parsed : any;
 
         try {
-            fileExists = await pathExists(this.localFile);
+            fileExists = await pathExists(stateFile);
         } catch (err) {
             console.error(err);
             return false;
@@ -109,13 +138,13 @@ class State {
         }
 
         try {
-            raw = await readFile(this.localFile, 'utf8');
+            raw = await readFile(stateFile, 'utf8');
         } catch (err) {
             console.error(err);
         }
         if (raw) {
             try {
-                this.storage = JSON.parse(raw) as StateStorage;
+                parsed = JSON.parse(raw);
             } catch (err) {
                 console.error(err);
                 console.error(raw);
@@ -123,6 +152,9 @@ class State {
                 await this.save();
                 return false;
             }
+            this.storage = parsed.storage as StateStorage;
+            this.timeline = parsed.timeline;
+            this.visualize = parsed.visualize;
         }
     }
 

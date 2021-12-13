@@ -960,4 +960,19 @@ class Visualize {
         this.current.value = String(x);
         this.cursor.style.left = `${left}%`;
     }
+
+    /**
+     * Duplicate state into object that can be easily saved
+     * to the shared state visualize object for restoration purposes.
+     **/
+     public save () {
+         
+     }
+
+    /**
+     * Restore the visualize from the saved state.
+     **/
+    public restore () {
+        console.log(this.state.visualize)
+    }
 }

@@ -2,6 +2,7 @@
 
 import { basename, extname, join, dirname } from 'path';
 import { homedir } from 'os';
+import { readFile } from 'fs-extra';
 
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
@@ -1105,21 +1106,123 @@ async function onProcessAudio (evt : Event, args : any) {
 }
 
 /**
- * Save current state to file.
+ * Parse the save file and evaluate that it contains the 
+ * keys required to load into the state.
  **/
- async function saveState () {
-    const options : any = {
-        defaultPath: lastDir === '' ? homedir() : lastDir
-    };
-    let savePath : string;
-
-
+async function validateSaveFile (file : string) {
+    const fileName : string = basename(file);
+    const errorTitle : string =  `Error loading saved file`;
+    let errorMsg : string;
+    let data : string;
+    let json : any;
+    let keys : string[];
+    let required : string[] = [ 'storage', 'timeline', 'visualize' ];
+    let filePath : string;
+    let fileType : string;
 
     try {
-        savePath = await dialog.showSaveDialog(null, options)
+        data = await readFile(file, 'utf8');
+    } catch (err) {
+        console.error(err);
+        errorMsg = `Cannot load ${fileName}. It is failing to load from disk.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+        return false;
+    }
+
+    try {
+        json = JSON.parse(data);
+    } catch (err) {
+        console.error(err);
+        errorMsg = `Cannot load ${fileName}. It cannot be parsed.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+        return false;
+    }
+
+    keys = Object.keys(json);
+    for (let key of required) {
+        if (keys.indexOf(key) === -1) {
+            errorMsg = `Cannot load ${fileName}. It is corrupted.`;
+            dialog.showErrorBox(errorTitle, errorMsg);
+            return false;
+        }
+    }
+
+    state.saveFile = file;
+
+    try {
+        await state.restore();
+        await timeline.restore();
+        //await visualize.restore();
     } catch (err) {
         console.error(err);
     }
+
+    filePath = state.get('filePath');
+    fileType = state.get('type')
+    if (filePath != null) {
+        if (fileType == 'video' || fileType == 'still') {
+            f.setSonify(filePath, fileType);
+            ui.page('sonify');
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Determine if selection contains an .sio save file.
+ * 
+ * @param {string} file     File to examine
+ **/
+async function determineSaveFile (file : string) {
+    const fileName : string = basename(file);
+    const ext : string = extname(fileName).toLowerCase();
+    const errorTitle : string =  `Error loading saved file`;
+    let errorMsg : string;
+    if (ext === '.sio') {
+        try {
+            await validateSaveFile(file);
+        } catch (err) {
+            console.error(err);
+        }
+    } else {
+        errorMsg = `Cannot load ${fileName}. Please select a .sio file.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+    }
+}
+
+/**
+ * Save current state to file.
+ **/
+ async function saveState (saveAs : boolean = false) {
+    const options : any = {
+        defaultPath: lastDir === '' ? homedir() : lastDir
+    };
+    let saveRes : any;
+    let saveFile : string;
+    let ext : string;
+
+    if (state.saveFile == null || saveAs) {
+        try {
+            saveRes = await dialog.showSaveDialog(null, options)
+            saveFile = saveRes.filePath;
+        } catch (err) {
+            console.error(err);
+            return false;
+        }
+
+        ext = extname(basename(saveFile)).toLowerCase();
+
+        if (ext != '.sio') {
+            saveFile += '.sio';
+        }
+        if (saveFile) {
+            state.saveFile = saveFile;
+        }
+    }
+    
+    state.save(true);
+    return false;
  }
 
 /**
@@ -1152,7 +1255,11 @@ async function onProcessAudio (evt : Event, args : any) {
 
     filePath = files.filePaths[0];
 
-    this.determineProcess(filePath);
+    try {
+        await determineSaveFile(filePath);
+    } catch (err) {
+        console.error(err);
+    }
  }
 
 function bindListeners () {
@@ -1212,7 +1319,8 @@ function bindListeners () {
 
     ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
 
-    ipcRenderer.on('save_state', saveState, false);
+    ipcRenderer.on('save_state', () => { saveState(false) }, false);
+    ipcRenderer.on('save_state_as', () => { saveState(true) }, false);
     ipcRenderer.on('restore_state', restoreState, false)
 }
 
@@ -1226,7 +1334,7 @@ function bindListeners () {
     f = new Files();
     audioContext = new AudioContext();
 
-    //@ts-ignore why are you like this
+    //@ts-ignore
     state = new State();
 
     try {
@@ -1238,7 +1346,7 @@ function bindListeners () {
     //@ts-ignore
     ui = new UI(state);
     video = new Video(state, ui);
-    sonify = new Sonify(state, video.canvas, audioContext); //need to refresh when settings change
+    sonify = new Sonify(state, video.canvas, audioContext);
     visualize = new Visualize(state, audioContext);
     timeline = new Timeline(state, ui, onTimelineBin, onTimelinePreview);
 

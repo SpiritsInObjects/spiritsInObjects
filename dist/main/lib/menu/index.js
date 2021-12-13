@@ -7,6 +7,7 @@ const showPreferences = () => {
 };
 let save;
 let restore;
+let saveAs;
 const helpSubmenu = [
     openUrlMenuItem({
         label: 'Website',
@@ -63,6 +64,13 @@ const macosTemplate = [
                 }
             },
             {
+                label: 'Save As',
+                accelerator: 'CommandOrControl+Shift+S',
+                click() {
+                    saveAs();
+                }
+            },
+            {
                 label: 'Open',
                 accelerator: 'CommandOrControl+O',
                 click() {
@@ -103,6 +111,13 @@ const otherTemplate = [
                 }
             },
             {
+                label: 'Save As',
+                accelerator: 'CommandOrControl+Shift+S',
+                click() {
+                    saveAs();
+                }
+            },
+            {
                 label: 'Open',
                 accelerator: 'CommandOrControl+O',
                 click() {
@@ -139,9 +154,10 @@ const otherTemplate = [
     }
 ];
 const template = process.platform === 'darwin' ? macosTemplate : otherTemplate;
-function createMenu(saveState, restoreState) {
+function createMenu(saveState, restoreState, saveStateAs) {
     save = saveState;
     restore = restoreState;
+    saveAs = saveStateAs;
     return Menu.buildFromTemplate(template);
 }
 exports.createMenu = createMenu;

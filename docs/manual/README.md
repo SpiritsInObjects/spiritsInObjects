@@ -5,21 +5,25 @@
 SpiritsInObjects is a software tool that provides a means for sonifying and sequencing a set of images, sonifying entire videos and visualizing MIDI or audio. 
 It is meant to aid in the process of creating optical sound films by allowing a user to import a set of images, organize/sequence them onto a timeline in either repeating or unique patterns, listen to the sounds that they produce, and output results in three formats: 
 
-1. playback within the program
-2. a WAV file
-3. an Adobe After Effects Expressions script. 
+1. preview playback within the program
+2. a WAV file (of sonified video or images)
+3. a MOV video (of sequences or visualized audio)
 
-This manual will guide you through the SpiritsInObjects program and show you how to implement the After Effects Expressions script for further image processing.
+This manual will guide you through the SpiritsInObjects program.
 
 ## II. Getting Started 
  
 **A. Creating your image-set:**
 
+**i. Dimensions:**
+SpiritsInObjects will accept images and video of any dimensions, but for the purposes of making sound-on-film video, 16x9 is the ideal dimension ratio.
+
 **i. Soundtrack location:** 
-SpiritsInObjects attempts to recreate the sounds that are produced by the optical sound component within 16mm projectors. These sound devices work by reading light that passes through the soundtrack portion (the side without the sprocket-holes) of Super16mm film. SpiritsInObjects only analyzes the 
-right 28% of each image. 
-Any data to the left of this portion is ignored and doesn’t affect the sound in any way. 
-Therefore, when creating images for use with this program, make sure to note that you will only be hearing the right 28% of each image. 
+SpiritsInObjects attempts to recreate the sounds that are produced by the optical sound component within 16mm projectors. 
+These sound devices work by reading light that passes through the soundtrack portion (the side without the sprocket-holes) of single perf 16mm film. 
+SpiritsInObjects only analyzes the right 19% of each image. 
+Any visual data to the left of this portion is ignored and doesn’t affect the sound in any way. 
+Therefore, when creating images for use with this program, make sure to note that you will only be hearing the right 19% of each image. 
  
 **ii. Filename organization:**
 Another important detail to note while preparing your images is their filename.

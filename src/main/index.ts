@@ -684,6 +684,14 @@ async function saveState () {
 }
 
 /**
+ * Save a file storing current state to be restored.
+ * Force save dialog
+ **/
+async function saveStateAs () {
+	mainWindow.webContents.send('save_state_as', { });
+}
+
+/**
  * Load state from file.
  **/
 async function restoreState () {
@@ -691,7 +699,7 @@ async function restoreState () {
 }
 
 (async () => {
-	const menu = createMenu(saveState, restoreState);
+	const menu = createMenu(saveState, restoreState, saveStateAs);
 	await app.whenReady();
 	Menu.setApplicationMenu(menu);
 	mainWindow = await createMainWindow();

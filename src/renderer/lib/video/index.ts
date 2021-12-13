@@ -113,6 +113,7 @@ class Video {
             this.displayInfo();
             this.sonifyFrameBtn.removeAttribute('disabled');
             this.sonifyVideoBtn.removeAttribute('disabled');
+            this.state.save();
         }
     }
 
@@ -391,7 +392,7 @@ class Video {
         this.state.set('height', this.height);
         this.state.set('samplerate', this.samplerate);
         this.state.set('type', this.type);
-
+        this.state.save();
         this.displayInfo();
 
         this.sonifyFrameBtn.disabled  = false;

@@ -624,5 +624,10 @@ class Visualize {
         this.current.value = String(x);
         this.cursor.style.left = `${left}%`;
     }
+    save() {
+    }
+    restore() {
+        console.log(this.state.visualize);
+    }
 }
 //# sourceMappingURL=index.js.map

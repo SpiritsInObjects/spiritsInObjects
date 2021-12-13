@@ -806,6 +806,7 @@ class Timeline {
 			this.bin.push(bi);
 			this.onBin(bi, image);
 		}
+		this.saveBin();
 		this.ui.overlay.progress(1.0, `Cleaning up...`);
 		this.layoutBin();
 	}
@@ -1074,6 +1075,7 @@ class Timeline {
 			container.appendChild(frame);
 			container.appendChild(between);
 		}
+		this.saveTimeline();
 	}
 
 	/**
@@ -1831,5 +1833,48 @@ class Timeline {
 	private changeSelected (x : number) {
 		this.selected = x;
 		this.counter.value = String(x);
+	}
+
+	/**
+	 * Restore the timeline from the saved state file.
+	 **/
+	public async restore () {
+		let files : any[];
+		let ids : any[];
+
+		if (this.state.timeline.bin.length > 0) {
+			files = this.state.timeline.bin.map((el : any) => el.file);
+			ids = this.state.timeline.bin.map((el : any) => el.id);
+			await this.addToBin(files, ids);
+		}
+
+		if (this.state.timeline.timeline.length > 0) {
+			this.timeline = [];
+			for (let i = 0; i < this.state.timeline.timeline.length; i++) {
+				this.timeline.push(this.state.timeline.timeline[i]);
+			}
+			this.layout();
+		}
+	}
+
+	/**
+	 * Save the bin to the state class.
+	 **/
+	private saveBin() {
+		this.state.timeline.bin = this.bin.map( el => {
+			return {
+				id : el.id,
+				file : el.file
+			}
+		});
+		this.state.save();
+	}
+
+	/**
+	 * Save the timeline to the state class.
+	 **/
+	private saveTimeline () {
+		this.state.timeline.timeline = this.timeline;
+		this.state.save();
 	}
 }

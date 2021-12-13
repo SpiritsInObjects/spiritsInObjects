@@ -553,11 +553,14 @@ electron_1.ipcMain.on('timeline_preview', async (evt, args) => {
 async function saveState() {
     mainWindow.webContents.send('save_state', {});
 }
+async function saveStateAs() {
+    mainWindow.webContents.send('save_state_as', {});
+}
 async function restoreState() {
     mainWindow.webContents.send('restore_state', {});
 }
 (async () => {
-    const menu = (0, menu_1.createMenu)(saveState, restoreState);
+    const menu = (0, menu_1.createMenu)(saveState, restoreState, saveStateAs);
     await electron_1.app.whenReady();
     electron_1.Menu.setApplicationMenu(menu);
     mainWindow = await createMainWindow();

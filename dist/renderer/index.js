@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path_1 = require("path");
 const os_1 = require("os");
+const fs_extra_1 = require("fs-extra");
 const { ipcRenderer } = require('electron');
 const { dialog } = require('electron').remote;
 const humanizeDuration = require('humanize-duration');
@@ -834,17 +835,104 @@ async function onProcessAudio(evt, args) {
     }
     ui.overlay.hide();
 }
-async function saveState() {
-    const options = {
-        defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir
-    };
-    let savePath;
+async function validateSaveFile(file) {
+    const fileName = (0, path_1.basename)(file);
+    const errorTitle = `Error loading saved file`;
+    let errorMsg;
+    let data;
+    let json;
+    let keys;
+    let required = ['storage', 'timeline', 'visualize'];
+    let filePath;
+    let fileType;
     try {
-        savePath = await dialog.showSaveDialog(null, options);
+        data = await (0, fs_extra_1.readFile)(file, 'utf8');
+    }
+    catch (err) {
+        console.error(err);
+        errorMsg = `Cannot load ${fileName}. It is failing to load from disk.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+        return false;
+    }
+    try {
+        json = JSON.parse(data);
+    }
+    catch (err) {
+        console.error(err);
+        errorMsg = `Cannot load ${fileName}. It cannot be parsed.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+        return false;
+    }
+    keys = Object.keys(json);
+    for (let key of required) {
+        if (keys.indexOf(key) === -1) {
+            errorMsg = `Cannot load ${fileName}. It is corrupted.`;
+            dialog.showErrorBox(errorTitle, errorMsg);
+            return false;
+        }
+    }
+    state.saveFile = file;
+    try {
+        await state.restore();
+        await timeline.restore();
     }
     catch (err) {
         console.error(err);
     }
+    filePath = state.get('filePath');
+    fileType = state.get('type');
+    if (filePath != null) {
+        if (fileType == 'video' || fileType == 'still') {
+            f.setSonify(filePath, fileType);
+            ui.page('sonify');
+        }
+    }
+    return true;
+}
+async function determineSaveFile(file) {
+    const fileName = (0, path_1.basename)(file);
+    const ext = (0, path_1.extname)(fileName).toLowerCase();
+    const errorTitle = `Error loading saved file`;
+    let errorMsg;
+    if (ext === '.sio') {
+        try {
+            await validateSaveFile(file);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }
+    else {
+        errorMsg = `Cannot load ${fileName}. Please select a .sio file.`;
+        dialog.showErrorBox(errorTitle, errorMsg);
+    }
+}
+async function saveState(saveAs = false) {
+    const options = {
+        defaultPath: lastDir === '' ? (0, os_1.homedir)() : lastDir
+    };
+    let saveRes;
+    let saveFile;
+    let ext;
+    if (state.saveFile == null || saveAs) {
+        try {
+            saveRes = await dialog.showSaveDialog(null, options);
+            saveFile = saveRes.filePath;
+        }
+        catch (err) {
+            console.error(err);
+            return false;
+        }
+        ext = (0, path_1.extname)((0, path_1.basename)(saveFile)).toLowerCase();
+        if (ext != '.sio') {
+            saveFile += '.sio';
+        }
+        if (saveFile) {
+            state.saveFile = saveFile;
+        }
+    }
+    state.save(true);
+    return false;
 }
 async function restoreState() {
     const options = {
@@ -870,7 +958,12 @@ async function restoreState() {
         return false;
     }
     filePath = files.filePaths[0];
-    this.determineProcess(filePath);
+    try {
+        await determineSaveFile(filePath);
+    }
+    catch (err) {
+        console.error(err);
+    }
 }
 function bindListeners() {
     dropArea = document.getElementById('dragOverlay');
@@ -915,7 +1008,8 @@ function bindListeners() {
     ipcRenderer.on('timeline_export_complete', onTimelineExportComplete, false);
     ipcRenderer.on('timeline_export_progress', onTimelineExportProgress, false);
     ipcRenderer.on('timeline_preview_complete', onTimelinePreviewComplete, false);
-    ipcRenderer.on('save_state', saveState, false);
+    ipcRenderer.on('save_state', () => { saveState(false); }, false);
+    ipcRenderer.on('save_state_as', () => { saveState(true); }, false);
     ipcRenderer.on('restore_state', restoreState, false);
 }
 (async function main() {
