@@ -15,7 +15,7 @@ for dep in "${DEPS[@]}"; do
 done
 
 YEAR=`date '+%Y'`
-HTML="./docs/manual/index.html"
+HTML="./docs/index.html"
 
 ############
 #
@@ -24,13 +24,13 @@ HTML="./docs/manual/index.html"
 ############
 
 tmp_file=`mktemp`
-./node_modules/.bin/showdown makehtml -i ./docs/manual/README.md -o "${tmp_file}"
+./node_modules/.bin/showdown makehtml -i ./docs/README.md -o "${tmp_file}"
 
-cat ./docs/manual/head.html.tmpl > "${HTML}" 
+cat ./docs/head.html.tmpl > "${HTML}" 
 cat "${tmp_file}" >> "${HTML}"
 echo "" >> "${HTML}"
 echo "<br/><br/><footer><hr/ ><center>&copy; ${YEAR}</center></footer>" >> "${HTML}"
-cat ./docs/manual/footer.html.tmpl >> "${HTML}"
+cat ./docs/footer.html.tmpl >> "${HTML}"
 
 rm "${tmp_file}"
 
@@ -43,13 +43,13 @@ rm "${tmp_file}"
 tmp_file=`mktemp`
 tmp_md="${tmp_file}.md"
 
-cat "./docs/manual/README.md" > "${tmp_md}"
+cat "./docs/README.md" > "${tmp_md}"
 echo " " >> "${tmp_md}"
 echo " " >> "${tmp_md}"
 echo "__________" >> "${tmp_md}"
 echo "<center>&copy; ${YEAR}</center>" >> "${tmp_md}"
 
-pandoc "${tmp_md}" -o ./docs/manual/spiritsInObjects-manual.pdf
+pandoc "${tmp_md}" -o ./docs/spiritsInObjects-manual.pdf
 
 rm -f "${tmp_md}"
 rm -f "${tmp_file}"
