@@ -13,6 +13,7 @@ const videoExtensions : string[] = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.m
 const stillExtensions : string[] = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions : string[] = ['.mid', '.midi'];
 const audioExtensions : string[] = ['.mp3', '.aiff', '.aif',  '.wav', '.wave'];
+const saveExtension : string = '.sio';
 const videoFormatMap : any = {
     'prores3' : '.mov',
     'h264' : '.mp4'
@@ -153,6 +154,8 @@ class DragDrop {
         let files : any[];
         let loadFiles : any[] = [];
         let paths : string[] = [];
+        let ext : string;
+
         if (this.active) {
             evt.preventDefault();
             files = evt.dataTransfer.files as any; //squashes ts error
@@ -166,6 +169,7 @@ class DragDrop {
                     fileReader.readAsDataURL(file);
                 }));
             }
+
             try {
                 await Promise.all(loadFiles)
             } catch (err) {
@@ -173,6 +177,13 @@ class DragDrop {
             }
 
             if (ui.currentPage === 'timeline') {
+                if (paths.length === 1) {
+                    ext = extname(paths[0]).toLowerCase();
+                    if (ext === saveExtension) {
+                        f.determineProcess(paths[0]);
+                        return this.leave(evt)
+                    }
+                }
                 timeline.addToBin(paths);
             } else {
                 f.determineProcess(paths[0]);
@@ -252,7 +263,7 @@ class Files {
 
         ext = extname(filePath.toLowerCase());
 
-        if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+        if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1 || ext !== saveExtension) {
             valid = true;
         }
 
@@ -261,7 +272,9 @@ class Files {
             return false;
         }
 
-        if (stillExtensions.indexOf(ext) > -1) {
+        if (ext === saveExtension) {
+            return validateSaveFile(filePath);
+        } else if (stillExtensions.indexOf(ext) > -1) {
             type = 'still';
         } else if (audioExtensions.indexOf(ext) > -1) {
             type = 'audio';
@@ -1152,13 +1165,14 @@ async function validateSaveFile (file : string) {
     try {
         await state.restore();
         await timeline.restore();
-        //await visualize.restore();
+        await visualize.restore(processAudio);
     } catch (err) {
         console.error(err);
     }
 
     filePath = state.get('filePath');
-    fileType = state.get('type')
+    fileType = state.get('type');
+
     if (filePath != null) {
         if (fileType == 'video' || fileType == 'still') {
             f.setSonify(filePath, fileType);
@@ -1347,7 +1361,7 @@ function bindListeners () {
     ui = new UI(state);
     video = new Video(state, ui);
     sonify = new Sonify(state, video.canvas, audioContext);
-    visualize = new Visualize(state, audioContext);
+    visualize = new Visualize(state, audioContext, ui);
     timeline = new Timeline(state, ui, onTimelineBin, onTimelinePreview);
 
     bindListeners();

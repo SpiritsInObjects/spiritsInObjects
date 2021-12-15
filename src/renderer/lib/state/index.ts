@@ -32,7 +32,18 @@ class State {
         end : 1.0
     } as StateStorage;
     public timeline : any = { bin : [], timeline : [] };
-    public visualize : any = {};
+    public visualize : any = {    
+        resolution : '1080',
+        type : 'midi',
+        style : 'simple',
+        waves : 'square',
+        soundtrackType : 'variable density full',
+        soundtrackFull : true,
+        offset : false,
+        format : 'prores3',
+
+        filePath : null
+    };
     private lock : boolean = false;
     private unsaved : boolean = true;
     

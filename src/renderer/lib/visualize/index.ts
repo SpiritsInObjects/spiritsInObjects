@@ -16,7 +16,7 @@ class Visualize {
     private wavesSelect : HTMLSelectElement = document.getElementById('vWaves') as HTMLSelectElement;
     private stylesSelect : HTMLSelectElement = document.getElementById('vStyle') as HTMLSelectElement;
     private offsetSelect : HTMLSelectElement = document.getElementById('vOffset') as HTMLSelectElement;
-    private formatSelect : HTMLSelectElement = document.getElementById('vFormat') as HTMLSelectElement;
+    private resolutionSelect : HTMLSelectElement = document.getElementById('vFormat') as HTMLSelectElement;
 
     private canvas : HTMLCanvasElement = document.getElementById('vCanvas') as HTMLCanvasElement;
     private ctx : CanvasRenderingContext2D;
@@ -49,13 +49,14 @@ class Visualize {
     private endSoundtrack = 1.0;
 
     private framerates : number[] = [ 23.976, 24, 25, 29.97, 30, 50, 59.94, 60 ]; 
-    private formats : any = {
+    private resolutions : any = {
         "1080" : { width: 1920, height: 1080 },
         "1152" : { width: 2048, height: 1152 },
         "1440" : { width: 2560, height: 1440 },
         "2160" : { width: 3840, height: 2160 }
-    }
+    };
 
+    private resolution : string = '1080';
     private type : string = 'midi';
     private style : string = 'simple';
     private waves : string = 'square';
@@ -109,10 +110,11 @@ class Visualize {
      * @param {object} audioContext   Shared audio contect from renderer 
      **/ 
 
-    constructor (state : State, audioContext : AudioContext) {
+    constructor (state : State, audioContext : AudioContext, ui : any) {
         const visualizeState = {
             get : function () { return false }
         } as State;
+        this.ui = ui;
         this.state = state;
         this.ctx = this.canvas.getContext('2d');
         this.displayCtx = this.display.getContext('2d');
@@ -122,7 +124,7 @@ class Visualize {
         this.audioCtx = this.audioCanvas.getContext('2d');
 
         this.ctx.scale(1, 1);
-        this.setFormat(this.width, this.height);
+        this.setResolution(this.width, this.height);
         this.sonify = new Sonify(visualizeState, this.canvas, audioContext);
         this.bindListeners();
     }
@@ -136,7 +138,7 @@ class Visualize {
         this.wavesSelect.addEventListener('change', this.changeWaves.bind(this));
         //this.stylesSelect.addEventListener('change', this.changeStyles.bind(this));
         this.offsetSelect.addEventListener('change', this.changeOffset.bind(this));
-        this.formatSelect.addEventListener('change', this.changeFormat.bind(this));
+        this.resolutionSelect.addEventListener('change', this.changeResolution.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -239,7 +241,6 @@ class Visualize {
     private showMidi () {
         this.removeClass(this.tracksSelect, 'hide');
         this.removeClass(this.wavesSelect, 'hide');
-        //this.removeClass(this.stylesSelect, 'hide');
         this.removeClass(this.offsetSelect, 'hide');
 
         this.addClass(this.typesSelect, 'hide');
@@ -251,7 +252,6 @@ class Visualize {
     private showAudio () {
         this.addClass(this.tracksSelect, 'hide');
         this.addClass(this.wavesSelect, 'hide');
-        //this.addClass(this.wavesSelect, 'hide');
         this.addClass(this.offsetSelect, 'hide');
 
         this.removeClass(this.typesSelect, 'hide');
@@ -278,6 +278,7 @@ class Visualize {
     private changeTrack () {
         const val : string = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
+        this.save();
     }
 
     /**
@@ -286,6 +287,7 @@ class Visualize {
     private changeWaves () {
         this.waves = this.wavesSelect.value;
         this.decodeMidi(this.trackIndex);
+        this.save();
     }
 
     /**
@@ -294,6 +296,7 @@ class Visualize {
     private changeStyle () {
         this.style = this.stylesSelect.value;
         this.decodeMidi(this.trackIndex);
+        this.save();
     }
 
     /**
@@ -302,6 +305,7 @@ class Visualize {
     private changeType () {
         this.soundtrackType = this.typesSelect.value;
         this.decodeAudio();
+        this.save();
     }
 
     /**
@@ -314,16 +318,18 @@ class Visualize {
         } else {
             this.decodeAudio();
         }
+        this.save();
     }
 
     /**
-     * Change the format of the video generated (dimensions).
+     * Change the resolution of the video generated.
      **/
-    private changeFormat () {
-        const format : string = this.formatSelect.value;
-        const width : number = this.formats[format].width;
-        const height : number = this.formats[format].height;
-        this.setFormat(width, height);
+    private changeResolution () {
+        this.resolution = this.resolutionSelect.value;
+        const width : number = this.resolutions[this.resolution].width;
+        const height : number = this.resolutions[this.resolution].height;
+        this.setResolution(width, height);
+        this.save();
     }
 
     /**
@@ -713,12 +719,12 @@ class Visualize {
     } 
 
     /**
-     * Set the format (dimensions) of the video to generate
+     * Set the format resolution of the video to generate
      * 
      * @param {number} width      Width of video
      * @param {number} height     Height of video
      **/
-    public setFormat (width : number, height : number) {
+    public setResolution (width : number, height : number) {
         this.width = width;
         this.height = height;
         this.canvas.width = this.width;
@@ -965,14 +971,69 @@ class Visualize {
      * Duplicate state into object that can be easily saved
      * to the shared state visualize object for restoration purposes.
      **/
-     public save () {
-         
-     }
+    public save () {
+        this.state.visualize = {
+            filePath : this.filePath,
+            resolution : this.resolution,
+            type : this.type,
+            style : this.style,
+            waves : this.waves,
+            soundtrackType : this.soundtrackType,
+            soundtrackFull : this.soundtrackFull,
+            offset : this.offset,
+            format : this.format
+        };
+        this.state.save();
+    }
 
     /**
      * Restore the visualize from the saved state.
      **/
-    public restore () {
-        console.log(this.state.visualize)
+    public async restore (processAudio : Function) {
+        const elem : HTMLInputElement = document.getElementById('vFileSourceProxy') as HTMLInputElement;
+        let displayName : string;
+        let width : number;
+        let height : number;
+        if (this.state.visualize.filePath && this.state.visualize.filePath != null) {
+            displayName = this.set(this.state.visualize.filePath, this.state.visualize.type);
+            elem.innerHTML = displayName;
+
+            document.getElementById('vInfo').classList.remove('hide');
+            document.getElementById('sonifyVisualizeBtn').removeAttribute('disabled');
+            document.getElementById('visualizeExportBtn').removeAttribute('disabled');
+            document.getElementById('vDropMessage').classList.add('hide');
+
+            if (this.soundtrackType !== this.state.visualize.soundtrackType) {
+                this.typesSelect.value = this.state.visualize.soundtrackType;
+                this.soundtrackType = this.state.visualize.soundtrackType;
+            }
+
+            if (this.waves !== this.state.visualize.waves) {
+                this.wavesSelect.value = this.state.visualize.waves;
+                this.waves = this.state.visualize.waves;
+            }
+
+            if (this.offset !== this.state.visualize.offset) {
+                this.offset = this.state.visualize.offset;
+                this.offsetSelect.value = this.offset ? 'true' : 'false';
+            }
+            
+            if (this.resolution !== this.state.visualize.resolution) {
+                this.resolutionSelect.value = this.state.visualize.resolution;
+                this.resolution = this.state.visualize.resolution;
+                width =  this.resolutions[this.resolution].width;
+                height = this.resolutions[this.resolution].height;
+                this.setResolution(width, height);
+            }
+            
+            this.type = this.state.visualize.type;
+            if (this.type === 'midi') {
+                await this.processMidi();
+                this.decodeMidi(0);
+            } else if (this.type === 'audio') {
+                processAudio();
+            }
+            this.ui.page('visualize');
+        }
     }
 }

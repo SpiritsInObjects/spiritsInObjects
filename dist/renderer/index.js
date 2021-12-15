@@ -10,6 +10,7 @@ const videoExtensions = ['.avi', '.mp4', '.mkv', '.mpg', '.mpeg', '.mov', '.m4v'
 const stillExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
 const midiExtensions = ['.mid', '.midi'];
 const audioExtensions = ['.mp3', '.aiff', '.aif', '.wav', '.wave'];
+const saveExtension = '.sio';
 const videoFormatMap = {
     'prores3': '.mov',
     'h264': '.mp4'
@@ -94,6 +95,7 @@ class DragDrop {
         let files;
         let loadFiles = [];
         let paths = [];
+        let ext;
         if (this.active) {
             evt.preventDefault();
             files = evt.dataTransfer.files;
@@ -114,6 +116,13 @@ class DragDrop {
                 console.error(err);
             }
             if (ui.currentPage === 'timeline') {
+                if (paths.length === 1) {
+                    ext = (0, path_1.extname)(paths[0]).toLowerCase();
+                    if (ext === saveExtension) {
+                        f.determineProcess(paths[0]);
+                        return this.leave(evt);
+                    }
+                }
                 timeline.addToBin(paths);
             }
             else {
@@ -165,14 +174,17 @@ class Files {
         let type = 'video';
         let ext;
         ext = (0, path_1.extname)(filePath.toLowerCase());
-        if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1) {
+        if (videoExtensions.indexOf(ext) > -1 || stillExtensions.indexOf(ext) > -1 || ext !== saveExtension) {
             valid = true;
         }
         if (!valid) {
             console.log(`File selection is not valid`);
             return false;
         }
-        if (stillExtensions.indexOf(ext) > -1) {
+        if (ext === saveExtension) {
+            return validateSaveFile(filePath);
+        }
+        else if (stillExtensions.indexOf(ext) > -1) {
             type = 'still';
         }
         else if (audioExtensions.indexOf(ext) > -1) {
@@ -875,6 +887,7 @@ async function validateSaveFile(file) {
     try {
         await state.restore();
         await timeline.restore();
+        await visualize.restore(processAudio);
     }
     catch (err) {
         console.error(err);
@@ -1026,7 +1039,7 @@ function bindListeners() {
     ui = new UI(state);
     video = new Video(state, ui);
     sonify = new Sonify(state, video.canvas, audioContext);
-    visualize = new Visualize(state, audioContext);
+    visualize = new Visualize(state, audioContext, ui);
     timeline = new Timeline(state, ui, onTimelineBin, onTimelinePreview);
     bindListeners();
 })();

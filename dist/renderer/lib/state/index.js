@@ -11,7 +11,17 @@ class State {
             end: 1.0
         };
         this.timeline = { bin: [], timeline: [] };
-        this.visualize = {};
+        this.visualize = {
+            resolution: '1080',
+            type: 'midi',
+            style: 'simple',
+            waves: 'square',
+            soundtrackType: 'variable density full',
+            soundtrackFull: true,
+            offset: false,
+            format: 'prores3',
+            filePath: null
+        };
         this.lock = false;
         this.unsaved = true;
         this.start();

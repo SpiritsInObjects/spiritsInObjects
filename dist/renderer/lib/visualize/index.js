@@ -2,13 +2,13 @@
 const { Midi } = require('@tonejs/midi');
 const { Frequency } = require('tone');
 class Visualize {
-    constructor(state, audioContext) {
+    constructor(state, audioContext, ui) {
         this.tracksSelect = document.getElementById('vTracks');
         this.typesSelect = document.getElementById('vType');
         this.wavesSelect = document.getElementById('vWaves');
         this.stylesSelect = document.getElementById('vStyle');
         this.offsetSelect = document.getElementById('vOffset');
-        this.formatSelect = document.getElementById('vFormat');
+        this.resolutionSelect = document.getElementById('vFormat');
         this.canvas = document.getElementById('vCanvas');
         this.display = document.getElementById('vCanvasDisplay');
         this.audioCanvas = document.getElementById('aCanvas');
@@ -25,12 +25,13 @@ class Visualize {
         this.startSoundtrack = 0.81;
         this.endSoundtrack = 1.0;
         this.framerates = [23.976, 24, 25, 29.97, 30, 50, 59.94, 60];
-        this.formats = {
+        this.resolutions = {
             "1080": { width: 1920, height: 1080 },
             "1152": { width: 2048, height: 1152 },
             "1440": { width: 2560, height: 1440 },
             "2160": { width: 3840, height: 2160 }
         };
+        this.resolution = '1080';
         this.type = 'midi';
         this.style = 'simple';
         this.waves = 'square';
@@ -59,6 +60,7 @@ class Visualize {
         const visualizeState = {
             get: function () { return false; }
         };
+        this.ui = ui;
         this.state = state;
         this.ctx = this.canvas.getContext('2d');
         this.displayCtx = this.display.getContext('2d');
@@ -67,7 +69,7 @@ class Visualize {
         this.midiCtx = this.midiTimeline.getContext('2d');
         this.audioCtx = this.audioCanvas.getContext('2d');
         this.ctx.scale(1, 1);
-        this.setFormat(this.width, this.height);
+        this.setResolution(this.width, this.height);
         this.sonify = new Sonify(visualizeState, this.canvas, audioContext);
         this.bindListeners();
     }
@@ -76,7 +78,7 @@ class Visualize {
         this.typesSelect.addEventListener('change', this.changeType.bind(this));
         this.wavesSelect.addEventListener('change', this.changeWaves.bind(this));
         this.offsetSelect.addEventListener('change', this.changeOffset.bind(this));
-        this.formatSelect.addEventListener('change', this.changeFormat.bind(this));
+        this.resolutionSelect.addEventListener('change', this.changeResolution.bind(this));
         this.next.addEventListener('click', this.nextFrame.bind(this));
         this.prev.addEventListener('click', this.prevFrame.bind(this));
         this.current.addEventListener('change', this.editFrame.bind(this));
@@ -150,18 +152,22 @@ class Visualize {
     changeTrack() {
         const val = this.tracksSelect.value;
         this.decodeMidi(parseInt(val));
+        this.save();
     }
     changeWaves() {
         this.waves = this.wavesSelect.value;
         this.decodeMidi(this.trackIndex);
+        this.save();
     }
     changeStyle() {
         this.style = this.stylesSelect.value;
         this.decodeMidi(this.trackIndex);
+        this.save();
     }
     changeType() {
         this.soundtrackType = this.typesSelect.value;
         this.decodeAudio();
+        this.save();
     }
     changeOffset() {
         this.offset = this.offsetSelect.value === 'true';
@@ -171,12 +177,14 @@ class Visualize {
         else {
             this.decodeAudio();
         }
+        this.save();
     }
-    changeFormat() {
-        const format = this.formatSelect.value;
-        const width = this.formats[format].width;
-        const height = this.formats[format].height;
-        this.setFormat(width, height);
+    changeResolution() {
+        this.resolution = this.resolutionSelect.value;
+        const width = this.resolutions[this.resolution].width;
+        const height = this.resolutions[this.resolution].height;
+        this.setResolution(width, height);
+        this.save();
     }
     async processMidi() {
         let midi;
@@ -442,7 +450,7 @@ class Visualize {
         }
         this.displayCtx.drawImage(this.canvas, 0, 0, this.width, this.height, 0, 0, this.displayWidth, this.displayHeight);
     }
-    setFormat(width, height) {
+    setResolution(width, height) {
         this.width = width;
         this.height = height;
         this.canvas.width = this.width;
@@ -625,9 +633,60 @@ class Visualize {
         this.cursor.style.left = `${left}%`;
     }
     save() {
+        this.state.visualize = {
+            filePath: this.filePath,
+            resolution: this.resolution,
+            type: this.type,
+            style: this.style,
+            waves: this.waves,
+            soundtrackType: this.soundtrackType,
+            soundtrackFull: this.soundtrackFull,
+            offset: this.offset,
+            format: this.format
+        };
+        this.state.save();
     }
-    restore() {
-        console.log(this.state.visualize);
+    async restore(processAudio) {
+        const elem = document.getElementById('vFileSourceProxy');
+        let displayName;
+        let width;
+        let height;
+        if (this.state.visualize.filePath && this.state.visualize.filePath != null) {
+            displayName = this.set(this.state.visualize.filePath, this.state.visualize.type);
+            elem.innerHTML = displayName;
+            document.getElementById('vInfo').classList.remove('hide');
+            document.getElementById('sonifyVisualizeBtn').removeAttribute('disabled');
+            document.getElementById('visualizeExportBtn').removeAttribute('disabled');
+            document.getElementById('vDropMessage').classList.add('hide');
+            if (this.soundtrackType !== this.state.visualize.soundtrackType) {
+                this.typesSelect.value = this.state.visualize.soundtrackType;
+                this.soundtrackType = this.state.visualize.soundtrackType;
+            }
+            if (this.waves !== this.state.visualize.waves) {
+                this.wavesSelect.value = this.state.visualize.waves;
+                this.waves = this.state.visualize.waves;
+            }
+            if (this.offset !== this.state.visualize.offset) {
+                this.offset = this.state.visualize.offset;
+                this.offsetSelect.value = this.offset ? 'true' : 'false';
+            }
+            if (this.resolution !== this.state.visualize.resolution) {
+                this.resolutionSelect.value = this.state.visualize.resolution;
+                this.resolution = this.state.visualize.resolution;
+                width = this.resolutions[this.resolution].width;
+                height = this.resolutions[this.resolution].height;
+                this.setResolution(width, height);
+            }
+            this.type = this.state.visualize.type;
+            if (this.type === 'midi') {
+                await this.processMidi();
+                this.decodeMidi(0);
+            }
+            else if (this.type === 'audio') {
+                processAudio();
+            }
+            this.ui.page('visualize');
+        }
     }
 }
 //# sourceMappingURL=index.js.map
