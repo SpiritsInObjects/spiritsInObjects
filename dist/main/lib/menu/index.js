@@ -15,7 +15,7 @@ const helpSubmenu = [
     }),
     openUrlMenuItem({
         label: 'Manual',
-        url: 'https://github.com/sixteenmillimeter/spiritsInObjects/tree/master/docs/manual#readme'
+        url: 'https://sixteenmillimeter.github.io/spiritsInObjects/'
     }),
     openUrlMenuItem({
         label: 'Source Code',
