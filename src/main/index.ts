@@ -676,6 +676,11 @@ nodeCleanup((exitCode : any, signal : string) => {
 	console.log(`Exiting spiritsInObjects...`)
 });
 
+/** Create save file on uncaught exception **/
+process.on('uncaughtException', (err : Error) => {
+    console.error(err);
+});
+
 /**
  * Save a file storing current state to be restored.
  **/
