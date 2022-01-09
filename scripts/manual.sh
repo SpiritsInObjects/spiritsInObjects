@@ -25,7 +25,8 @@ HTML="./docs/index.html"
 
 tmp_file=`mktemp`
 ./node_modules/.bin/showdown makehtml -i ./docs/README.md -o "${tmp_file}"
-
+tmp_html=`cat "${tmp_file}"`
+echo "${tmp_html//\\/<br />}" > "${tmp_file}"
 cat ./docs/head.html.tmpl > "${HTML}" 
 cat "${tmp_file}" >> "${HTML}"
 echo "" >> "${HTML}"
