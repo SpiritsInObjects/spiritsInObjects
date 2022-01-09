@@ -550,6 +550,9 @@ electron_1.ipcMain.on('timeline_preview', async (evt, args) => {
     }
     console.log(`Exiting spiritsInObjects...`);
 });
+process.on('uncaughtException', (err) => {
+    console.error(err);
+});
 async function saveState() {
     mainWindow.webContents.send('save_state', {});
 }
