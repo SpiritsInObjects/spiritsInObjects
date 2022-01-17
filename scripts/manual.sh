@@ -53,8 +53,8 @@ cat "./docs/README.md" > "${tmp_md}"
 echo " " >> "${tmp_md}"
 echo " " >> "${tmp_md}"
 echo "__________" >> "${tmp_md}"
-echo "<center>Copyright &copy; ${YEAR}</center>" >> "${tmp_md}"
-echo "<center>Build version: ${VERSION}</center>" >> "${tmp_md}"
+echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Copyright &copy; ${YEAR}\\" >> "${tmp_md}"
+echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Build version: ${VERSION}" >> "${tmp_md}"
 
 pandoc "${tmp_md}" -o ./docs/spiritsInObjects-manual.pdf -f markdown+implicit_figures
 
