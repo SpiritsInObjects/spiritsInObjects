@@ -30,13 +30,23 @@ II. <a href="#getting_started">Getting started</a><br />
 III. <a href="#using_the_application">Using the application</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;A. <a href="#composer">Composer</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i. <a href="#adding_images_to_the_bin">Adding images to the Bin</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ii. <a href="#creating_a_timeline">Creating a Timeline</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iii. <a href="#adding_images_to_the_timeline">Adding images to the Timeline</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iv. <a href="#editing_the_timeline">Editing the Timeline</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v. <a href="#previewing_timeline_video">Previewing Timeline video</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;vi. <a href="#exporting_timeline_video">Exporting Timeline video</a><br />
 &nbsp;&nbsp;&nbsp;&nbsp;B. <a href="#sonify">Sonify</a><br />
-&nbsp;&nbsp;&nbsp;&nbsp;C. <a href="#visualize">Visualize</a><br /></p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i. <a href="#sonifying_videos">Sonifying videos</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ii. <a href="#sonifying_still_images">Sonifying still images</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iii. <a href="#previewing_audio">Previewing audio</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iv. <a href="#exporting_audio">Exporting audio</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;C. <a href="#visualize">Visualize</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i. <a href="#visualizing_midi">Visualizing MIDI</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ii. <a href="#visualizing_audio">Visualizing audio</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iii. <a href="#previewing_video">Previewing video</a><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iv.<a href="#exporting_video">Exporting video</a><br />
+IV. <a href="#saved_projects">Saved Projects</a><br />
+<a href="#references">References</a><br /></p>
 <p><a name="introduction"></a></p>
 <h2 id="iintroduction">I. Introduction</h2>
 <p>SpiritsInObjects is a software tool that provides a means for sonifying and sequencing a set of images, sonifying entire videos <em>and</em> visualizing MIDI or audio. 
@@ -46,7 +56,7 @@ It is meant to aid in the process of creating optical sound films by allowing a 
 <li>WAV files</li>
 <li>MOV videos</li>
 </ol>
-<p>This manual will guide you through the SpiritsInObjects program.</p>
+<p>This manual will guide you through using the SpiritsInObjects program.</p>
 <p><a name="getting_started"></a></p>
 <h2 id="iigettingstarted">II. Getting started</h2>
 <p><a name="creating_images_and_videos"></a></p>
@@ -60,10 +70,10 @@ All videos are processed with a provided <code>ffmpeg</code> binary and the appl
 JPEG files are allowed with either the .jpeg or .jpg extension.</p>
 <p><a name="dimensions"></a></p>
 <p><strong>ii. Dimensions</strong></p>
-<p>SpiritsInObjects will accept images and video of any dimensions, but for the purposes of making sound-on-film video, 16:9 is the ideal dimension ratio.
+<p>SpiritsInObjects will accept images and video of any dimensions, but for the purposes of making sound-on-film video, 16:9 is the ideal aspect ratio.
 The resolution that will determine audio quality is the height of the image or video, with larger values allowing for higher sample rates.</p>
 <p>When creating images for the Composer, note that the largest of any files you include in the Bin will be the resolution of the video you create.
-Keep this in mind when adding images and unless you have a specific reason for doing otherwise, try to </p>
+Keep this in mind when adding images and unless you have a specific reason for doing otherwise, try to keep all of your images in the same resolution and aspect ratio for use with the Composer.</p>
 <p><a name="soundtrack_location"></a></p>
 <p><strong>iii. Soundtrack location</strong> </p>
 <p>SpiritsInObjects attempts to recreate the sounds that are produced by the optical sound component within 16mm projectors. 
@@ -77,18 +87,22 @@ Therefore, when creating images for use with this program, make sure to note tha
 It only calculates the average, perceptual luminance within the soundtrack portion of the imported pictures. </p>
 <p><a name="creating_audio"></a></p>
 <h4 id="bcreatingaudio">B. Creating audio</h4>
+<p>Before using the Visualize tool, make sure the audio files you intend to use are supported by SpiritsInObjects.</p>
 <p><a name="a_formats"></a></p>
 <p><strong>i. Formats</strong></p>
-<p>SpiritsInObjects is capable of visualizing both MIDI and audio files in WAV or MP3 formats.</p>
+<p>SpiritsInObjects is capable of visualizing both MIDI and audio files in WAV or MP3 file formats.</p>
 <p><a name="midi_files"></a></p>
 <p><strong>ii. MIDI files</strong></p>
-<p>The MIDI visualization feature can generate videos per track, meaning that if your MIDI file contains several tracks or instruments they will have to be visualized separately.</p>
+<p>The MIDI visualization feature can generate videos per track, meaning that if your MIDI file contains several tracks or instruments they will have to be visualized separately.
+SpiritsInObjects does not synthesize MIDI with default instruments or those located in sound font files, but rather implements its own synthesizer that it applies to any track selected.</p>
 <p><a name="audio_files"></a></p>
 <p><strong>iii. Audio files</strong></p>
-<p>Audio files will be interpreted as mono, single-channel files no matter what is provided to the software.
-Take this into consideration if you would like to mix down your tracks outside of the application prior to visualization.
-The sample rate of the audio will be scaled to the maximum rate allowed by the height of the video resolution you wish to output.
-For reference, if you are generating a 1080P resolution video (in the app labelled 1920x1080) your maximum sample rate will be 25920 Hz or just under 26 kHz.
+<p>Audio files created in mono or single-channel <a href="https://en.wikipedia.org/wiki/WAV">WAV</a><sup><a href="#footnote3">3</a></sup> format are supported by default with no need for additional transcoding or mixdown.</p>
+<p>All other audio files will be interpreted as mono, single-channel files no matter what is provided to the software.
+On opening an MP3 or multi-channel WAV file, the application will transcode and mix down your file to a temporary file stored by the app.</p>
+<p>Take this into consideration if you would like to mix down your tracks outside of SpiritsInObjects prior to visualization.
+The sample rate of the audio will be resampled to the maximum rate allowed by the height of the video resolution you wish to output.
+For reference: if you are generating a 1080P resolution video (in the app labelled 1920×1080) your maximum sample rate will be 25920 Hz or just under 26 kHz.
 Higher resolution video which allows for more visual data will allow for higher sample rate audio.</p>
 <p><a name="other_details"></a></p>
 <h4 id="cotherdetails">C. Other details</h4>
@@ -97,12 +111,18 @@ Higher resolution video which allows for more visual data will allow for higher 
 <p>SpiritsInObjects assumes that your images will end up on 16mm film filmed with a Super16 gate and run through a 16mm projector at 24 frames per second.</p>
 <p><a name="audio_sample_rate"></a></p>
 <p><strong>ii. Audio sample rate</strong> </p>
-<p>The audio in this application and the WAV file that it exports are played/recorded at a 48 kHz sampling rate. </p>
+<p>The audio generated by the Sonify tool and the WAV file that it exports are created at a 48 kHz sampling rate. </p>
 <p><a name="using_the_application"></a></p>
 <h2 id="iiiusingtheapplication">III. Using the application</h2>
-<p><a name="compose"></a></p>
+<p>SpiritsInObjects is comprised of three tools: <strong><a href="#composer">Composer</a></strong>, <strong><a href="#sonify">Sonify</a></strong> and <strong><a href="#visualize">Visualize</a></strong>.
+Each of these different tools are accessible by selecting the corresponding tab at the top of the application.</p>
+<p>![SCREENSHOT OF TABS]()</p>
+<p><a name="composer"></a></p>
 <h4 id="composer">Composer</h4>
-<p>The Composer…</p>
+<p>The Composer allows you to sequence images along a Timeline to create compositions of sounds.
+Each cell on the Timeline represents a frame in a sequence of a set length and each frame will be sonified for playback.
+The tone generated by a single frame can be added in groups, sustaining the sound from a single image for multiple frames.
+Using this tool you can compose songs from your images.</p>
 <p><a name="adding_images_to_the_bin"></a></p>
 <p><strong>i. Adding images to the Bin</strong></p>
 <p>In order to use images within the Composer, they first must be added to the bin.
@@ -125,6 +145,7 @@ Timelines that are 4000 frame long will fill exactly 100 feet or 30.48 meters of
 <p>To sequence images on the Timeline you can drag them from the Bin or by clicking the "Add # Frame(s) to Timeline" button.
 Dragging them from the bin will result in a green highlighted preview of where the image or images will be placed.
 The key of the image will appear within the frame while previewing and then after being added.</p>
+<p>![SCREENSHOT OF FRAMES DRAGGED INTO THE TIMELINE]()</p>
 <p>To add multiple images to Timeline, change the value in the number input element between the "Import File" and "Add 1 Frame to Timeline"
 Changing this number to 4 will update the button to the right</p>
 <p>The cursor, highlighted in yellow, marks the position you are editing at.
@@ -145,36 +166,129 @@ It will then move to the previous frame if there is one or remain at the first f
 A loading spinner will appear in the button for the length of time it takes to render a preview video.
 If the Timeline has been changed since the last preview it will have to regenerate a new video.</p>
 <p>Preview can be looped and this setting can be changed by clicking the toggle button that is labelled "Loop: OFF" by default.
-Clicking it will cause it to enable loop and change the text of the button to "Loop: ON".</p>
+Clicking the button will cause it to enable looping and change the text of the button to "Loop: ON".
+Clicking it again will disable looping and toggle the label back to "Loop: OFF".</p>
+<p><a name="exporting_timeline_video"></a></p>
 <p><strong>vi. Exporting Timeline video</strong></p>
-<p>Note: Your video will be </p>
+<p>Videos of the current state of the Timeline can be exported by clicking the "Export Timeline" button on the right side of the screen.
+This will pause the application interface until the export process completes.</p>
+<p>Videos exported from the Composer view come in a <code>.mov</code> <a href="https://en.wikipedia.org/wiki/QuickTime_File_Format">QuickTime</a><sup><a href="#footnote4">4</a></sup> container and are encoded as <a href="https://www.apple.com/final-cut-pro/docs/Apple_ProRes_White_Paper.pdf">Apple ProRes 444</a><sup><a href="#footnote5">5</a></sup>.</p>
+<p><strong>Note:</strong> The video will be exported at the resolution of the largest image in the Bin, as mentioned in the <a href="#dimensions">Dimensions</a> section.
+If your Timeline consists of only 1920×1080 images and your bin contains a single 2560×1440 file, your images will all be scaled to 2560×1440 as will the resulting video.</p>
 <p><a name="sonify"></a></p>
 <h4 id="sonify">Sonify</h4>
-<p>The Sonify window…</p>
+<p>![SCREENSHOT OF THE SONIFY TOOL]()</p>
+<p>The Sonify window, accessed by selecting the "Sonify" tab at the top of the app, allows you to turn a video or still image into playable sound as it would were it film running through a 16mm projector.
+Importing a video or image file into this tool will allow you to listen to your images and explore videos frame by frame and previewing how they will sound.</p>
+<p><a name="sonifying_videos"></a></p>
 <p><strong>i. Sonifying videos</strong></p>
+<p>Videos can be sonified, previewed and exported by first dragging them from your operating system's file browser or desktop into the application.
+If no file is selected, as when first opening the app, you can also open a file dialog by clicking on the area with the text "Select or drag an image or video to sonify".</p>
+<p>When loaded, a video's end timecode will be displayed in the top right hand corner of the app in <code>00:00:00;00</code> format.</p>
+<p>The area of the image marked by the two red lines marking the right-most 19% of the image highlights the part of the image that is being sonified.</p>
+<p><a name="sonifying_still_images"></a></p>
 <p><strong>ii. Sonifying still images</strong></p>
+<p>Still images can be sonified using a similar process as with videos but with fewer features.
+Dragging an image of JPEG or PNG file types will load them into the preview window and allow you to preview the audio of it as if it were a single frame video.</p>
+<p><strong>Note:</strong> When exporting the audio of a single frame the resulting audio file will be only 0.042 seconds or 42 milliseconds long.</p>
+<p><a name="previewing_audio"></a></p>
 <p><strong>iii. Previewing audio</strong></p>
+<p>Pressing the <code>F</code> key on your keyboard will play the audio interpreted from that frame.
+When using a video, scrubbing along the timeline will change the count in the input box</p>
+<p>Scrubbing through a video can be done by clicking the timeline or dragging the cursor.
+Frame by frame scrubbing can be accomplished by pressing the "Prev Frame" and "Next Frame" buttons on either side of the play button.
+The timeline can also be scrubbed a single frame at a time using the <code>left</code> and <code>right</code> keys on your keyboard.</p>
+<p>The entirety of a video can be previewed by pressing the play button.
+This will pause the application interface while a preview audio file is rendered.
+The amount of time this will take depends on the length and resolution of your video, longer and higher resolution videos taking more time to interpret and generate audio from.
+Once this preview file has been rendered it will not have to be re-rendered until the selected file changes in the Sonify tool.</p>
+<p><a name="exporting_audio"></a></p>
 <p><strong>iv. Exporting audio</strong></p>
+<p>An audio file of your video or still image can be created by clicking the "Sonify Video" button.
+This will pause the application interface while an audio file is rendered.
+Once the process is complete a file dialog will open and ask you where you want to save your new audio file.
+The format of the file is WAV and the application will append a <code>.wav</code> extension on your file if you do not give it a <code>.wav</code> or <code>.wave</code> file extension in the save dialog.</p>
 <p><a name="visiualize"></a></p>
 <h4 id="visualize">Visualize</h4>
-<p>The Visualize window…</p>
+<p>![SCREENSHOT OF THE VISUALIZE TOOL]()</p>
+<p>The Visualize tool enables you to create visualizations of a MIDI or audio file that, when committed to 16mm film, will produce the same sound when played in a 16mm projector.
+The application does this by generating images that represent notes in MIDI files or by interpreting audio sample data using the <a href="https://github.com/sixteenmillimeter/SoundtrackOptical.js">SoundtrackOptical.js</a><sup><a href="#footnote6">6</a></sup> library.</p>
+<p><a name="visualizing_midi"></a></p>
 <p><strong>i. Visualizing MIDI</strong></p>
+<p>MIDI files can be visualized, previewed and exported to video by first dragging them from your operating system's file browser or desktop into the application.
+If no file is selected, as when first opening the app, you can also open a file dialog by clicking on the area with the text "Select or drag a MIDI or audio file to visualize".</p>
+<p>Once loaded, a frames will be generated for the first track by default.
+The preview will jump ahead in the video timeline to the first rendered note.</p>
+<p>The total length of the video that is to be generated by the Visualize tool can be verified by looking in the top right corner of the application where the end timecode is printed in <code>00:00:00;00</code> format.</p>
+<p>![SCREENSHOT OF VIDEO RESOLUTION DROPDOWN]()</p>
+<p>The video's resolution is shown in the dropdown element at the top of the application window, to the right of the frame counter.
+By default it is set to 1920×1080 but can be set to other 16:9 video formats up to 3840×2160.
+Changing this value will cause your preview video to re-render at the new resolution.</p>
+<p>![SCREENSHOT OF TRACK DROPDOWN]()</p>
+<p>Different tracks can be selected in the dropdown that appears below the preview window.
+Labelled "Track #, Instrument [#]" the different tracks in your MIDI file will all be presented as options with their instrument and instrument ID number.
+Changing the selection in this dropdown will cause your preview video to render the newly-chosen track.</p>
+<p>![SCREENSHOT OF WAVE TYPE DROPDOWN]()</p>
+<p>The MIDI audio can also be represented with "Square Wave" (the default) bars representing the tone of a note or "Sine Wave" gradients.
+Changing this value triggers a re-render of your preview.</p>
+<p>![SCREENSHOT OF OFFSET DROPDOWN]()</p>
+<p>The offset of the image from the soundtrack area can be changed.
+By default the "No offset" option is selected, meaning your generated image will run continuously from the 16mm image area through the soundtrack.
+If you were to take this video and print it perfectly onto single perf 16mm film and play it using a projector, the audio would lag the image by 26 frames, slightly over a second.
+This is because the optical soundtrack reader on a 16mm projector sits 26 frames after the projection gate, so the image is shown before it is read by the optical reader head.</p>
+<p>![SCREENSHOT OF VIDEO RESOLUTION DROPDOWN]()</p>
+<p>To counteract this, select the "Offset 26 frames" option which will advance the generated imagery in the audio track by 26 frames and display blank frames until the audio and picture are in sync.
+It will create a split view where the right 19% of the image differs from what is shown on the left 81%.</p>
+<p>![SCREENSHOT DEMONSTRATING MIDI WITH OFFSET]()</p>
+<p><a name="visualizing_audio"></a></p>
 <p><strong>ii. Visualizing audio</strong></p>
+<p>Similar to MIDI files, standard audio can also be visualized to play back when committed to film and played in a 16mm projector.
+SpiritsInObjects gives you the ability to generate images that extend the entire width of the film--using the "Variable density (full screen)" option--or to create more traditional soundtracks of different types that sit only in the soundtrack area.</p>
+<p>![SCREENSHOT OF SOUNDTRACK TYPE DROPDOWN]()</p>
+<p>When using the "Variable density (full screen)" soundtrack type, the sample data of your audio file will appear stretched completely across the 16:9 frame at different densities that, when played back, will produce a facsimile of the original audio.</p>
+<p>![SCREENSHOT OF VARIABLE DENSITY OFFSET]() </p>
+<p>Similar to visualizing a MIDI file, you can select an offset option which will advance the imagery in the soundtrack area 26 frame ahead of the images in the picture area.</p>
+<p>When using the other types of soundtracks, imagery representing the sound will only appear in the right 19% of the frame which is the soundtrack area.
+These types are "Variable Density", "Unilateral", "Variable Area", "Dual Variable Area" and "Multiple Variable Area".</p>
+<p>![SCREENSHOT OF DIFFERENT SOUNDTRACK TYPES]()</p>
+<p>These different types are detailed more completely in the original Processing library that SoundtrackOptical.js was based on, <a href="https://github.com/sixteenmillimeter/SoundtrackOptical">SoundtrackOptical</a><sup><a href="#footnote7">7</a></sup> and in <a href="http://www.paulivester.com/films/filmstock/guide.htm">a guide created by Paul Ivester</a><sup><a href="#footnote8">8</a></sup>.</p>
+<p><a name="previewing_video"></a></p>
 <p><strong>iii. Previewing video</strong></p>
+<p>Preview the visualization of your audio by pressing the play button below the preview window.
+This will pause the application interface while the preview video is rendered.
+Because these images are generated on the fly based on your settings, anytime you change a setting such as the selected track, the wave style, the soundtrack type or the offset you must create a new preview.</p>
+<p><a name="exporting_video"></a></p>
 <p><strong>iv. Exporting video</strong></p>
+<p>Similar to the Composer, the video exported by the Visualize tool is a Quicktime <code>.mov</code> file with ProRes encoding.
+Click the "Export Video" button to begin exporting.
+This will pause the application interface while the video is being rendered.
+Once this is complete you will be presented with a file dialog for you to choose a name and location for this new video.</p>
+<p><a name="saved_projects"></a></p>
 <h2 id="ivsavedprojects">IV. Saved Projects</h2>
 <p>Your work can be saved as a <code>.sio</code> file by pressing <code>Ctrl-S</code> or <code>Apple-S</code>.
 These files can be restored by opening them with <code>Ctrl-O</code> or <code>Apple-O</code> and selecting the file.
 Project files can also be dragged and dropped onto the application to open them.</p>
 <p>Saved .sio files are JSON documents that are readable and editable with any text editor.
 Corrupting or altering the structure of the JSON object which store application state may cause SpiritsInObjects to fail to load your file correctly. Otherwise, these files may be read, altered or generated by other applications.</p>
+<p><strong>Note:</strong> Opening or dropping an save file into the application while you have unsaved changes will overwrite them.
+This may cause you to lose work if you have not already saved your work in a <code>.sio</code> file.</p>
+<p><a name="references"></a></p>
 <h5 id="references">References</h5>
 <ol>
 <li><a name="footnote1"></a>The Chromium Project - Audio Video | <a href="https://www.chromium.org/audio-video">https://www.chromium.org/audio-video</a></li>
 <li><a name="footnote2"></a>npm - ffmpeg-static | <a href="https://www.npmjs.com/package/ffmpeg-static">https://www.npmjs.com/package/ffmpeg-static</a></li>
+<li><a name="footnote3"></a>Wikipedia - WAV | <a href="https://en.wikipedia.org/wiki/WAV">https://en.wikipedia.org/wiki/WAV</a></li>
+<li><a name="footnote4"></a>Wikipedia - QuickTime File Format | <a href="https://en.wikipedia.org/wiki/QuickTime_File_Format">https://en.wikipedia.org/wiki/QuickTime<em>File</em>Format</a></li>
+<li><a name="footnote5"></a>Apple.com - Apple ProRes, White Paper | <a href="https://www.apple.com/final-cut-pro/docs/Apple_ProRes_White_Paper.pdf">https://www.apple.com/final-cut-pro/docs/Apple<em>ProRes</em>White_Paper.pdf</a></li>
+<li><a name="footnote6"></a>Github - sixteenmillimeter/SoundtrackOptical.js | <a href="https://github.com/sixteenmillimeter/SoundtrackOptical.js">https://github.com/sixteenmillimeter/SoundtrackOptical.js</a></li>
+<li><a name="footnote7"></a>Github - sixteenmillimeter/SoundtrackOptical | <a href="https://github.com/sixteenmillimeter/SoundtrackOptical">https://github.com/sixteenmillimeter/SoundtrackOptical</a></li>
+<li><a name="footnote8"></a>Paul's 16mm Film Collecting Pages - Guide to Identifying Color Movie Film Stocks | <a href="http://www.paulivester.com/films/filmstock/guide.htm">http://www.paulivester.com/films/filmstock/guide.htm</a></li>
 </ol>
 
-<br/><br/><footer><hr/ ><center>&copy; 2022</center></footer>
+<br/><br/><footer><hr/ ><center>Copyright &copy; 2022</center>
+
+<br/><center>Build version: 0.5.0</center>
+</footer>
 
 </body>
 </html>

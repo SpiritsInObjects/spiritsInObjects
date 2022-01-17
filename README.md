@@ -2,7 +2,9 @@
 
 This is an app that sonifies images and visualizes sound as an aide in creating optical sound films.
 
-Built off the work by [Carlos Dominguez](https://github.com/carlosdominguez) in the original project: [spiritsInObjects](https://github.com/carlosdominguez/spiritsInObjects).
+The current version builds off the work by [Carlos Dominguez](https://github.com/carlosdominguez) in the original project: [spiritsInObjects](https://github.com/carlosdominguez/spiritsInObjects).
+
+View [the manual](https://github.com/sixteenmillimeter/spiritsInObjects/tree/master/docs) for operating the application or download it as [HTML](https://raw.githubusercontent.com/sixteenmillimeter/spiritsInObjects/master/docs/index.html) or as [a PDF](https://raw.githubusercontent.com/sixteenmillimeter/spiritsInObjects/master/docs/spiritsInObjects-manual.pdf).
 
 
 ### Dependencies
@@ -12,7 +14,7 @@ The application packages binaries for `ffmpeg` and `ffprobe` using [ffmpeg-stati
 
 ### Running from source
 
-To download the source and install all NPM packages required to run the application.
+To download the source and install all [NPM](https://www.npmjs.com/) packages required to run the application.
 
 ```bash
 git clone https://github.com/sixteenmillimeter/spiritsInObjects.git
