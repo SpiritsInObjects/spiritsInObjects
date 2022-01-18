@@ -46,8 +46,9 @@ rm "${tmp_file}"
 #
 ############
 
-tmp_file=`mktemp`
-tmp_md="${tmp_file}.md"
+tmp_file="spiritsInObjects-manual.md"
+tmp_md="./docs/${tmp_file}"
+pdf="./spiritsInObjects-manual.pdf"
 
 cat "./docs/README.md" > "${tmp_md}"
 echo " " >> "${tmp_md}"
@@ -56,7 +57,8 @@ echo "__________" >> "${tmp_md}"
 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Copyright &copy; ${YEAR}\\" >> "${tmp_md}"
 echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Build version: ${VERSION}" >> "${tmp_md}"
 
-pandoc "${tmp_md}" -o ./docs/spiritsInObjects-manual.pdf -f markdown+implicit_figures
+cd ./docs/
+pandoc "${tmp_file}" -o "${pdf}"
+cd ..
 
 rm -f "${tmp_md}"
-rm -f "${tmp_file}"
