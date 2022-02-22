@@ -27,12 +27,12 @@ sleep 5s
 echo "Building dmg installer..."
 
 #--icon=assets/icons/icon.icns 
-./node_modules/.bin/electron-installer-dmg ./releases/mac/spiritsinobjects-darwin-x64/spiritsinobjects.app spiritsinobjects --out=./releases/mac  --overwrite    
+./node_modules/.bin/electron-installer-dmg ./releases/mac/spiritsInObjects-darwin-x64/spiritsInObjects.app spiritsInObjects --out=./releases/mac --icon=./dist/icons/icon.icns  --overwrite    
 # Path to the icon file that will be the app icon in the DMG window.
 #  --icon-size=<px>     How big to make the icon for the app in the DMG. [Default: `80`].
 #  --background=<path>  Path to a PNG image to use as the background of the DMG.
 #--overwrite          Overwrite any existing DMG.
 
-mv ./releases/mac/spiritsinobjects.dmg "./releases/mac/spiritsinobjects_${version}.dmg"
+mv ./releases/mac/spiritsInObjects.dmg "./releases/mac/spiritsInObjects_${version}.dmg"
 
 echo "Built installer of version ${version}"

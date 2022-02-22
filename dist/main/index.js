@@ -181,6 +181,11 @@ async function sonify(args) {
 let mainWindow;
 let visualize;
 let timeline;
+const isWindows = (process.platform === 'win32' || /^(msys|cygwin)$/.test(process.env.OSTYPE));
+const isMac = process.platform === 'darwin';
+const iconPath = isWindows ? (0, path_1.join)(__dirname, '../icons/icon.ico') : (isMac ? (0, path_1.join)(__dirname, '../icons/icon.icns') : (0, path_1.join)(__dirname, '../icons/icon.png'));
+const iconImage = electron_1.nativeImage.createFromPath(iconPath);
+electron_1.app.dock.setIcon(iconImage);
 const BrowserOptions = {
     title: electron_1.app.name,
     show: false,
@@ -188,6 +193,7 @@ const BrowserOptions = {
     height: 1000,
     resizable: false,
     backgroundColor: '#a7abb4',
+    icon: iconPath,
     webPreferences: {
         webSecurity: true,
         nodeIntegration: true,

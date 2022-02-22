@@ -1,7 +1,8 @@
 'use strict';
 
 import { join as pathJoin } from 'path';
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
+import { app, BrowserWindow, Menu, ipcMain, nativeImage } from 'electron';
+import type { NativeImage } from 'electron';
 import { is } from 'electron-util';
 import unhandled from 'electron-unhandled';
 import debug from 'electron-debug';
@@ -239,6 +240,13 @@ let mainWindow : any;
 let visualize : Visualize;
 let timeline : Timeline;
 
+const isWindows : boolean = (process.platform === 'win32' || /^(msys|cygwin)$/.test(process.env.OSTYPE));
+const isMac : boolean = process.platform === 'darwin';
+const iconPath : string = isWindows ? pathJoin(__dirname, '../icons/icon.ico') : ( isMac ? pathJoin(__dirname, '../icons/icon.icns') : pathJoin(__dirname, '../icons/icon.png') );
+const iconImage : NativeImage = nativeImage.createFromPath(iconPath);
+
+app.dock.setIcon(iconImage);
+
 const BrowserOptions = {
 	title: app.name,
 	show: false,
@@ -246,6 +254,7 @@ const BrowserOptions = {
 	height: 1000,
 	resizable: false,
 	backgroundColor: '#a7abb4',
+	icon : iconPath,
 	webPreferences : {
 		webSecurity : true,
 		nodeIntegration: true,

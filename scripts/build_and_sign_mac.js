@@ -16,7 +16,7 @@
  	arch : 'x64',
  	prune : true,
     appBundleId : pkg.build.appId,
- 	//icon : './assets/icons/icon.icns',
+ 	icon : './dist/icons/icon.icns',
  	ignore : '^/releases',
  	overwrite : true,
  	out : './releases/mac',
