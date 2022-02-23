@@ -185,7 +185,9 @@ const isWindows = (process.platform === 'win32' || /^(msys|cygwin)$/.test(proces
 const isMac = process.platform === 'darwin';
 const iconPath = isWindows ? (0, path_1.join)(__dirname, '../icons/icon.ico') : (isMac ? (0, path_1.join)(__dirname, '../icons/icon.icns') : (0, path_1.join)(__dirname, '../icons/icon.png'));
 const iconImage = electron_1.nativeImage.createFromPath(iconPath);
-electron_1.app.dock.setIcon(iconImage);
+if (electron_1.app && electron_1.app.dock) {
+    electron_1.app.dock.setIcon(iconImage);
+}
 const BrowserOptions = {
     title: electron_1.app.name,
     show: false,

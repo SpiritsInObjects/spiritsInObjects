@@ -245,7 +245,9 @@ const isMac : boolean = process.platform === 'darwin';
 const iconPath : string = isWindows ? pathJoin(__dirname, '../icons/icon.ico') : ( isMac ? pathJoin(__dirname, '../icons/icon.icns') : pathJoin(__dirname, '../icons/icon.png') );
 const iconImage : NativeImage = nativeImage.createFromPath(iconPath);
 
-app.dock.setIcon(iconImage);
+if (app && app.dock) {
+	app.dock.setIcon(iconImage);
+}
 
 const BrowserOptions = {
 	title: app.name,
